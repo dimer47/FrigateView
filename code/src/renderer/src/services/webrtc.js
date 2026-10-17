@@ -37,21 +37,28 @@ export async function connectWebRTC(server, cam, video, onFail) {
     if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) onFail?.(pc.connectionState)
   }
 
-  await pc.setLocalDescription(await pc.createOffer())
-  await waitIce(pc)
+  try {
+    await pc.setLocalDescription(await pc.createOffer())
+    await waitIce(pc)
 
-  const list = workingEndpoint ? [workingEndpoint(server, cam)] : endpoints(server, cam)
-  for (const url of list) {
-    const r = await window.native.http({ url, method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp, timeout: 5000 })
-    if (r.ok && r.text.startsWith('v=')) {
-      await pc.setRemoteDescription({ type: 'answer', sdp: r.text })
-      if (!workingEndpoint) {
-        const i = endpoints(server, cam).indexOf(url)
-        workingEndpoint = (s, c) => endpoints(s, c)[i]
+    const list = workingEndpoint ? [workingEndpoint(server, cam)] : endpoints(server, cam)
+    for (const url of list) {
+      const r = await window.native.http({ url, method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp, timeout: 5000 })
+      if (r.ok && r.text.startsWith('v=')) {
+        await pc.setRemoteDescription({ type: 'answer', sdp: r.text })
+        if (!workingEndpoint) {
+          const i = endpoints(server, cam).indexOf(url)
+          workingEndpoint = (s, c) => endpoints(s, c)[i]
+        }
+        return pc
       }
-      return pc
     }
+  } catch (e) {
+    pc.onconnectionstatechange = null
+    pc.close()
+    throw e
   }
+  pc.onconnectionstatechange = null
   pc.close()
   throw new Error('WebRTC indisponible')
 }

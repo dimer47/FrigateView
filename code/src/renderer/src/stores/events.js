@@ -5,6 +5,7 @@ import { load, save } from './storage'
 import { t } from '@/i18n'
 
 const POLL_MS = 60e3 // filet de sécurité si le temps réel est coupé
+const KEEP = 2 * DAY // au-delà, les événements reçus en temps réel sont retirés de la liste
 
 export const TYPE_KEYS = ['person', 'car', 'animal', 'other']
 export const typeLabel = (k) => t('types.' + k)
@@ -63,7 +64,15 @@ export const useEventsStore = defineStore('events', {
       // insertion à sa place (liste triée du plus récent au plus ancien)
       const at = this.items.findIndex((x) => x.s < ev.s)
       this.items.splice(at < 0 ? this.items.length : at, 0, ev)
+      this.prune()
       return ev
+    },
+    // Liste triée du plus récent au plus ancien : on coupe la queue
+    prune() {
+      const limit = Date.now() - KEEP
+      let n = this.items.length
+      while (n && this.items[n - 1].s < limit && this.items[n - 1].id !== this.detailId) n--
+      if (n < this.items.length) this.items.splice(n)
     },
 
     async refresh(server) {
@@ -83,7 +92,7 @@ export const useEventsStore = defineStore('events', {
       this._onNew = onNew
       await this.refresh(server)
       this.connect()
-      this._poll = setInterval(async () => { if (this.realtime !== 'on') for (const e of await this.refresh(server)) onNew?.(e) }, POLL_MS)
+      this._poll = setInterval(async () => { this.prune(); if (this.realtime !== 'on') for (const e of await this.refresh(server)) onNew?.(e) }, POLL_MS)
     },
     connect() {
       const server = this._server
@@ -103,7 +112,9 @@ export const useEventsStore = defineStore('events', {
         const added = this.upsert(server, r)
         if (added) {
           this.fresh.push(added.id)
-          setTimeout(() => (this.fresh = this.fresh.filter((x) => x !== added.id)), 3000)
+          this._freshTimers ||= new Set()
+          const tm = setTimeout(() => { this._freshTimers.delete(tm); this.fresh = this.fresh.filter((x) => x !== added.id) }, 3000)
+          this._freshTimers.add(tm)
           this._onNew?.(added)
         }
       }
@@ -123,6 +134,9 @@ export const useEventsStore = defineStore('events', {
     stop() {
       clearInterval(this._poll)
       clearTimeout(this._retry)
+      for (const tm of this._freshTimers || []) clearTimeout(tm)
+      this._freshTimers?.clear()
+      this.fresh = []
       const ws = this._ws
       this._ws = null
       ws?.close()

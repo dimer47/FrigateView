@@ -80,7 +80,7 @@
     "local": "بدون حساب",
     "recommended": "موصى به",
     "host": "عنوان الخادم",
-    "hostPlaceholder": "192.168.0.107 أو frigate.local",
+    "hostPlaceholder": "192.168.1.10 أو frigate.local",
     "port": "المنفذ",
     "user": "المستخدم",
     "password": "كلمة المرور",

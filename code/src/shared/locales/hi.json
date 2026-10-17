@@ -80,7 +80,7 @@
     "local": "बिना खाते के",
     "recommended": "अनुशंसित",
     "host": "सर्वर पता",
-    "hostPlaceholder": "192.168.0.107 या frigate.local",
+    "hostPlaceholder": "192.168.1.10 या frigate.local",
     "port": "पोर्ट",
     "user": "उपयोगकर्ता",
     "password": "पासवर्ड",

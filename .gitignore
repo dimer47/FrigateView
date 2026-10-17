@@ -3,3 +3,5 @@ node_modules
 .playwright-mcp
 __pycache__/
 docs/serveur-*.md
+docs/2026-07-04_session-maquette.md
+docs/api-frigate-reference.md

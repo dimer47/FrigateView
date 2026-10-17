@@ -80,7 +80,7 @@
     "local": "Sin cuenta",
     "recommended": "Recomendado",
     "host": "Dirección del servidor",
-    "hostPlaceholder": "192.168.0.107 o frigate.local",
+    "hostPlaceholder": "192.168.1.10 o frigate.local",
     "port": "Puerto",
     "user": "Usuario",
     "password": "Contraseña",

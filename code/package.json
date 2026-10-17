@@ -12,7 +12,8 @@
     "mock": "node dev/mock-frigate.mjs",
     "dist:win": "electron-vite build && electron-builder --win",
     "dist:mac": "electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
-    "release": "electron-vite build && electron-builder --publish always"
+    "release": "electron-vite build && electron-builder --publish always",
+    "test": "vitest run"
   },
   "build": {
     "appId": "fr.idsynergy.frigateview",
@@ -92,6 +93,7 @@
     "pinia": "^3.0.4",
     "tailwindcss": "^4.3.3",
     "vite": "^7.3.7",
+    "vitest": "^5.0.5",
     "vue": "^3.5.44",
     "vue-i18n": "^11.4.14",
     "ws": "^8.22.0"

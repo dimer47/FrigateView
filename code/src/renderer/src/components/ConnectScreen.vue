@@ -1,4 +1,5 @@
 <script setup>
+import logo from '../assets/logo.png'
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore, bestGrid } from '@/stores/layouts'
@@ -78,7 +79,7 @@ const fp = (f) => (f || '').replace(/^sha256\//, '')
     </button>
     <form class="w-[460px] rounded-2xl border border-line-2 bg-modal p-7 shadow-2xl" @submit.prevent="go">
       <div class="mb-1 flex items-center gap-2 text-[22px] font-bold text-accent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+        <img :src="logo" alt="" width="24" height="24" draggable="false">
         FrigateView
       </div>
       <p class="mb-5 text-[13px] leading-relaxed text-ink-2">

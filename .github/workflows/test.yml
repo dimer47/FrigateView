@@ -1,0 +1,29 @@
+# Tests : unitaires (Vitest) puis construction, à chaque push et pull request sur main.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: code
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: code/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx electron-vite build

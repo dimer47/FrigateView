@@ -80,7 +80,7 @@
     "local": "Без учётной записи",
     "recommended": "Рекомендуется",
     "host": "Адрес сервера",
-    "hostPlaceholder": "192.168.0.107 или frigate.local",
+    "hostPlaceholder": "192.168.1.10 или frigate.local",
     "port": "Порт",
     "user": "Пользователь",
     "password": "Пароль",

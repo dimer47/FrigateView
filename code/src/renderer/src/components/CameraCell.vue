@@ -41,37 +41,55 @@ function snapHeight() {
   const h = (root.value?.clientHeight || 360) * (window.devicePixelRatio || 1)
   return Math.max(180, Math.min(1080, Math.round(h / 60) * 60)) // paliers de 60 px pour profiter du cache
 }
+let snapImg = null // image en cours de chargement : une seule à la fois (lien lent = pas d'empilement)
 function loadSnapshot() {
-  if (frozen.value || showVideo.value || playback.value || !server.server) return
-  const url = snapshotUrl(server.server, props.camId, snapHeight())
-  const img = new Image()
-  img.onload = () => { imgSrc.value = url; imgError.value = false; lastFrame.value = Date.now() }
-  img.onerror = () => { imgError.value = true }
+  if (snapImg || frozen.value || showVideo.value || playback.value || !server.server) return
+  const cam = props.camId
+  const url = snapshotUrl(server.server, cam, snapHeight())
+  const img = (snapImg = new Image())
+  const done = (ok) => {
+    if (snapImg !== img) return // annulée (arrêt ou changement de caméra)
+    snapImg = null
+    if (cam !== props.camId) return
+    if (ok) { imgSrc.value = url; imgError.value = false; lastFrame.value = Date.now() } else imgError.value = true
+  }
+  img.onload = () => done(true)
+  img.onerror = () => done(false)
   img.src = url
 }
 function startSnapshots() { stopSnapshots(); loadSnapshot(); snapTimer = setInterval(loadSnapshot, 1000) }
-function stopSnapshots() { clearInterval(snapTimer); snapTimer = null }
+function stopSnapshots() {
+  clearInterval(snapTimer); snapTimer = null
+  if (snapImg) { snapImg.onload = snapImg.onerror = null; snapImg.src = ''; snapImg = null }
+}
 
 /* ---- Vidéo WebRTC ---- */
 let pc = null
 let retryTimer = null
+let rtcGen = 0 // jeton : toute connexion d'une génération dépassée est fermée à son arrivée
 async function startVideo() {
   stopVideo()
   if (!wantVideo.value || !video.value) return
+  const gen = rtcGen
   rtc.value = 'connecting'
   lastRtcBytes = 0
   try {
-    pc = await connectWebRTC(server.server, props.camId, video.value, () => {
+    const p = await connectWebRTC(server.server, props.camId, video.value, () => {
+      if (gen !== rtcGen) return
       rtc.value = 'failed'
       scheduleRetry()
     })
+    if (gen !== rtcGen) { p.onconnectionstatechange = null; p.close(); return } // arrêtée ou relancée entre-temps
+    pc = p
   } catch {
+    if (gen !== rtcGen) return
     rtc.value = 'failed'
     scheduleRetry()
   }
 }
 function scheduleRetry() { clearTimeout(retryTimer); retryTimer = setTimeout(() => wantVideo.value && startVideo(), 15000) }
 function stopVideo() {
+  rtcGen++
   clearTimeout(retryTimer)
   if (pc) { pc.onconnectionstatechange = null; pc.close(); pc = null }
   if (video.value) video.value.srcObject = null
@@ -106,11 +124,14 @@ function toOffset(t) {
   return null
 }
 
+let chunkGen = 0 // jeton : relecture arrêtée ou caméra changée pendant la requête → résultat ignoré
 async function loadChunk(t) {
+  const cam = props.camId, gen = ++chunkGen
   chunkLoading = true
   pbState.value = 'loading'
   try {
-    const recs = await getRecordings(server.server, props.camId, t / 1000 - 15, (t + CHUNK) / 1000)
+    const recs = await getRecordings(server.server, cam, t / 1000 - 15, (t + CHUNK) / 1000)
+    if (gen !== chunkGen || cam !== props.camId || !playback.value) return
     const segs = []
     for (const r of recs.map((x) => ({ s: x.start_time * 1000, e: x.end_time * 1000 })).sort((a, b) => a.s - b.s)) {
       if (r.e <= t) continue
@@ -127,13 +148,14 @@ async function loadChunk(t) {
     hls.on(Hls.Events.ERROR, (_e, d) => { if (dbg) console.log('[hls]', props.camId, d.type, d.details, d.fatal, d.response?.code || ''); if (d.fatal) pbState.value = 'error' })
     hls.on(Hls.Events.FRAG_LOADED, (_e, d) => { hlsBytes += d.frag?.stats?.loaded || 0 })
     hls.on(Hls.Events.MANIFEST_PARSED, () => { if (dbg) console.log('[hls]', props.camId, 'manifest ok'); syncPlayback(true) })
-    hls.loadSource(vodUrl(server.server, props.camId, segs[0].s / 1000, chunk.end / 1000))
+    hls.loadSource(vodUrl(server.server, cam, segs[0].s / 1000, chunk.end / 1000))
     hls.attachMedia(pbVideo.value)
   } catch {
+    if (gen !== chunkGen) return
     pbState.value = 'error'
     chunk = { start: t, end: t + 10000, segs: [] } // nouvel essai dans 10 s
   } finally {
-    chunkLoading = false
+    if (gen === chunkGen) chunkLoading = false
   }
 }
 
@@ -153,7 +175,7 @@ function syncPlayback(force = false) {
 }
 
 function destroyHls() { if (hls) { hls.destroy(); hls = null } }
-function stopPlayback() { destroyHls(); chunk = null; pbState.value = 'idle' }
+function stopPlayback() { chunkGen++; chunkLoading = false; destroyHls(); chunk = null; pbState.value = 'idle' }
 
 watch(playback, (p) => (p ? syncPlayback() : stopPlayback()))
 watch(() => [tl.time, tl.playing, tl.speed], () => syncPlayback())

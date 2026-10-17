@@ -1,11 +1,17 @@
 import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage, Notification, Tray, Menu, screen, nativeImage, dialog } from 'electron'
-import { join, resolve, dirname } from 'node:path'
+import { join } from 'node:path'
 import { readFileSync, writeFileSync, rmSync, createWriteStream } from 'node:fs'
+import { Transform } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import tls from 'node:tls'
 import os from 'node:os'
 import { createHash } from 'node:crypto'
 import { resolveLang, translate } from '../shared/langs'
 import { initUpdater } from './updater'
+import { isAllowedHttpUrl, isExternalUrlSafe, allowedIn as allowedInSet, isAppUrl } from './guards'
+
+// Liens externes : http(s) seulement
+const openExternal = (url) => { if (isExternalUrlSafe(url)) shell.openExternal(url) }
 let checkUpdates = () => {}
 
 // Traductions (les mêmes fichiers que la fenêtre)
@@ -41,8 +47,13 @@ function installCertCheck() {
 
 // Lecture du certificat AVANT toute requête Chromium : un refus de Chromium est mis en cache
 // et empêcherait la connexion juste après l'approbation.
+// Serveur Frigate courant : seul hôte joignable par l'IPC 'http'.
+// Fixé par cert:probe (mode sécurisé, avant toute requête) ou, à défaut, par la première
+// requête de la session (mode local) ; remis à zéro à la déconnexion (changement de serveur).
+let currentServer = null
 ipcMain.handle('cert:probe', (_e, { host, port }) =>
   new Promise((resolve) => {
+    currentServer = { host: String(host), port: String(port) }
     const sock = tls.connect({ host, port: Number(port), servername: /^[\d.]+$/.test(host) ? undefined : host, rejectUnauthorized: false, timeout: 5000 }, () => {
       const c = sock.getPeerCertificate()
       const fingerprint = 'sha256/' + createHash('sha256').update(c.raw).digest('base64')
@@ -69,8 +80,16 @@ ipcMain.handle('cert:trust', async (_e, { host, fingerprint }) => {
    pas de contrainte CORS, et les cookies de session (jeton Frigate)
    sont partagés avec la fenêtre, donc avec les balises <img>.
    ------------------------------------------------------------------ */
+function checkServerUrl(url) {
+  let u
+  try { u = new URL(url) } catch { return false }
+  if (!currentServer && (u.protocol === 'http:' || u.protocol === 'https:')) currentServer = { host: u.hostname.replace(/^\[|\]$/g, ''), port: u.port || (u.protocol === 'https:' ? '443' : '80') }
+  return isAllowedHttpUrl(currentServer, url)
+}
+
 ipcMain.handle('http', (_e, { url, method = 'GET', headers = {}, body, timeout = 5000 }) =>
   new Promise((resolve) => {
+    if (!checkServerUrl(url)) return resolve({ ok: false, status: 0, error: `refused: ${String(url).slice(0, 200)} n'est pas sur le serveur Frigate courant (${currentServer ? currentServer.host + ':' + currentServer.port : 'aucun'})` })
     const host = new URL(url).hostname
     let settled = false
     const finish = (r) => { if (!settled) { settled = true; clearTimeout(timer); resolve(r) } }
@@ -103,7 +122,7 @@ ipcMain.handle('http', (_e, { url, method = 'GET', headers = {}, body, timeout =
 const allowedPaths = new Set()
 const allow = (p) => { if (p) allowedPaths.add(p); return p }
 // Fichier choisi, ou fichier placé directement dans un dossier choisi
-const allowedIn = (p) => typeof p === 'string' && (allowedPaths.has(p) || allowedPaths.has(dirname(resolve(p))))
+const allowedIn = (p) => allowedInSet(allowedPaths, p)
 const winOf = (e) => BrowserWindow.fromWebContents(e.sender)
 
 ipcMain.handle('file:chooseSave', async (e, { defaultName, kind }) => {
@@ -119,8 +138,7 @@ ipcMain.handle('file:chooseDir', async (e) => {
 })
 ipcMain.handle('file:write', (_e, { path, data }) => {
   if (!allowedIn(path)) return false
-  writeFileSync(path, Buffer.from(data))
-  return true
+  try { writeFileSync(path, Buffer.from(data)); return true } catch (err) { console.error('[file:write]', err.message); return false }
 })
 ipcMain.handle('file:reveal', (_e, path) => { if (allowedIn(path)) shell.showItemInFolder(path) })
 
@@ -128,31 +146,35 @@ ipcMain.handle('file:reveal', (_e, path) => { if (allowedIn(path)) shell.showIte
 const downloads = new Map()
 ipcMain.handle('file:download', (e, { id, url, path }) =>
   new Promise((resolve) => {
-    if (!allowedIn(path) || !/^https?:\/\//.test(url)) return resolve({ ok: false, error: 'refused' })
+    if (!allowedIn(path) || !checkServerUrl(url)) return resolve({ ok: false, error: 'refused' })
     const req = net.request({ url, useSessionCookies: true })
     downloads.set(id, req)
-    const done = (r) => { downloads.delete(id); resolve(r) }
+    let settled = false
+    const done = (r) => { if (settled) return; settled = true; downloads.delete(id); if (!r.ok) rmSync(path, { force: true }); resolve(r) }
     req.on('response', (res) => {
       if (res.statusCode !== 200) { res.resume?.(); return done({ ok: false, status: res.statusCode }) }
       const total = Number(res.headers['content-length']) || 0
-      const out = createWriteStream(path)
       let loaded = 0, last = 0
-      res.on('data', (c) => {
-        out.write(c)
+      const progress = new Transform({ transform(c, _enc, cb) {
         loaded += c.length
         if (Date.now() - last > 300) { last = Date.now(); if (!e.sender.isDestroyed()) e.sender.send('download:progress', { id, loaded, total }) }
-      })
-      res.on('end', () => out.end(() => done({ ok: true, size: loaded })))
-      res.on('error', (err) => { out.destroy(); rmSync(path, { force: true }); done({ ok: false, error: err.message }) })
+        cb(null, c)
+      } })
+      // pipeline : contre-pression (lecture suspendue tant que le disque n'a pas suivi)
+      // et, sur erreur d'écriture (disque plein…), arrêt de la requête + suppression du fichier partiel
+      pipeline(res, progress, createWriteStream(path))
+        .then(() => done({ ok: true, size: loaded }))
+        .catch((err) => { try { req.abort() } catch { /* déjà terminée */ } done({ ok: false, error: err.message }) })
     })
-    req.on('error', (err) => { rmSync(path, { force: true }); done({ ok: false, error: err.message }) })
-    req.on('abort', () => { rmSync(path, { force: true }); done({ ok: false, error: 'aborted' }) })
+    req.on('error', (err) => done({ ok: false, error: err.message }))
+    req.on('abort', () => done({ ok: false, error: 'aborted' }))
     req.end()
   })
 )
 ipcMain.handle('file:cancel', (_e, id) => { downloads.get(id)?.abort() })
 
 ipcMain.handle('auth:logout', async (_e, { origin }) => {
+  currentServer = null // changement de serveur possible ensuite
   const cookies = await session.defaultSession.cookies.get({ url: origin })
   await Promise.all(cookies.map((c) => session.defaultSession.cookies.remove(origin, c.name)))
   await session.defaultSession.cookies.flushStore()
@@ -232,19 +254,26 @@ function baseOptions() {
     backgroundColor: '#111827',
     title: 'FrigateView',
     icon: appIcon(),
-    webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: false, contextIsolation: true }
+    webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: true, contextIsolation: true, nodeIntegration: false }
   }
 }
 
+// Toutes les fenêtres : pas de nouvelle fenêtre (liens http(s) ouverts dans le navigateur),
+// pas de navigation hors de la page locale de l'application
+const APP_PAGE = join(__dirname, '../renderer/index.html')
+function harden(win) {
+  win.webContents.setWindowOpenHandler(({ url }) => { openExternal(url); return { action: 'deny' } })
+  const guard = (e, url) => { if (!isAppUrl(url, { devUrl: process.env.ELECTRON_RENDERER_URL, appFile: APP_PAGE })) { e.preventDefault(); openExternal(url) } }
+  win.webContents.on('will-navigate', guard)
+  win.webContents.on('will-redirect', guard)
+  win.webContents.on('will-attach-webview', (e) => e.preventDefault())
+  return win
+}
+
 function createWindow() {
-  const win = new BrowserWindow({ ...baseOptions(), width: 1600, height: 950, minWidth: 1000, minHeight: 640, show: !process.argv.includes('--hidden') })
+  const win = harden(new BrowserWindow({ ...baseOptions(), width: 1600, height: 950, minWidth: 1000, minHeight: 640, show: !process.argv.includes('--hidden') }))
   mainWin = win
 
-  // Liens externes : navigateur par défaut
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
-    return { action: 'deny' }
-  })
 
   // Fermer = réduire dans la zone de notification (les alertes continuent d'arriver)
   win.on('close', (e) => {
@@ -294,7 +323,7 @@ function syncWalls() {
     if (!w || w.isDestroyed()) {
       // macOS : plein écran « simple » (pas d'animation ni d'espace séparé, la barre de menu est masquée)
       const mac = process.platform === 'darwin'
-      w = new BrowserWindow({ ...baseOptions(), x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height, fullscreen: !mac, frame: false })
+      w = harden(new BrowserWindow({ ...baseOptions(), x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height, fullscreen: !mac, frame: false }))
       if (mac) w.setSimpleFullScreen(true)
       w.setMenu(null)
       if (process.env.FV_DEBUG) w.webContents.on('console-message', (e) => console.log(`[mur ${id}]`, e.message))
@@ -309,7 +338,7 @@ ipcMain.handle('screens:apply', (_e, screensConf) => { settings = { ...settings,
 function identifyScreens() {
   // Grand numéro affiché 2 s sur chaque écran
   screen.getAllDisplays().forEach((d, i) => {
-    const w = new BrowserWindow({ x: d.bounds.x + d.bounds.width / 2 - 160, y: d.bounds.y + d.bounds.height / 2 - 120, width: 320, height: 240, frame: false, transparent: true, alwaysOnTop: true, focusable: false, skipTaskbar: true })
+    const w = harden(new BrowserWindow({ x: d.bounds.x + d.bounds.width / 2 - 160, y: d.bounds.y + d.bounds.height / 2 - 120, width: 320, height: 240, frame: false, transparent: true, alwaysOnTop: true, focusable: false, skipTaskbar: true, webPreferences: { sandbox: true, contextIsolation: true } }))
     w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`<body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font:800 160px system-ui;color:#fff;background:rgba(59,130,246,.92);border-radius:28px">${i + 1}</body>`))
     setTimeout(() => !w.isDestroyed() && w.destroy(), 2000)
   })
@@ -458,7 +487,7 @@ function buildMenu() {
       submenu: [
         { label: tr('menu.shortcuts'), accelerator: 'F1', click: () => send('help') },
         { label: tr('menu.checkUpdates'), enabled: app.isPackaged, click: () => checkUpdates() },
-        { label: tr('menu.docs'), click: () => shell.openExternal('https://docs.frigate.video') },
+        { label: tr('menu.docs'), click: () => openExternal('https://docs.frigate.video') },
         { type: 'separator' },
         { label: tr('menu.dataFolder'), click: () => shell.openPath(app.getPath('userData')) },
         { label: tr('menu.about'), click: () => dialog.showMessageBox(mainWin, { type: 'info', title: tr('menu.about'), message: `FrigateView ${app.getVersion()}`, detail: `${tr('main.aboutText')}\n${uiState.version ? `${tr('main.aboutServer', { version: uiState.version })}\n` : ''}Electron ${process.versions.electron} · Chromium ${process.versions.chrome}`, icon: appIcon() }) }

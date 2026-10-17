@@ -80,7 +80,7 @@
     "local": "অ্যাকাউন্ট ছাড়া",
     "recommended": "প্রস্তাবিত",
     "host": "সার্ভারের ঠিকানা",
-    "hostPlaceholder": "192.168.0.107 বা frigate.local",
+    "hostPlaceholder": "192.168.1.10 বা frigate.local",
     "port": "পোর্ট",
     "user": "ব্যবহারকারী",
     "password": "পাসওয়ার্ড",

@@ -20,7 +20,7 @@ export function reviewType(r) {
 }
 
 // Segments de 10 s → plages continues (coupure si trou > 2 s)
-function mergeRanges(list) {
+export function mergeRanges(list) {
   const out = []
   for (const s of list) {
     const last = out[out.length - 1]
@@ -135,6 +135,7 @@ export const useTimelineStore = defineStore('timeline', {
         const after = (h0 * HOUR) / 1000, before = ((h1 + 1) * HOUR) / 1000
         const [recs, reviews] = await Promise.all([getRecordings(server, cam, after, before), getReviews(server, [cam], after, before)])
         const at = Date.now()
+        this.pruneChunks(at)
         for (let h = h0; h <= h1; h++) {
           const hs = h * HOUR, he = hs + HOUR
           const segs = recs.map((r) => ({ s: r.start_time * 1000, e: r.end_time * 1000, m: r.motion > 0 })).filter((r) => r.e > hs && r.s < he).sort((a, b) => a.s - b.s)
@@ -150,6 +151,11 @@ export const useTimelineStore = defineStore('timeline', {
         this._pending.delete(key)
         this.loading--
       }
+    },
+    // Cache : heures sorties de la fenêtre affichable (2 jours + marge) retirées
+    pruneChunks(now = Date.now()) {
+      const oldest = Math.floor((now - RETENTION) / HOUR) - 1
+      for (const k of Object.keys(this.chunks)) if (Number(k.slice(k.lastIndexOf(':') + 1)) < oldest) delete this.chunks[k]
     },
     // Données d'une caméra sur la vue courante
     rangesFor(cam) {

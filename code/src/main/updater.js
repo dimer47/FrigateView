@@ -19,7 +19,7 @@ export function initUpdater({ tr, win }) {
   autoUpdater.on('update-available', async (info) => {
     if (!mac) return
     const r = await dialog.showMessageBox(win(), { type: 'info', message: tr('main.updateAvailable', { version: info.version }), detail: tr('main.updateMacHint'), buttons: [tr('main.updateDownload'), tr('main.updateLater')], defaultId: 0, cancelId: 1 })
-    if (r.response === 0) shell.openExternal(RELEASES)
+    if (r.response === 0 && /^https:\/\//.test(RELEASES)) shell.openExternal(RELEASES)
   })
   autoUpdater.on('update-downloaded', async (info) => {
     const r = await dialog.showMessageBox(win(), { type: 'info', message: tr('main.updateReady', { version: info.version }), buttons: [tr('main.updateRestart'), tr('main.updateLater')], defaultId: 0, cancelId: 1 })
