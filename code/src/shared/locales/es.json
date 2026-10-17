@@ -12,7 +12,9 @@
     "wall": "Solo videowall",
     "fullscreen": "Pantalla completa",
     "settings": "Ajustes",
-    "serverTitle": "Frigate {version} — conexión, cuenta, cambiar de servidor"
+    "serverTitle": "Frigate {version} — conexión, cuenta, cambiar de servidor",
+    "showUser": "clic para mostrar el nombre",
+    "hideUser": "clic para ocultar el nombre"
   },
   "roles": {
     "admin": "administrador",
@@ -381,12 +383,33 @@
     "cut": "Cortar",
     "copy": "Copiar",
     "paste": "Pegar",
-    "selectAll": "Seleccionar todo"
+    "selectAll": "Seleccionar todo",
+    "stats": "Estadísticas (ancho de banda, CPU, memoria)"
   },
   "main": {
     "aboutText": "Videowall para Frigate NVR.",
     "aboutServer": "Servidor: Frigate {version}",
     "stillRunning": "FrigateView sigue activo",
     "stillRunningBody": "Las alertas siguen llegando. Clic derecho en el icono para salir."
+  },
+  "stats": {
+    "cellTitle": "Ancho de banda recibido por FrigateView para esta cámara, resolución, imágenes por segundo y tipo de flujo",
+    "fps": "{n} i/s",
+    "barTitle": "Estadísticas de este equipo (opcional)",
+    "totalTitle": "Ancho de banda total recibido por FrigateView, todas las cámaras mostradas",
+    "app": "App",
+    "appTitle": "CPU (en % del equipo completo) y memoria usadas por FrigateView",
+    "mb": "{n} MB",
+    "pc": "PC",
+    "pcTitle": "Carga de CPU y memoria del equipo, todas las aplicaciones",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "Estadísticas: ancho de banda, CPU, memoria",
+    "settingsTitle": "Estadísticas",
+    "settingsHint": "Ancho de banda recibido en cada cámara y carga de CPU / memoria en la barra superior. También con el botón de la barra de herramientas.",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "imágenes"
+    }
   }
 }

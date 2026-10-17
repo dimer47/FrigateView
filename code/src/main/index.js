@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage, Notifica
 import { join } from 'node:path'
 import { readFileSync, writeFileSync, rmSync } from 'node:fs'
 import tls from 'node:tls'
+import os from 'node:os'
 import { createHash } from 'node:crypto'
 import { resolveLang, translate } from '../shared/langs'
 
@@ -315,6 +316,7 @@ function buildMenu() {
         { label: tr('menu.liveVideo'), type: 'radio', checked: uiState.liveMode === 'webrtc', enabled: c, click: () => send('livemode', 'webrtc') },
         { label: tr('menu.liveImages'), type: 'radio', checked: uiState.liveMode === 'snapshot', enabled: c, click: () => send('livemode', 'snapshot') },
         { type: 'separator' },
+        { label: tr('menu.stats'), type: 'checkbox', checked: uiState.stats, enabled: c, click: () => send('toggle:stats') },
         { label: tr('menu.wall'), type: 'checkbox', checked: uiState.expand, enabled: c, ...shown('CmdOrCtrl+E'), click: () => send('toggle:expand') },
         { label: tr('menu.fullscreen'), accelerator: isMac ? 'Ctrl+Cmd+F' : 'F11', click: () => mainWin?.setFullScreen(!mainWin.isFullScreen()) },
         { type: 'separator' },
@@ -395,6 +397,26 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
+// Statistiques : processeur et mémoire de FrigateView (tous ses processus) et du PC
+let lastCpu = null
+function systemCpu() {
+  const t = os.cpus().reduce((a, c) => { const v = c.times; a.idle += v.idle; a.total += v.user + v.nice + v.sys + v.irq + v.idle; return a }, { idle: 0, total: 0 })
+  const prev = lastCpu
+  lastCpu = t
+  return prev && t.total > prev.total ? 100 * (1 - (t.idle - prev.idle) / (t.total - prev.total)) : null
+}
+ipcMain.handle('metrics:get', () => {
+  const procs = app.getAppMetrics()
+  return {
+    appCpu: procs.reduce((a, p) => a + (p.cpu?.percentCPUUsage || 0), 0) / os.cpus().length, // % de la capacité totale du PC
+    appMem: procs.reduce((a, p) => a + (p.memory?.workingSetSize || 0), 0) * 1024, // octets
+    sysCpu: systemCpu(),
+    sysMemUsed: os.totalmem() - os.freemem(),
+    sysMemTotal: os.totalmem(),
+    gpu: procs.some((p) => p.type === 'GPU')
+  }
+})
+
 ipcMain.handle('app:focused', () => !!mainWin && mainWin.isVisible() && mainWin.isFocused())
 
 /* ------------------------------------------------------------------
@@ -459,6 +481,7 @@ app.whenReady().then(() => {
     if (!details.webContentsId) return done({})
     const headers = Object.fromEntries(Object.entries(details.responseHeaders || {}).filter(([k]) => k.toLowerCase() !== 'access-control-allow-origin'))
     headers['Access-Control-Allow-Origin'] = ['*']
+    headers['Timing-Allow-Origin'] = ['*'] // permet de mesurer la taille des images reçues (statistiques de débit)
     done({ responseHeaders: headers })
   })
   createTray()

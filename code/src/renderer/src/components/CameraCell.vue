@@ -7,12 +7,15 @@ import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
 import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
+import { useStatsStore, fmtRate } from '@/stores/stats'
 
 const props = defineProps({ camId: { type: String, required: true } })
 const server = useServerStore()
 const ui = useUiStore()
 const tl = useTimelineStore()
 const playback = computed(() => tl.isPlayback(props.camId))
+const stats = useStatsStore()
+const imgEl = ref(null)
 
 const root = ref(null)
 const video = ref(null)
@@ -52,6 +55,7 @@ async function startVideo() {
   stopVideo()
   if (!wantVideo.value || !video.value) return
   rtc.value = 'connecting'
+  lastRtcBytes = 0
   try {
     pc = await connectWebRTC(server.server, props.camId, video.value, () => {
       rtc.value = 'failed'
@@ -113,6 +117,7 @@ async function loadChunk(t) {
     hls = new Hls({ maxBufferLength: 30, backBufferLength: 30 })
     const dbg = localStorage.getItem('fv-debug') === '1'
     hls.on(Hls.Events.ERROR, (_e, d) => { if (dbg) console.log('[hls]', props.camId, d.type, d.details, d.fatal, d.response?.code || ''); if (d.fatal) pbState.value = 'error' })
+    hls.on(Hls.Events.FRAG_LOADED, (_e, d) => { hlsBytes += d.frag?.stats?.loaded || 0 })
     hls.on(Hls.Events.MANIFEST_PARSED, () => { if (dbg) console.log('[hls]', props.camId, 'manifest ok'); syncPlayback(true) })
     hls.loadSource(vodUrl(server.server, props.camId, segs[0].s / 1000, chunk.end / 1000))
     hls.attachMedia(pbVideo.value)
@@ -145,13 +150,46 @@ function stopPlayback() { destroyHls(); chunk = null; pbState.value = 'idle' }
 watch(playback, (p) => (p ? syncPlayback() : stopPlayback()))
 watch(() => [tl.time, tl.playing, tl.speed], () => syncPlayback())
 
+/* ---- Statistiques (option) : débit reçu, résolution, images/s ---- */
+let lastRtcBytes = 0
+let hlsBytes = 0
+let lastSample = 0
+let statTimer = null
+const myStats = computed(() => stats.cams[props.camId])
+async function sample() {
+  const now = performance.now(), dt = (now - lastSample) / 1000
+  lastSample = now
+  let bytes = 0, w = 0, h = 0, fps = 0, source
+  if (playback.value) {
+    source = 'hls'; bytes = hlsBytes; hlsBytes = 0
+    w = pbVideo.value?.videoWidth; h = pbVideo.value?.videoHeight
+  } else if (showVideo.value && pc) {
+    source = 'webrtc'
+    let total = 0
+    ;(await pc.getStats()).forEach((s) => {
+      if (s.type !== 'inbound-rtp') return
+      total += s.bytesReceived || 0
+      if (s.kind === 'video') { w = s.frameWidth; h = s.frameHeight; fps = s.framesPerSecond }
+    })
+    bytes = lastRtcBytes ? total - lastRtcBytes : 0
+    lastRtcBytes = total
+  } else {
+    source = 'image'; bytes = stats.takeImageBytes(props.camId); fps = frozen.value ? 0 : 1
+    w = imgEl.value?.naturalWidth; h = imgEl.value?.naturalHeight
+  }
+  if (dt > 0 && dt < 10) stats.report(props.camId, { kbps: (bytes * 8) / 1000 / dt, w, h, fps, source })
+}
+function startStats() { stopStats(); lastSample = performance.now(); statTimer = setInterval(sample, 2000) }
+function stopStats() { clearInterval(statTimer); statTimer = null; stats.forget(props.camId) }
+watch(() => ui.showStats, (on) => (on ? startStats() : stopStats()), { immediate: true })
+
 let clock = null
 onMounted(() => {
   startSnapshots()
   if (wantVideo.value) startVideo()
   clock = setInterval(() => (now.value = Date.now()), 1000)
 })
-onBeforeUnmount(() => { stopSnapshots(); stopVideo(); stopPlayback(); clearInterval(clock) })
+onBeforeUnmount(() => { stopSnapshots(); stopVideo(); stopPlayback(); stopStats(); clearInterval(clock) })
 
 const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString(loc()))
 </script>
@@ -159,10 +197,10 @@ const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? l
 <template>
   <div ref="root" class="absolute inset-0 bg-[linear-gradient(160deg,#1b2636,#0b121c)]">
     <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full object-contain" :class="{ 'brightness-50': pbState === 'norec' }" muted playsinline />
-    <img v-if="imgSrc && !showVideo && !playback" :src="imgSrc" class="absolute inset-0 size-full object-contain" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
+    <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full object-contain" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
     <video ref="video" class="absolute inset-0 size-full object-contain" :class="{ invisible: !showVideo }" autoplay muted playsinline @playing="onPlaying" />
 
-    <div class="absolute left-1.5 top-1.5 z-[3] flex gap-1">
+    <div class="absolute left-1.5 top-1.5 z-[3] flex flex-wrap items-center gap-1">
       <span v-if="playback" class="badge text-warn"><i class="bg-warn" />{{ $t('cell.playback') }}{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>
       <span v-else-if="frozen" class="badge"><i class="bg-bad" />{{ $t('cell.interrupted') }}</span>
       <span v-else-if="offline" class="badge"><i class="bg-bad" />{{ $t('cell.offline') }}</span>
@@ -170,6 +208,9 @@ const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? l
       <span v-else class="badge" :title="wantVideo ? $t('cell.noVideoTitle') : $t('cell.snapshotTitle')">
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
+    </div>
+    <div v-if="ui.showStats && myStats" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
+        {{ fmtRate(myStats.kbps, loc()) }}<template v-if="myStats.w"> · {{ myStats.w }}×{{ myStats.h }}</template><template v-if="myStats.fps"> · {{ $t('stats.fps', { n: Math.round(myStats.fps) }) }}</template> · {{ $t('stats.src.' + myStats.source) }}
     </div>
 
     <div v-if="playback && pbState !== 'playing'" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">

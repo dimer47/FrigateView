@@ -12,7 +12,9 @@
     "wall": "Dinding video saja",
     "fullscreen": "Layar penuh",
     "settings": "Pengaturan",
-    "serverTitle": "Frigate {version} — koneksi, akun, ganti server"
+    "serverTitle": "Frigate {version} — koneksi, akun, ganti server",
+    "showUser": "klik untuk menampilkan nama",
+    "hideUser": "klik untuk menyembunyikan nama"
   },
   "roles": {
     "admin": "administrator",
@@ -381,12 +383,33 @@
     "cut": "Potong",
     "copy": "Salin",
     "paste": "Tempel",
-    "selectAll": "Pilih semua"
+    "selectAll": "Pilih semua",
+    "stats": "Statistik (bandwidth, CPU, memori)"
   },
   "main": {
     "aboutText": "Dinding video untuk Frigate NVR.",
     "aboutServer": "Server: Frigate {version}",
     "stillRunning": "FrigateView tetap berjalan",
     "stillRunningBody": "Peringatan tetap masuk. Klik kanan pada ikon untuk keluar."
+  },
+  "stats": {
+    "cellTitle": "Bandwidth yang diterima FrigateView untuk kamera ini, resolusi, frame per detik, dan jenis stream",
+    "fps": "{n} fps",
+    "barTitle": "Statistik komputer ini (opsional)",
+    "totalTitle": "Total bandwidth yang diterima FrigateView, semua kamera yang ditampilkan",
+    "app": "Apl",
+    "appTitle": "CPU (dalam % dari seluruh komputer) dan memori yang digunakan FrigateView",
+    "mb": "{n} MB",
+    "pc": "PC",
+    "pcTitle": "Beban CPU dan memori komputer, semua aplikasi",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "Statistik: bandwidth, CPU, memori",
+    "settingsTitle": "Statistik",
+    "settingsHint": "Bandwidth yang diterima tiap kamera, serta beban CPU / memori di bilah atas. Juga lewat tombol bilah alat.",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "gambar"
+    }
   }
 }

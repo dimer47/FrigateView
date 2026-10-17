@@ -57,6 +57,8 @@ const close = () => (app.open = false)
                 <option v-for="l in LANGS" :key="l.code" :value="l.code">{{ l.name }}</option>
               </select>
             </label>
+            <h3 class="mb-1.5 mt-5 font-semibold">{{ $t('stats.settingsTitle') }}</h3>
+            <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('stats.toggle') }}<small class="block text-xs text-ink-3">{{ $t('stats.settingsHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.showStats" @change="ui.toggleStats()"></label>
           </template>
 
           <!-- Notifications -->

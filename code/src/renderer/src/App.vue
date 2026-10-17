@@ -21,6 +21,7 @@ import { bestGrid } from '@/stores/layouts'
 import { t, loc, setLocale } from '@/i18n'
 import { resolveLang } from '../../shared/langs'
 import { load, save } from '@/stores/storage'
+import { useStatsStore } from '@/stores/stats'
 
 const server = useServerStore()
 const layouts = useLayoutStore()
@@ -28,6 +29,8 @@ const ui = useUiStore()
 const tl = useTimelineStore()
 const ev = useEventsStore()
 const appSettings = useAppSettings()
+const stats = useStatsStore()
+watch(() => ui.showStats, (on) => (on ? stats.start() : stats.stop()), { immediate: true })
 
 // Fenêtre « mur vidéo » ouverte sur un autre écran : grille seule, layout imposé
 const params = new URLSearchParams(location.search)
@@ -81,6 +84,7 @@ const MENU = {
   'toggle:events': () => { ev.visible = !ev.visible; ev.persist() },
   'toggle:timeline': () => { tl.visible = !tl.visible; tl.persist() },
   'toggle:expand': () => (ui.expand = !ui.expand),
+  'toggle:stats': () => ui.toggleStats(),
   livemode: (m) => ui.setLiveMode(m),
   'play:toggle': () => tl.togglePlay(),
   'play:live': () => tl.goLive(),
@@ -99,7 +103,7 @@ if (!wall) {
     hasServer: !!server.server,
     layouts: layouts.layouts.map((l) => ({ id: l.id, name: l.name })),
     activeLayout: layouts.activeId,
-    sidebar: ui.sidebar, events: ev.visible, timeline: tl.visible, expand: ui.expand, liveMode: ui.liveMode,
+    sidebar: ui.sidebar, stats: ui.showStats, events: ev.visible, timeline: tl.visible, expand: ui.expand, liveMode: ui.liveMode,
     live: tl.live, playing: tl.playing, sync: tl.sync, unseen: ev.unseenCount, version: server.version
   }), (st) => window.native.setMenuState(JSON.parse(JSON.stringify(st))), { immediate: true, deep: true })
 }

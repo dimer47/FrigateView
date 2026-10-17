@@ -12,7 +12,9 @@
     "wall": "Somente mural de vídeo",
     "fullscreen": "Tela cheia",
     "settings": "Configurações",
-    "serverTitle": "Frigate {version} — conexão, conta, trocar de servidor"
+    "serverTitle": "Frigate {version} — conexão, conta, trocar de servidor",
+    "showUser": "clique para mostrar o nome",
+    "hideUser": "clique para ocultar o nome"
   },
   "roles": {
     "admin": "administrador",
@@ -381,12 +383,33 @@
     "cut": "Recortar",
     "copy": "Copiar",
     "paste": "Colar",
-    "selectAll": "Selecionar tudo"
+    "selectAll": "Selecionar tudo",
+    "stats": "Estatísticas (banda, CPU, memória)"
   },
   "main": {
     "aboutText": "Mural de vídeo para o Frigate NVR.",
     "aboutServer": "Servidor: Frigate {version}",
     "stillRunning": "O FrigateView continua ativo",
     "stillRunningBody": "Os alertas continuam chegando. Clique com o botão direito no ícone para sair."
+  },
+  "stats": {
+    "cellTitle": "Largura de banda recebida pelo FrigateView para esta câmera, resolução, quadros por segundo e tipo de fluxo",
+    "fps": "{n} q/s",
+    "barTitle": "Estatísticas deste computador (opcional)",
+    "totalTitle": "Largura de banda total recebida pelo FrigateView, todas as câmeras exibidas",
+    "app": "App",
+    "appTitle": "CPU (em % do computador inteiro) e memória usadas pelo FrigateView",
+    "mb": "{n} MB",
+    "pc": "PC",
+    "pcTitle": "Carga de CPU e memória do computador, todos os aplicativos",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "Estatísticas: banda, CPU, memória",
+    "settingsTitle": "Estatísticas",
+    "settingsHint": "Largura de banda recebida em cada câmera e carga de CPU / memória na barra superior. Também pelo botão da barra de ferramentas.",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "imagens"
+    }
   }
 }

@@ -12,7 +12,9 @@
     "wall": "শুধু ভিডিও ওয়াল",
     "fullscreen": "পূর্ণ স্ক্রিন",
     "settings": "সেটিংস",
-    "serverTitle": "Frigate {version} — সংযোগ, অ্যাকাউন্ট, সার্ভার পরিবর্তন"
+    "serverTitle": "Frigate {version} — সংযোগ, অ্যাকাউন্ট, সার্ভার পরিবর্তন",
+    "showUser": "নাম দেখাতে ক্লিক করুন",
+    "hideUser": "নাম লুকাতে ক্লিক করুন"
   },
   "roles": {
     "admin": "অ্যাডমিন",
@@ -381,12 +383,33 @@
     "cut": "কাটুন",
     "copy": "কপি করুন",
     "paste": "পেস্ট করুন",
-    "selectAll": "সব নির্বাচন করুন"
+    "selectAll": "সব নির্বাচন করুন",
+    "stats": "পরিসংখ্যান (ব্যান্ডউইথ, CPU, মেমরি)"
   },
   "main": {
     "aboutText": "Frigate NVR-এর জন্য ভিডিও ওয়াল।",
     "aboutServer": "সার্ভার: Frigate {version}",
     "stillRunning": "FrigateView চালু আছে",
     "stillRunningBody": "সতর্কতা আসতে থাকবে। প্রস্থান করতে আইকনে রাইট-ক্লিক করুন।"
+  },
+  "stats": {
+    "cellTitle": "এই ক্যামেরার জন্য FrigateView যে ব্যান্ডউইথ পায়, রেজোলিউশন, প্রতি সেকেন্ডে ফ্রেম ও স্ট্রিমের ধরন",
+    "fps": "{n} fps",
+    "barTitle": "এই কম্পিউটারের পরিসংখ্যান (ঐচ্ছিক)",
+    "totalTitle": "FrigateView প্রাপ্ত মোট ব্যান্ডউইথ, সব প্রদর্শিত ক্যামেরা",
+    "app": "অ্যাপ",
+    "appTitle": "FrigateView ব্যবহৃত CPU (পুরো কম্পিউটারের %) ও মেমরি",
+    "mb": "{n} MB",
+    "pc": "PC",
+    "pcTitle": "কম্পিউটারের CPU ও মেমরি লোড, সব অ্যাপ",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "পরিসংখ্যান: ব্যান্ডউইথ, CPU, মেমরি",
+    "settingsTitle": "পরিসংখ্যান",
+    "settingsHint": "প্রতিটি ক্যামেরায় প্রাপ্ত ব্যান্ডউইথ, এবং উপরের বারে CPU / মেমরি লোড। টুলবারের বোতাম থেকেও।",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "ছবি"
+    }
   }
 }

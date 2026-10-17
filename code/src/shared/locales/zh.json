@@ -12,7 +12,9 @@
     "wall": "仅显示视频墙",
     "fullscreen": "全屏",
     "settings": "设置",
-    "serverTitle": "Frigate {version} — 连接、账户、更换服务器"
+    "serverTitle": "Frigate {version} — 连接、账户、更换服务器",
+    "showUser": "点击显示名称",
+    "hideUser": "点击隐藏名称"
   },
   "roles": {
     "admin": "管理员",
@@ -381,12 +383,33 @@
     "cut": "剪切",
     "copy": "复制",
     "paste": "粘贴",
-    "selectAll": "全选"
+    "selectAll": "全选",
+    "stats": "统计（带宽、CPU、内存）"
   },
   "main": {
     "aboutText": "适用于 Frigate NVR 的视频墙。",
     "aboutServer": "服务器：Frigate {version}",
     "stillRunning": "FrigateView 仍在运行",
     "stillRunningBody": "警报会继续送达。右键单击图标即可退出。"
+  },
+  "stats": {
+    "cellTitle": "FrigateView 为此摄像头接收的带宽、分辨率、帧率和流类型",
+    "fps": "{n} 帧/秒",
+    "barTitle": "本机统计（可选）",
+    "totalTitle": "FrigateView 接收的总带宽（所有显示的摄像头）",
+    "app": "应用",
+    "appTitle": "FrigateView 使用的 CPU（占整机百分比）和内存",
+    "mb": "{n} MB",
+    "pc": "电脑",
+    "pcTitle": "电脑的 CPU 和内存负载（所有应用）",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "统计：带宽、CPU、内存",
+    "settingsTitle": "统计",
+    "settingsHint": "每个摄像头的接收带宽，以及顶部栏中的 CPU/内存负载。也可通过工具栏按钮开启。",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "图像"
+    }
   }
 }

@@ -12,7 +12,9 @@
     "wall": "Video wall only",
     "fullscreen": "Full screen",
     "settings": "Settings",
-    "serverTitle": "Frigate {version} — connection, account, change server"
+    "serverTitle": "Frigate {version} — connection, account, change server",
+    "showUser": "click to show the name",
+    "hideUser": "click to hide the name"
   },
   "roles": {
     "admin": "administrator",
@@ -381,12 +383,33 @@
     "cut": "Cut",
     "copy": "Copy",
     "paste": "Paste",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+    "stats": "Statistics (bandwidth, CPU, memory)"
   },
   "main": {
     "aboutText": "Video wall for Frigate NVR.",
     "aboutServer": "Server: Frigate {version}",
     "stillRunning": "FrigateView is still running",
     "stillRunningBody": "Alerts keep coming in. Right-click the icon to quit."
+  },
+  "stats": {
+    "cellTitle": "Bandwidth received by FrigateView for this camera, resolution, frames per second and stream type",
+    "fps": "{n} fps",
+    "barTitle": "Statistics for this computer (optional)",
+    "totalTitle": "Total bandwidth received by FrigateView, all displayed cameras",
+    "app": "App",
+    "appTitle": "CPU (as % of the whole computer) and memory used by FrigateView",
+    "mb": "{n} MB",
+    "pc": "PC",
+    "pcTitle": "CPU and memory load of the computer, all applications",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "Statistics: bandwidth, CPU, memory",
+    "settingsTitle": "Statistics",
+    "settingsHint": "Bandwidth received on each camera, and CPU / memory load in the top bar. Also from the toolbar button.",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "images"
+    }
   }
 }

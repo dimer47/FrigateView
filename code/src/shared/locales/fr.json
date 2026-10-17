@@ -12,7 +12,9 @@
     "wall": "Mur vidéo seul",
     "fullscreen": "Plein écran",
     "settings": "Réglages",
-    "serverTitle": "Frigate {version} — connexion, compte, changement de serveur"
+    "serverTitle": "Frigate {version} — connexion, compte, changement de serveur",
+    "showUser": "clic pour afficher le nom",
+    "hideUser": "clic pour masquer le nom"
   },
   "roles": {
     "admin": "administrateur",
@@ -381,12 +383,33 @@
     "cut": "Couper",
     "copy": "Copier",
     "paste": "Coller",
-    "selectAll": "Tout sélectionner"
+    "selectAll": "Tout sélectionner",
+    "stats": "Statistiques (débit, processeur, mémoire)"
   },
   "main": {
     "aboutText": "Mur vidéo pour Frigate NVR.",
     "aboutServer": "Serveur : Frigate {version}",
     "stillRunning": "FrigateView reste actif",
     "stillRunningBody": "Les alertes continuent d'arriver. Clic droit sur l'icône pour quitter."
+  },
+  "stats": {
+    "cellTitle": "Débit reçu par FrigateView pour cette caméra, résolution, images par seconde et type de flux",
+    "fps": "{n} i/s",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "images"
+    },
+    "barTitle": "Statistiques de ce poste (option, désactivable)",
+    "totalTitle": "Débit total reçu par FrigateView, toutes caméras affichées",
+    "app": "App",
+    "appTitle": "Processeur (en % du PC entier) et mémoire utilisés par FrigateView",
+    "mb": "{n} Mo",
+    "pc": "PC",
+    "pcTitle": "Charge processeur et mémoire du PC, toutes applications confondues",
+    "gbOf": "{n}/{total} Go",
+    "toggle": "Statistiques : débit, processeur, mémoire",
+    "settingsTitle": "Statistiques",
+    "settingsHint": "Débit reçu sur chaque caméra, et charge processeur / mémoire dans la barre du haut. Aussi par le bouton de la barre d'outils."
   }
 }

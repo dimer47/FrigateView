@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('native', {
   applyScreens: (conf) => ipcRenderer.invoke('screens:apply', conf),
   identifyScreens: () => ipcRenderer.invoke('screens:identify'),
   onWallLayout: (cb) => on('wall:layout', cb),
+  getMetrics: () => ipcRenderer.invoke('metrics:get'),
   setMenuState: (st) => ipcRenderer.invoke('menu:state', st),
   onMenu: (cb) => on('menu:command', cb)
 })

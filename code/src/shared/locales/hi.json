@@ -12,7 +12,9 @@
     "wall": "केवल वीडियो वॉल",
     "fullscreen": "फ़ुल स्क्रीन",
     "settings": "सेटिंग्स",
-    "serverTitle": "Frigate {version} — कनेक्शन, खाता, सर्वर बदलें"
+    "serverTitle": "Frigate {version} — कनेक्शन, खाता, सर्वर बदलें",
+    "showUser": "नाम दिखाने के लिए क्लिक करें",
+    "hideUser": "नाम छिपाने के लिए क्लिक करें"
   },
   "roles": {
     "admin": "एडमिनिस्ट्रेटर",
@@ -381,12 +383,33 @@
     "cut": "काटें",
     "copy": "कॉपी करें",
     "paste": "चिपकाएँ",
-    "selectAll": "सभी चुनें"
+    "selectAll": "सभी चुनें",
+    "stats": "आँकड़े (बैंडविड्थ, CPU, मेमोरी)"
   },
   "main": {
     "aboutText": "Frigate NVR के लिए वीडियो वॉल।",
     "aboutServer": "सर्वर: Frigate {version}",
     "stillRunning": "FrigateView चल रहा है",
     "stillRunningBody": "अलर्ट आते रहेंगे। बाहर निकलने के लिए आइकन पर राइट-क्लिक करें।"
+  },
+  "stats": {
+    "cellTitle": "इस कैमरे के लिए FrigateView द्वारा प्राप्त बैंडविड्थ, रिज़ॉल्यूशन, फ़्रेम प्रति सेकंड और स्ट्रीम प्रकार",
+    "fps": "{n} fps",
+    "barTitle": "इस कंप्यूटर के आँकड़े (वैकल्पिक)",
+    "totalTitle": "FrigateView द्वारा प्राप्त कुल बैंडविड्थ, सभी दिखाए गए कैमरे",
+    "app": "ऐप",
+    "appTitle": "FrigateView द्वारा उपयोग किया गया CPU (पूरे कंप्यूटर का %) और मेमोरी",
+    "mb": "{n} MB",
+    "pc": "PC",
+    "pcTitle": "कंप्यूटर का CPU और मेमोरी लोड, सभी ऐप्स",
+    "gbOf": "{n}/{total} GB",
+    "toggle": "आँकड़े: बैंडविड्थ, CPU, मेमोरी",
+    "settingsTitle": "आँकड़े",
+    "settingsHint": "हर कैमरे पर प्राप्त बैंडविड्थ, और ऊपरी बार में CPU / मेमोरी लोड। टूलबार बटन से भी।",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "छवियाँ"
+    }
   }
 }
