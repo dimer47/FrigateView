@@ -3,6 +3,12 @@ import { join } from 'node:path'
 import { readFileSync, writeFileSync, rmSync } from 'node:fs'
 import tls from 'node:tls'
 import { createHash } from 'node:crypto'
+import { resolveLang, translate } from '../shared/langs'
+
+// Traductions (les mêmes fichiers que la fenêtre)
+const LOCALES = Object.fromEntries(Object.entries(import.meta.glob('../shared/locales/*.json', { eager: true, import: 'default' })).map(([p, m]) => [p.match(/(\w+)\.json$/)[1], m]))
+const lang = () => resolveLang(settings.lang, app.getLocale())
+const tr = (key, vars) => translate(LOCALES[lang()] || {}, key, vars) ?? translate(LOCALES.en || {}, key, vars) ?? translate(LOCALES.fr, key, vars) ?? key
 
 /* ------------------------------------------------------------------
    Fichiers locaux (dossier utilisateur de l'application)
@@ -112,6 +118,7 @@ ipcMain.handle('secret:clear', () => { rmSync(file('credentials.bin'), { force: 
    zone de notification, fermeture, démarrage, écrans)
    ------------------------------------------------------------------ */
 const DEFAULTS = {
+  lang: null, // null = langue du système
   notify: true,
   notifyTypes: { person: true, car: false, animal: false, other: false },
   notifySound: true,
@@ -124,12 +131,12 @@ const DEFAULTS = {
 let settings = DEFAULTS
 const saveSettings = () => writeJson('settings.json', settings)
 
-ipcMain.handle('settings:get', () => settings)
+ipcMain.handle('settings:get', () => ({ ...settings, systemLocale: app.getLocale() }))
 ipcMain.handle('settings:set', (_e, patch) => {
   settings = { ...settings, ...patch }
   saveSettings()
   applySettings()
-  return settings
+  return { ...settings, systemLocale: app.getLocale() }
 })
 
 function applySettings() {
@@ -137,7 +144,7 @@ function applySettings() {
   if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: settings.startAtLogin, args: settings.startHidden ? ['--hidden'] : [] })
   refreshTray()
   buildMenu()
-  for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', settings)
+  for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', { ...settings, systemLocale: app.getLocale() })
 }
 
 /* ------------------------------------------------------------------
@@ -185,7 +192,7 @@ function createWindow() {
       e.preventDefault()
       win.hide()
       if (!settings._trayHintShown && Notification.isSupported()) {
-        new Notification({ title: 'FrigateView reste actif', body: 'Les alertes continuent d\'arriver. Clic droit sur l\'icône pour quitter.', icon: appIcon() }).show()
+        new Notification({ title: tr('main.stillRunning'), body: tr('main.stillRunningBody'), icon: appIcon() }).show()
         settings._trayHintShown = true
         saveSettings()
       }
@@ -273,103 +280,103 @@ function buildMenu() {
   const template = [
     ...(isMac ? [{ role: 'appMenu', label: 'FrigateView' }] : []),
     {
-      label: 'Fichier',
+      label: tr('menu.file'),
       submenu: [
-        { label: 'Nouveau layout…', accelerator: 'CmdOrCtrl+N', enabled: c, click: () => send('layout:new') },
+        { label: tr('menu.newLayout'), accelerator: 'CmdOrCtrl+N', enabled: c, click: () => send('layout:new') },
         { type: 'separator' },
-        { label: 'Réglages…', ...shown('CmdOrCtrl+,'), click: () => send('settings') },
+        { label: tr('menu.settings'), ...shown('CmdOrCtrl+,'), click: () => send('settings') },
         { type: 'separator' },
-        { label: 'Changer de serveur ou de mode…', enabled: c, click: () => send('server:change') },
-        { label: 'Se déconnecter', enabled: c, click: () => send('server:signout') },
+        { label: tr('menu.changeServer'), enabled: c, click: () => send('server:change') },
+        { label: tr('menu.signOut'), enabled: c, click: () => send('server:signout') },
         { type: 'separator' },
-        { label: 'Fermer la fenêtre', accelerator: 'CmdOrCtrl+W', click: () => mainWin?.close() },
-        { label: 'Quitter FrigateView', accelerator: 'CmdOrCtrl+Q', click: () => { quitting = true; app.quit() } }
+        { label: tr('menu.closeWindow'), accelerator: 'CmdOrCtrl+W', click: () => mainWin?.close() },
+        { label: tr('menu.quit'), accelerator: 'CmdOrCtrl+Q', click: () => { quitting = true; app.quit() } }
       ]
     },
     {
-      label: 'Affichage',
+      label: tr('menu.view'),
       submenu: [
-        { label: 'Layouts et caméras', type: 'checkbox', checked: uiState.sidebar, enabled: c, ...shown('CmdOrCtrl+1'), click: () => send('toggle:sidebar') },
-        { label: 'Événements', type: 'checkbox', checked: uiState.events, enabled: c, ...shown('CmdOrCtrl+2'), click: () => send('toggle:events') },
-        { label: 'Timeline', type: 'checkbox', checked: uiState.timeline, enabled: c, ...shown('CmdOrCtrl+3'), click: () => send('toggle:timeline') },
+        { label: tr('menu.sidebar'), type: 'checkbox', checked: uiState.sidebar, enabled: c, ...shown('CmdOrCtrl+1'), click: () => send('toggle:sidebar') },
+        { label: tr('menu.events'), type: 'checkbox', checked: uiState.events, enabled: c, ...shown('CmdOrCtrl+2'), click: () => send('toggle:events') },
+        { label: tr('menu.timeline'), type: 'checkbox', checked: uiState.timeline, enabled: c, ...shown('CmdOrCtrl+3'), click: () => send('toggle:timeline') },
         { type: 'separator' },
-        { label: 'Direct en vidéo (WebRTC)', type: 'radio', checked: uiState.liveMode === 'webrtc', enabled: c, click: () => send('livemode', 'webrtc') },
-        { label: 'Direct en images (1 par seconde)', type: 'radio', checked: uiState.liveMode === 'snapshot', enabled: c, click: () => send('livemode', 'snapshot') },
+        { label: tr('menu.liveVideo'), type: 'radio', checked: uiState.liveMode === 'webrtc', enabled: c, click: () => send('livemode', 'webrtc') },
+        { label: tr('menu.liveImages'), type: 'radio', checked: uiState.liveMode === 'snapshot', enabled: c, click: () => send('livemode', 'snapshot') },
         { type: 'separator' },
-        { label: 'Mur vidéo seul', type: 'checkbox', checked: uiState.expand, enabled: c, ...shown('CmdOrCtrl+E'), click: () => send('toggle:expand') },
-        { label: 'Plein écran', accelerator: isMac ? 'Ctrl+Cmd+F' : 'F11', click: () => mainWin?.setFullScreen(!mainWin.isFullScreen()) },
+        { label: tr('menu.wall'), type: 'checkbox', checked: uiState.expand, enabled: c, ...shown('CmdOrCtrl+E'), click: () => send('toggle:expand') },
+        { label: tr('menu.fullscreen'), accelerator: isMac ? 'Ctrl+Cmd+F' : 'F11', click: () => mainWin?.setFullScreen(!mainWin.isFullScreen()) },
         { type: 'separator' },
-        { label: 'Zoom avant', role: 'zoomIn' },
-        { label: 'Zoom arrière', role: 'zoomOut' },
-        { label: 'Taille réelle', role: 'resetZoom' },
+        { label: tr('menu.zoomIn'), role: 'zoomIn' },
+        { label: tr('menu.zoomOut'), role: 'zoomOut' },
+        { label: tr('menu.resetZoom'), role: 'resetZoom' },
         { type: 'separator' },
-        { label: 'Recharger', role: 'reload' },
-        ...(app.isPackaged ? [] : [{ label: 'Outils de développement', role: 'toggleDevTools' }])
+        { label: tr('menu.reload'), role: 'reload' },
+        ...(app.isPackaged ? [] : [{ label: tr('menu.devtools'), role: 'toggleDevTools' }])
       ]
     },
     {
-      label: 'Layouts',
+      label: tr('menu.layouts'),
       submenu: [
         ...(uiState.layouts.length
           ? uiState.layouts.map((l, i) => ({ label: l.name, type: 'radio', checked: l.id === uiState.activeLayout, accelerator: i < 9 ? `CmdOrCtrl+Alt+${i + 1}` : undefined, click: () => send('layout:apply', l.id) }))
-          : [{ label: 'Aucun layout', enabled: false }]),
+          : [{ label: tr('menu.noLayout'), enabled: false }]),
         { type: 'separator' },
-        { label: 'Layout précédent', accelerator: 'CmdOrCtrl+Alt+Left', enabled: uiState.layouts.length > 1, click: () => send('layout:step', -1) },
-        { label: 'Layout suivant', accelerator: 'CmdOrCtrl+Alt+Right', enabled: uiState.layouts.length > 1, click: () => send('layout:step', 1) },
+        { label: tr('menu.prevLayout'), accelerator: 'CmdOrCtrl+Alt+Left', enabled: uiState.layouts.length > 1, click: () => send('layout:step', -1) },
+        { label: tr('menu.nextLayout'), accelerator: 'CmdOrCtrl+Alt+Right', enabled: uiState.layouts.length > 1, click: () => send('layout:step', 1) },
         { type: 'separator' },
-        { label: 'Modifier le layout affiché…', enabled: !!uiState.activeLayout, click: () => send('layout:edit') },
-        { label: 'Nouveau layout…', enabled: c, click: () => send('layout:new') },
-        { label: 'Créer un layout avec toutes les caméras', enabled: c, click: () => send('layout:auto') }
+        { label: tr('menu.editLayout'), enabled: !!uiState.activeLayout, click: () => send('layout:edit') },
+        { label: tr('menu.newLayout'), enabled: c, click: () => send('layout:new') },
+        { label: tr('menu.autoLayout'), enabled: c, click: () => send('layout:auto') }
       ]
     },
     {
-      label: 'Lecture',
+      label: tr('menu.playback'),
       submenu: [
-        { label: uiState.live || uiState.playing ? 'Pause' : 'Lecture', enabled: c, ...shown('Space'), click: () => send('play:toggle') },
-        { label: 'Revenir au direct', enabled: c && !uiState.live, ...shown('L'), click: () => send('play:live') },
+        { label: uiState.live || uiState.playing ? tr('menu.pause') : tr('menu.play'), enabled: c, ...shown('Space'), click: () => send('play:toggle') },
+        { label: tr('menu.backToLive'), enabled: c && !uiState.live, ...shown('L'), click: () => send('play:live') },
         { type: 'separator' },
-        { label: 'Reculer de 10 s', enabled: c, ...shown('Left'), click: () => send('play:skip', -10) },
-        { label: 'Avancer de 10 s', enabled: c && !uiState.live, ...shown('Right'), click: () => send('play:skip', 10) },
-        { label: 'Reculer de 30 s', enabled: c, ...shown('Shift+Left'), click: () => send('play:skip', -30) },
-        { label: 'Avancer de 30 s', enabled: c && !uiState.live, ...shown('Shift+Right'), click: () => send('play:skip', 30) },
+        { label: tr('menu.back10'), enabled: c, ...shown('Left'), click: () => send('play:skip', -10) },
+        { label: tr('menu.fwd10'), enabled: c && !uiState.live, ...shown('Right'), click: () => send('play:skip', 10) },
+        { label: tr('menu.back30'), enabled: c, ...shown('Shift+Left'), click: () => send('play:skip', -30) },
+        { label: tr('menu.fwd30'), enabled: c && !uiState.live, ...shown('Shift+Right'), click: () => send('play:skip', 30) },
         { type: 'separator' },
-        { label: 'Plus vite', enabled: c && !uiState.live, click: () => send('play:speed', 1) },
-        { label: 'Moins vite', enabled: c && !uiState.live, click: () => send('play:speed', -1) },
+        { label: tr('menu.faster'), enabled: c && !uiState.live, click: () => send('play:speed', 1) },
+        { label: tr('menu.slower'), enabled: c && !uiState.live, click: () => send('play:speed', -1) },
         { type: 'separator' },
-        { label: 'Caméras synchronisées', type: 'checkbox', checked: uiState.sync, enabled: c, click: () => send('play:sync') },
-        { label: 'Il y a 15 minutes', enabled: c, click: () => send('play:ago', 15) },
-        { label: 'Il y a 1 heure', enabled: c, click: () => send('play:ago', 60) },
-        { label: 'Hier à la même heure', enabled: c, click: () => send('play:ago', 1440) }
+        { label: tr('menu.sync'), type: 'checkbox', checked: uiState.sync, enabled: c, click: () => send('play:sync') },
+        { label: tr('menu.ago15'), enabled: c, click: () => send('play:ago', 15) },
+        { label: tr('menu.ago60'), enabled: c, click: () => send('play:ago', 60) },
+        { label: tr('menu.yesterday'), enabled: c, click: () => send('play:ago', 1440) }
       ]
     },
     {
-      label: 'Événements',
+      label: tr('menu.events'),
       submenu: [
-        { label: `Tout marquer comme vu${uiState.unseen ? ` (${uiState.unseen})` : ''}`, enabled: c && uiState.unseen > 0, click: () => send('events:seen') },
+        { label: tr('menu.markAllSeen') + (uiState.unseen ? ` (${uiState.unseen})` : ''), enabled: c && uiState.unseen > 0, click: () => send('events:seen') },
         { type: 'separator' },
-        { label: 'Notifications Windows', type: 'checkbox', checked: settings.notify, click: (i) => { settings.notify = i.checked; saveSettings(); applySettings() } },
-        { label: 'Ne pas déranger', type: 'checkbox', checked: settings.dnd, click: (i) => { settings.dnd = i.checked; saveSettings(); applySettings() } },
-        { label: 'Réglages des notifications…', click: () => send('settings', 'notif') }
+        { label: tr('menu.notifications'), type: 'checkbox', checked: settings.notify, click: (i) => { settings.notify = i.checked; saveSettings(); applySettings() } },
+        { label: tr('menu.dnd'), type: 'checkbox', checked: settings.dnd, click: (i) => { settings.dnd = i.checked; saveSettings(); applySettings() } },
+        { label: tr('menu.notifSettings'), click: () => send('settings', 'notif') }
       ]
     },
     {
-      label: 'Fenêtre',
+      label: tr('menu.window'),
       submenu: [
-        { label: 'Murs vidéo sur les autres écrans…', click: () => send('settings', 'screens') },
-        { label: 'Identifier les écrans', click: identifyScreens },
+        { label: tr('menu.walls'), click: () => send('settings', 'screens') },
+        { label: tr('menu.identify'), click: identifyScreens },
         { type: 'separator' },
-        { label: 'Réduire', role: 'minimize' },
-        ...(isMac ? [{ role: 'zoom', label: 'Agrandir' }, { role: 'front', label: 'Tout ramener au premier plan' }] : [])
+        { label: tr('menu.minimize'), role: 'minimize' },
+        ...(isMac ? [{ role: 'zoom', label: tr('menu.zoom') }, { role: 'front', label: tr('menu.front') }] : [])
       ]
     },
     {
-      label: 'Aide',
+      label: tr('menu.help'),
       submenu: [
-        { label: 'Raccourcis clavier', accelerator: 'F1', click: () => send('help') },
-        { label: 'Documentation Frigate', click: () => shell.openExternal('https://docs.frigate.video') },
+        { label: tr('menu.shortcuts'), accelerator: 'F1', click: () => send('help') },
+        { label: tr('menu.docs'), click: () => shell.openExternal('https://docs.frigate.video') },
         { type: 'separator' },
-        { label: 'Ouvrir le dossier des données', click: () => shell.openPath(app.getPath('userData')) },
-        { label: 'À propos de FrigateView', click: () => dialog.showMessageBox(mainWin, { type: 'info', title: 'À propos', message: `FrigateView ${app.getVersion()}`, detail: `Mur vidéo pour Frigate NVR.\n${uiState.version ? `Serveur : Frigate ${uiState.version}\n` : ''}Electron ${process.versions.electron} · Chromium ${process.versions.chrome}`, icon: appIcon() }) }
+        { label: tr('menu.dataFolder'), click: () => shell.openPath(app.getPath('userData')) },
+        { label: tr('menu.about'), click: () => dialog.showMessageBox(mainWin, { type: 'info', title: tr('menu.about'), message: `FrigateView ${app.getVersion()}`, detail: `${tr('main.aboutText')}\n${uiState.version ? `${tr('main.aboutServer', { version: uiState.version })}\n` : ''}Electron ${process.versions.electron} · Chromium ${process.versions.chrome}`, icon: appIcon() }) }
       ]
     }
   ]
@@ -390,11 +397,11 @@ function refreshTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: `FrigateView${trayStatus ? ' · ' + trayStatus : ''}`, enabled: false },
     { type: 'separator' },
-    { label: 'Afficher', click: showMain },
-    { label: 'Ne pas déranger', type: 'checkbox', checked: settings.dnd, click: (i) => { settings.dnd = i.checked; saveSettings(); applySettings() } },
-    { label: 'Réglages…', click: () => { showMain(); mainWin?.webContents.send('settings:open') } },
+    { label: tr('menu.show'), click: showMain },
+    { label: tr('menu.dnd'), type: 'checkbox', checked: settings.dnd, click: (i) => { settings.dnd = i.checked; saveSettings(); applySettings() } },
+    { label: tr('menu.settings'), click: () => { showMain(); mainWin?.webContents.send('settings:open') } },
     { type: 'separator' },
-    { label: 'Quitter FrigateView', click: () => { quitting = true; app.quit() } }
+    { label: tr('menu.quit'), click: () => { quitting = true; app.quit() } }
   ]))
 }
 function createTray() {

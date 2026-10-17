@@ -9,7 +9,7 @@ export const useServerStore = defineStore('server', {
   state: () => ({
     server: load('fv-server', null), // { host, port, user } — jamais le mot de passe
     status: 'idle', // idle | connecting | ok | lost | auth
-    authReason: '', // message affiché sur l'écran de connexion quand la session a expiré
+    authReason: '', // clé du message affiché sur l'écran de connexion quand la session a expiré
     version: '',
     profile: { username: '', role: 'viewer' },
     cameras: [],
@@ -51,8 +51,8 @@ export const useServerStore = defineStore('server', {
         await this.open(this.server)
       } catch (e) {
         if (e.code === 'auth' && (await this.relogin())) return
-        if (e.code === 'auth') return this.askLogin('Votre session a expiré. Reconnectez-vous.')
-        if (e.code === 'cert') return this.askLogin('Le certificat du serveur a changé. Vérifiez-le avant de vous reconnecter.')
+        if (e.code === 'auth') return this.askLogin('connect.sessionExpired')
+        if (e.code === 'cert') return this.askLogin('connect.certChanged')
         this.status = 'lost'
         this.lostAt = Date.now()
         this.startPolling()
@@ -96,7 +96,7 @@ export const useServerStore = defineStore('server', {
         this.online = await getOnline(this.server)
         if (this.status === 'lost') { this.cameras = await getCameras(this.server); this.status = 'ok' }
       } catch (e) {
-        if (e.code === 'auth') { if (!(await this.relogin())) this.askLogin('Votre session a expiré. Reconnectez-vous.'); return }
+        if (e.code === 'auth') { if (!(await this.relogin())) this.askLogin('connect.sessionExpired'); return }
         if (this.status !== 'lost') { this.status = 'lost'; this.lostAt = Date.now() }
       }
     },

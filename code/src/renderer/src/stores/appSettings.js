@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 // Réglages gardés par le processus principal (fichier settings.json du dossier utilisateur)
 export const useAppSettings = defineStore('appSettings', {
-  state: () => ({ s: null, open: false, tab: 'notif' }),
+  state: () => ({ s: null, open: false, tab: 'general' }),
   actions: {
     async init() {
       this.s = await window.native.getSettings()

@@ -6,6 +6,7 @@ import Hls from 'hls.js'
 import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
 import { useTimelineStore } from '@/stores/timeline'
+import { loc } from '@/i18n'
 
 const props = defineProps({ camId: { type: String, required: true } })
 const server = useServerStore()
@@ -152,7 +153,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => { stopSnapshots(); stopVideo(); stopPlayback(); clearInterval(clock) })
 
-const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString('fr-FR'))
+const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString(loc()))
 </script>
 
 <template>
@@ -162,27 +163,27 @@ const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? l
     <video ref="video" class="absolute inset-0 size-full object-contain" :class="{ invisible: !showVideo }" autoplay muted playsinline @playing="onPlaying" />
 
     <div class="absolute left-1.5 top-1.5 z-[3] flex gap-1">
-      <span v-if="playback" class="badge text-warn"><i class="bg-warn" />RELECTURE{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>
-      <span v-else-if="frozen" class="badge"><i class="bg-bad" />FLUX INTERROMPU</span>
-      <span v-else-if="offline" class="badge"><i class="bg-bad" />HORS LIGNE</span>
-      <span v-else-if="showVideo" class="badge" title="Vidéo en direct (WebRTC)"><i class="bg-ok" />LIVE</span>
-      <span v-else class="badge" :title="wantVideo ? 'Vidéo indisponible : images rafraîchies chaque seconde' : 'Images rafraîchies chaque seconde'">
-        <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? 'CONNEXION…' : 'IMAGE 1/s' }}
+      <span v-if="playback" class="badge text-warn"><i class="bg-warn" />{{ $t('cell.playback') }}{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>
+      <span v-else-if="frozen" class="badge"><i class="bg-bad" />{{ $t('cell.interrupted') }}</span>
+      <span v-else-if="offline" class="badge"><i class="bg-bad" />{{ $t('cell.offline') }}</span>
+      <span v-else-if="showVideo" class="badge" :title="$t('cell.liveTitle')"><i class="bg-ok" />{{ $t('cell.live') }}</span>
+      <span v-else class="badge" :title="wantVideo ? $t('cell.noVideoTitle') : $t('cell.snapshotTitle')">
+        <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
     </div>
 
     <div v-if="playback && pbState !== 'playing'" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
       <span v-if="pbState === 'loading'" class="spin" />
       <template v-else>
-        <strong class="text-ink">{{ pbState === 'error' ? 'Relecture impossible' : 'Aucun enregistrement' }}</strong>
-        <span>{{ pbState === 'error' ? 'Le serveur n\'a pas fourni la vidéo' : 'à ' + time }}</span>
+        <strong class="text-ink">{{ pbState === 'error' ? $t('cell.playbackError') : $t('cell.noRecording') }}</strong>
+        <span>{{ pbState === 'error' ? $t('cell.noVideoFromServer') : $t('cell.at', { time }) }}</span>
       </template>
     </div>
     <div v-else-if="!playback && (frozen || offline || (imgError && !showVideo))" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
-      <strong :class="offline || frozen ? 'text-bad' : 'text-ink'">{{ frozen ? 'Flux interrompu' : offline ? 'Hors ligne' : 'Image indisponible' }}</strong>
-      <span v-if="frozen && lastFrame">Dernière image à {{ time }}</span>
-      <span v-else-if="offline">La caméra n'envoie plus d'images à Frigate</span>
-      <span v-else>Nouvel essai chaque seconde</span>
+      <strong :class="offline || frozen ? 'text-bad' : 'text-ink'">{{ frozen ? $t('cell.interruptedText') : offline ? $t('common.offline') : $t('cell.imageUnavailable') }}</strong>
+      <span v-if="frozen && lastFrame">{{ $t('cell.lastFrame', { time }) }}</span>
+      <span v-else-if="offline">{{ $t('cell.offlineText') }}</span>
+      <span v-else>{{ $t('cell.retrying') }}</span>
     </div>
 
     <div class="absolute inset-x-0 bottom-0 z-[3] flex items-end justify-between gap-2 bg-gradient-to-t from-black/75 to-transparent px-2.5 py-1.5">

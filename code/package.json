@@ -51,11 +51,12 @@
     "electron": "^44.9.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^6.0.0",
-    "tailwindcss": "^4.3.3",
-    "vite": "^7.3.7",
-    "ws": "^8.22.0",
     "hls.js": "^1.7.3",
     "pinia": "^3.0.4",
-    "vue": "^3.5.44"
+    "tailwindcss": "^4.3.3",
+    "vite": "^7.3.7",
+    "vue": "^3.5.44",
+    "vue-i18n": "^11.4.14",
+    "ws": "^8.22.0"
   }
 }

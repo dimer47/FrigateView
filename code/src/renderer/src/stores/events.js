@@ -2,10 +2,12 @@ import { defineStore } from 'pinia'
 import { getRecentReviews, markReviewed, thumbUrl, wsUrl } from '@/services/frigate'
 import { reviewType, DAY } from './timeline'
 import { load, save } from './storage'
+import { t } from '@/i18n'
 
 const POLL_MS = 60e3 // filet de sécurité si le temps réel est coupé
 
-export const TYPE_LABELS = { person: 'Personne', car: 'Véhicule', animal: 'Animal', other: 'Autre objet' }
+export const TYPE_KEYS = ['person', 'car', 'animal', 'other']
+export const typeLabel = (k) => t('types.' + k)
 export const TYPE_COLORS = { person: 'var(--color-bad)', car: 'var(--color-warn)', animal: 'var(--color-ok)', other: '#a78bfa' }
 
 // Revue Frigate → événement affiché
@@ -51,7 +53,7 @@ export const useEventsStore = defineStore('events', {
       return this.items.filter((e) =>
         (this.sev === 'all' || e.severity === this.sev) &&
         (!this.scopeLayout || cams.has(e.cam)) &&
-        (!q || [camName(e.cam), TYPE_LABELS[e.type], ...e.objects, ...e.subLabels, ...e.zones].some((v) => v && String(v).toLowerCase().replace(/[\s_-]/g, '').includes(q))))
+        (!q || [camName(e.cam), typeLabel(e.type), ...e.objects, ...e.subLabels, ...e.zones].some((v) => v && String(v).toLowerCase().replace(/[\s_-]/g, '').includes(q))))
     },
 
     upsert(server, raw) {

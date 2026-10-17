@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Hls from 'hls.js'
-import { useEventsStore, TYPE_LABELS, TYPE_COLORS } from '@/stores/events'
+import { useEventsStore, typeLabel, TYPE_COLORS } from '@/stores/events'
+import { t, loc, fmtDuration } from '@/i18n'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore } from '@/stores/layouts'
 import { useTimelineStore } from '@/stores/timeline'
@@ -27,15 +28,15 @@ const info = computed(() => {
   if (!x) return []
   const dur = Math.round(((x.e ?? Date.now()) - x.s) / 1000)
   const rows = [
-    ['Caméra', camName(x.cam)],
-    ['Zone', x.zones.map((z) => z.replace(/_/g, ' ')).join(', ') || '—'],
-    ['Début', `${new Date(x.s).toLocaleDateString('fr-FR')} ${hms(x.s)}`],
-    ['Fin', x.e ? hms(x.e) : 'en cours'],
-    ['Durée', dur >= 60 ? `${Math.floor(dur / 60)} min ${pad(dur % 60)} s` : `${dur} s`],
-    ['Objets', x.objects.join(', ') || '—'],
-    ['Gravité', x.severity === 'alert' ? 'Alerte' : 'Détection']
+    [t('detail.camera'), camName(x.cam)],
+    [t('detail.zone'), x.zones.map((z) => z.replace(/_/g, ' ')).join(', ') || '—'],
+    [t('detail.start'), `${new Date(x.s).toLocaleDateString(loc())} ${hms(x.s)}`],
+    [t('detail.end'), x.e ? hms(x.e) : t('detail.ongoing')],
+    [t('detail.duration'), fmtDuration(dur)],
+    [t('detail.objects'), x.objects.join(', ') || '—'],
+    [t('detail.severity'), x.severity === 'alert' ? t('detail.alert') : t('detail.detection')]
   ]
-  if (x.subLabels.length) rows.push(['Reconnu', x.subLabels.join(', ')])
+  if (x.subLabels.length) rows.push([t('detail.recognized'), x.subLabels.join(', ')])
   return rows
 })
 
@@ -84,20 +85,20 @@ function toTimeline() {
       <header class="flex items-center gap-3 border-b border-line px-5 py-3">
         <span class="size-2.5 shrink-0 rounded-full" :style="{ background: TYPE_COLORS[e.type] }" />
         <h2 class="truncate text-[15px] font-bold">
-          <span :style="{ color: TYPE_COLORS[e.type] }">{{ TYPE_LABELS[e.type] }}</span>
+          <span :style="{ color: TYPE_COLORS[e.type] }">{{ typeLabel(e.type) }}</span>
           <span class="font-normal text-ink-3"> — </span>{{ camName(e.cam) }}
           <span class="ml-2 font-mono text-[13px] font-normal text-ink-2">{{ hms(e.s) }}</span>
         </h2>
         <div class="ml-auto flex overflow-hidden rounded-md border border-line text-xs">
-          <button class="flex items-center gap-1 px-2.5 py-1.5 text-ink-2 hover:bg-raised hover:text-ink" title="Événement plus récent (↑)" @click="nav(-1)">
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6.5L5 3.5l3 3" fill="none" stroke="currentColor" stroke-width="1.6" /></svg>Plus récent
+          <button class="flex items-center gap-1 px-2.5 py-1.5 text-ink-2 hover:bg-raised hover:text-ink" :title="$t('detail.newerTitle')" @click="nav(-1)">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6.5L5 3.5l3 3" fill="none" stroke="currentColor" stroke-width="1.6" /></svg>{{ $t('detail.newer') }}
           </button>
-          <button class="flex items-center gap-1 border-l border-line px-2.5 py-1.5 text-ink-2 hover:bg-raised hover:text-ink" title="Événement plus ancien (↓)" @click="nav(1)">
-            Plus ancien<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5L5 6.5l3-3" fill="none" stroke="currentColor" stroke-width="1.6" /></svg>
+          <button class="flex items-center gap-1 border-l border-line px-2.5 py-1.5 text-ink-2 hover:bg-raised hover:text-ink" :title="$t('detail.olderTitle')" @click="nav(1)">
+            {{ $t('detail.older') }}<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5L5 6.5l3-3" fill="none" stroke="currentColor" stroke-width="1.6" /></svg>
           </button>
         </div>
         <div class="h-6 w-px bg-line" />
-        <button class="flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-bad/15 hover:text-bad" title="Fermer (Échap)" aria-label="Fermer" @click="ev.detailId = null">
+        <button class="flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-bad/15 hover:text-bad" :title="$t('common.closeEsc')" :aria-label="$t('common.close')" @click="ev.detailId = null">
           <svg width="13" height="13" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.7" /></svg>
         </button>
       </header>
@@ -107,25 +108,25 @@ function toTimeline() {
           <!-- Choix clip / image : contrôle segmenté, détaché de la vidéo -->
           <div class="flex items-center justify-between">
             <div class="flex rounded-md border border-line p-0.5 text-xs">
-              <button v-for="[k, l] in [['clip', 'Clip vidéo'], ['snap', 'Meilleure image']]" :key="k" class="rounded px-3 py-1 font-semibold"
+              <button v-for="[k, l] in [['clip', $t('detail.clip')], ['snap', $t('detail.snapshot')]]" :key="k" class="rounded px-3 py-1 font-semibold"
                 :class="view === k ? 'bg-raised text-ink' : 'text-ink-3 hover:text-ink'" @click="view = k">{{ l }}</button>
             </div>
-            <span class="text-xs text-ink-3">{{ view === 'clip' ? '3 s avant et après l\'événement' : 'Vignette enregistrée par Frigate' }}</span>
+            <span class="text-xs text-ink-3">{{ view === 'clip' ? $t('detail.clipHint') : $t('detail.snapshotHint') }}</span>
           </div>
           <div class="relative aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-line">
             <video v-if="view === 'clip'" ref="video" class="size-full" controls muted playsinline />
             <img v-else-if="e.thumb" :src="e.thumb" class="size-full object-contain" alt="">
-            <div v-if="view === 'clip' && clipError" class="absolute inset-0 flex items-center justify-center text-[13px] text-ink-2">Clip indisponible pour cette période</div>
+            <div v-if="view === 'clip' && clipError" class="absolute inset-0 flex items-center justify-center text-[13px] text-ink-2">{{ $t('detail.clipUnavailable') }}</div>
           </div>
         </div>
 
         <div class="flex flex-col">
-          <div class="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-3">Informations</div>
+          <div class="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('detail.info') }}</div>
           <dl class="divide-y divide-line rounded-lg border border-line text-[13px]">
             <div v-for="[k, v] in info" :key="k" class="flex justify-between gap-3 px-3 py-2"><dt class="text-ink-3">{{ k }}</dt><dd class="truncate text-right">{{ v }}</dd></div>
           </dl>
           <button class="btn btn-primary mt-auto flex items-center justify-center gap-2 py-2.5" @click="toTimeline">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M3 1.5v11l9.5-5.5z" /></svg>Relire dans la timeline
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M3 1.5v11l9.5-5.5z" /></svg>{{ $t('detail.toTimeline') }}
           </button>
         </div>
       </div>

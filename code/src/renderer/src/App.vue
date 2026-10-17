@@ -11,13 +11,15 @@ import AppToast from '@/components/AppToast.vue'
 import TimelinePanel from '@/components/TimelinePanel.vue'
 import EventsPanel from '@/components/EventsPanel.vue'
 import EventDetail from '@/components/EventDetail.vue'
-import { useEventsStore, TYPE_LABELS } from '@/stores/events'
+import { useEventsStore, typeLabel } from '@/stores/events'
 import { useTimelineStore } from '@/stores/timeline'
 import { useAppSettings } from '@/stores/appSettings'
 import SettingsDialog from '@/components/SettingsDialog.vue'
 import LayoutDialog from '@/components/LayoutDialog.vue'
 import HelpDialog from '@/components/HelpDialog.vue'
 import { bestGrid } from '@/stores/layouts'
+import { t, loc, setLocale } from '@/i18n'
+import { resolveLang } from '../../shared/langs'
 import { load, save } from '@/stores/storage'
 
 const server = useServerStore()
@@ -41,6 +43,7 @@ if (wall) {
 
 onMounted(async () => {
   await appSettings.init()
+  setLocale(resolveLang(appSettings.s.lang, appSettings.s.systemLocale))
   server.resume()
   if (!wall) window.native.onNotificationClick((id) => { if (id) ev.detailId = id })
 })
@@ -48,8 +51,8 @@ onMounted(async () => {
 // Nouvel événement : notification Windows si la fenêtre n'est pas au premier plan, sinon message dans l'application
 async function onNewEvent(e) {
   const s = appSettings.s
-  const title = `${TYPE_LABELS[e.type]} — ${server.camById(e.cam)?.name || e.cam}`
-  const body = [new Date(e.s).toLocaleTimeString('fr-FR'), e.zones[0]?.replace(/_/g, ' '), ...e.subLabels].filter(Boolean).join(' · ')
+  const title = `${typeLabel(e.type)} — ${server.camById(e.cam)?.name || e.cam}`
+  const body = [new Date(e.s).toLocaleTimeString(loc()), e.zones[0]?.replace(/_/g, ' '), ...e.subLabels].filter(Boolean).join(' · ')
   const wanted = s?.notify && s.notifyTypes[e.type] && !s.dnd
   if (await window.native.isFocused()) { if (e.severity === 'alert' || wanted) ui.notify(title, { label: 'Voir', run: () => (ev.detailId = e.id) }) }
   else if (wanted) window.native.notify({ title, body, id: e.id })
@@ -62,13 +65,15 @@ watch(() => server.status === 'ok' && server.server, (on, was) => {
   if (!on && server.status !== 'lost') ev.stop()
 })
 
+watch(() => appSettings.s?.lang, (l) => appSettings.s && setLocale(resolveLang(l, appSettings.s.systemLocale)))
+
 /* ---------- Menu de l'application ---------- */
 const MENU = {
   'layout:new': () => (ui.layoutDialog = null),
   'layout:edit': () => layouts.activeId && (ui.layoutDialog = layouts.activeId),
   'layout:apply': (id) => layouts.apply(id),
   'layout:step': (d) => { const L = layouts.layouts, i = L.findIndex((l) => l.id === layouts.activeId); if (L.length) layouts.apply(L[(i + d + L.length) % L.length].id) },
-  'layout:auto': () => { const ids = server.cameras.map((c) => c.id); layouts.create('Toutes les caméras', bestGrid(ids.length), ids) },
+  'layout:auto': () => { const ids = server.cameras.map((c) => c.id); layouts.create(t('layouts.allCameras'), bestGrid(ids.length), ids) },
   settings: (tab) => appSettings.show(tab),
   'server:change': () => server.changeServer(),
   'server:signout': () => server.signOut(),
@@ -101,7 +106,7 @@ if (!wall) {
 // État affiché sur l'icône de la zone de notification
 watch(() => [server.status, server.onlineCount, server.cameras.length], () => {
   if (wall) return
-  window.native.setTrayStatus(server.status === 'ok' ? `${server.onlineCount}/${server.cameras.length} caméras` : server.status === 'lost' ? 'serveur injoignable' : '')
+  window.native.setTrayStatus(server.status === 'ok' ? t('toolbar.online', { n: server.onlineCount, total: server.cameras.length }) : server.status === 'lost' ? t('app.serverUnreachable') : '')
 })
 
 // Caméras supprimées côté Frigate : on les retire des layouts
@@ -130,7 +135,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
 
 <template>
   <div v-if="wall && (server.needsLogin || server.status === 'connecting')" class="flex h-full items-center justify-center text-[15px] text-ink-2">
-    {{ server.status === 'connecting' ? 'Connexion…' : 'Connectez-vous dans la fenêtre principale de FrigateView.' }}
+    {{ server.status === 'connecting' ? $t('app.connecting') : $t('app.wallSignIn') }}
   </div>
   <div v-else-if="wall" class="h-full"><CameraGrid class="size-full" /></div>
   <ConnectScreen v-else-if="server.needsLogin" />
@@ -138,11 +143,11 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
     <AppToolbar v-show="!ui.expand" />
     <div v-if="server.status === 'lost'" v-show="!ui.expand" class="flex items-center gap-3 bg-red-900 px-4 py-1.5 text-[13px] text-white">
       <span class="spin" />
-      <span>Serveur {{ server.server.host }} injoignable depuis {{ new Date(server.lostAt).toLocaleTimeString('fr-FR') }} — nouvelle tentative toutes les 10 s. Les images affichées sont figées.</span>
-      <button class="ml-auto rounded border border-white/30 bg-white/15 px-2.5 py-0.5 text-xs" @click="server.retryNow()">Réessayer maintenant</button>
+      <span>{{ $t('app.lostBanner', { host: server.server.host, time: new Date(server.lostAt).toLocaleTimeString(loc()) }) }}</span>
+      <button class="ml-auto rounded border border-white/30 bg-white/15 px-2.5 py-0.5 text-xs" @click="server.retryNow()">{{ $t('app.retryNow') }}</button>
     </div>
     <div v-if="server.status === 'connecting'" class="flex flex-1 items-center justify-center gap-3 text-ink-2">
-      <span class="spin" /> Connexion à {{ server.server.host }}…
+      <span class="spin" /> {{ $t('connect.connecting', { host: server.server.host }) }}
     </div>
     <div v-else class="flex min-h-0 flex-1">
       <SideBar v-if="ui.sidebar && !ui.expand" />
@@ -151,7 +156,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
     </div>
     <TimelinePanel v-if="tl.visible && !ui.expand && server.status !== 'connecting'" />
     <button v-if="ui.expand && !wall" class="fixed right-2.5 top-2.5 z-50 rounded-md border border-white/25 bg-black/70 px-3.5 py-1.5 text-xs font-semibold opacity-0 transition-opacity hover:opacity-100" @click="ui.expand = false">
-      Quitter le mur vidéo (Échap)
+      {{ $t('app.exitWall') }}
     </button>
   </div>
   <EventDetail v-if="ev.detailId" />

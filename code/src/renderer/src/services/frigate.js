@@ -4,6 +4,8 @@
 
 // Mode « local » : sans compte, en HTTP. Choisi explicitement à la connexion
 // (anciennes configurations sans mode : déduit du port 5000).
+import { t } from '@/i18n'
+
 export const isInternal = (s) => (s.mode ? s.mode === 'local' : String(s.port) === '5000')
 export const baseUrl = (s) => `${isInternal(s) ? 'http' : 'https'}://${s.host}:${s.port}`
 
@@ -21,11 +23,11 @@ async function request(server, path, opts = {}) {
   if (opts.method && opts.method !== 'GET') opts = { ...opts, headers: { 'X-CSRF-TOKEN': '1', ...opts.headers } }
   const r = await window.native.http({ url: baseUrl(server) + path, timeout: 6000, ...opts })
   if (r.ok) return r.text
-  if (r.error === 'cert') throw new FrigateError('Certificat non reconnu', { code: 'cert', cert: r.cert })
-  if (r.error === 'timeout') throw new FrigateError('Délai dépassé', { code: 'timeout' })
-  if (r.status === 401 || r.status === 403) throw new FrigateError('Session expirée ou accès refusé', { status: r.status, code: 'auth' })
+  if (r.error === 'cert') throw new FrigateError(t('errors.cert'), { code: 'cert', cert: r.cert })
+  if (r.error === 'timeout') throw new FrigateError(t('errors.timeout'), { code: 'timeout' })
+  if (r.status === 401 || r.status === 403) throw new FrigateError(t('errors.auth'), { status: r.status, code: 'auth' })
   if (r.status) throw new FrigateError(`HTTP ${r.status}`, { status: r.status, code: 'http' })
-  throw new FrigateError(r.error || 'Erreur réseau', { code: 'network' })
+  throw new FrigateError(r.error || t('errors.network'), { code: 'network' })
 }
 
 export const getJson = async (server, path) => JSON.parse(await request(server, path))
@@ -34,16 +36,16 @@ export const getJson = async (server, path) => JSON.parse(await request(server, 
 export async function checkCert(server) {
   if (isInternal(server)) return
   const p = await window.native.probeCert(server.host, server.port)
-  if (!p.ok) throw new FrigateError(p.error === 'timeout' ? 'Délai dépassé' : p.error, { code: p.error === 'timeout' ? 'timeout' : 'network' })
-  if (!p.authorized && !p.trusted) throw new FrigateError('Certificat non reconnu', { code: 'cert', cert: p })
+  if (!p.ok) throw new FrigateError(p.error === 'timeout' ? t('errors.timeout') : p.error, { code: p.error === 'timeout' ? 'timeout' : 'network' })
+  if (!p.authorized && !p.trusted) throw new FrigateError(t('errors.cert'), { code: 'cert', cert: p })
 }
 
 export async function login(server, user, password) {
   try {
     await request(server, '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, password }) })
   } catch (e) {
-    if (e.status === 400 || e.status === 401) throw new FrigateError('Utilisateur ou mot de passe incorrect', { status: e.status, code: 'login' })
-    if (e.status === 429) throw new FrigateError('Trop de tentatives, réessayez dans une minute', { status: 429, code: 'login' })
+    if (e.status === 400 || e.status === 401) throw new FrigateError(t('errors.badLogin'), { status: e.status, code: 'login' })
+    if (e.status === 429) throw new FrigateError(t('errors.tooMany'), { status: 429, code: 'login' })
     throw e
   }
 }
