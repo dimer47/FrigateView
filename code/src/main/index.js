@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage, Notification, Tray, Menu, screen, nativeImage } from 'electron'
 import { join } from 'node:path'
 import { readFileSync, writeFileSync, rmSync } from 'node:fs'
 import tls from 'node:tls'
@@ -108,23 +108,70 @@ ipcMain.handle('secret:load', () => {
 ipcMain.handle('secret:clear', () => { rmSync(file('credentials.bin'), { force: true }); return true })
 
 /* ------------------------------------------------------------------
-   Fenêtre
+   Réglages de l'application (lus par le processus principal :
+   zone de notification, fermeture, démarrage, écrans)
    ------------------------------------------------------------------ */
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1600,
-    height: 950,
-    minWidth: 1000,
-    minHeight: 640,
+const DEFAULTS = {
+  notify: true,
+  notifyTypes: { person: true, car: false, animal: false, other: false },
+  notifySound: true,
+  dnd: false,
+  startAtLogin: false,
+  startHidden: false,
+  closeToTray: true,
+  screens: {} // id d'écran → { layout, enabled }
+}
+let settings = DEFAULTS
+const saveSettings = () => writeJson('settings.json', settings)
+
+ipcMain.handle('settings:get', () => settings)
+ipcMain.handle('settings:set', (_e, patch) => {
+  settings = { ...settings, ...patch }
+  saveSettings()
+  applySettings()
+  return settings
+})
+
+function applySettings() {
+  // Démarrage avec Windows (sans effet en développement)
+  if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: settings.startAtLogin, args: settings.startHidden ? ['--hidden'] : [] })
+  refreshTray()
+  for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', settings)
+}
+
+/* ------------------------------------------------------------------
+   Icône de l'application (aussi pour la zone de notification)
+   ------------------------------------------------------------------ */
+const iconPath = () => join(app.isPackaged ? process.resourcesPath : join(__dirname, '../../build'), 'icon.png')
+const appIcon = () => nativeImage.createFromPath(iconPath())
+
+/* ------------------------------------------------------------------
+   Fenêtres : une principale, et un mur vidéo par écran supplémentaire
+   ------------------------------------------------------------------ */
+let mainWin = null
+let tray = null
+let quitting = false
+const walls = new Map() // id d'écran → fenêtre
+
+function loadRenderer(win, query = {}) {
+  const qs = new URLSearchParams(query).toString()
+  if (process.env.ELECTRON_RENDERER_URL) win.loadURL(process.env.ELECTRON_RENDERER_URL + (qs ? '?' + qs : ''))
+  else win.loadFile(join(__dirname, '../renderer/index.html'), { query })
+}
+
+function baseOptions() {
+  return {
     backgroundColor: '#111827',
     title: 'FrigateView',
+    icon: appIcon(),
     autoHideMenuBar: true,
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      contextIsolation: true
-    }
-  })
+    webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: false, contextIsolation: true }
+  }
+}
+
+function createWindow() {
+  const win = new BrowserWindow({ ...baseOptions(), width: 1600, height: 950, minWidth: 1000, minHeight: 640, show: !process.argv.includes('--hidden') })
+  mainWin = win
 
   // Liens externes : navigateur par défaut
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -132,13 +179,121 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  if (process.env.FV_SMOKE) smokeTest(win, process.env.FV_SMOKE)
+  // Fermer = réduire dans la zone de notification (les alertes continuent d'arriver)
+  win.on('close', (e) => {
+    if (!quitting && settings.closeToTray && tray) {
+      e.preventDefault()
+      win.hide()
+      if (!settings._trayHintShown && Notification.isSupported()) {
+        new Notification({ title: 'FrigateView reste actif', body: 'Les alertes continuent d\'arriver. Clic droit sur l\'icône pour quitter.', icon: appIcon() }).show()
+        settings._trayHintShown = true
+        saveSettings()
+      }
+    }
+  })
+  win.on('closed', () => { mainWin = null })
 
-  if (process.env.ELECTRON_RENDERER_URL) win.loadURL(process.env.ELECTRON_RENDERER_URL)
-  else win.loadFile(join(__dirname, '../renderer/index.html'))
+  if (process.env.FV_SMOKE) smokeTest(win, process.env.FV_SMOKE)
+  loadRenderer(win)
 }
 
+function showMain() {
+  if (!mainWin) createWindow()
+  if (mainWin.isMinimized()) mainWin.restore()
+  mainWin.show()
+  mainWin.focus()
+}
+
+ipcMain.handle('screens:list', () => {
+  const primary = screen.getPrimaryDisplay().id
+  return screen.getAllDisplays().map((d, i) => ({
+    id: String(d.id), index: i + 1, primary: d.id === primary,
+    label: d.label || `Écran ${i + 1}`, width: d.size.width, height: d.size.height,
+    current: mainWin ? screen.getDisplayMatching(mainWin.getBounds()).id === d.id : false
+  }))
+})
+
+// Ouvre / ferme les murs vidéo selon les réglages
+function syncWalls() {
+  const displays = screen.getAllDisplays()
+  for (const [id, w] of walls) {
+    const conf = settings.screens[id]
+    if (!conf?.enabled || !displays.some((d) => String(d.id) === id)) { walls.delete(id); if (!w.isDestroyed()) w.destroy() }
+  }
+  for (const d of displays) {
+    const id = String(d.id), conf = settings.screens[id]
+    if (!conf?.enabled || !conf.layout) continue
+    let w = walls.get(id)
+    if (!w || w.isDestroyed()) {
+      w = new BrowserWindow({ ...baseOptions(), x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height, fullscreen: true, frame: false })
+      w.on('close', (e) => { if (!quitting) { e.preventDefault(); settings.screens[id] = { ...settings.screens[id], enabled: false }; saveSettings(); syncWalls(); applySettings() } })
+      walls.set(id, w)
+      loadRenderer(w, { wall: '1', layout: conf.layout })
+    } else w.webContents.send('wall:layout', conf.layout)
+  }
+}
+ipcMain.handle('screens:apply', (_e, screensConf) => { settings = { ...settings, screens: screensConf }; saveSettings(); syncWalls(); return true })
+ipcMain.handle('screens:identify', () => {
+  // Grand numéro affiché 2 s sur chaque écran
+  screen.getAllDisplays().forEach((d, i) => {
+    const w = new BrowserWindow({ x: d.bounds.x + d.bounds.width / 2 - 160, y: d.bounds.y + d.bounds.height / 2 - 120, width: 320, height: 240, frame: false, transparent: true, alwaysOnTop: true, focusable: false, skipTaskbar: true })
+    w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`<body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font:800 160px system-ui;color:#fff;background:rgba(59,130,246,.92);border-radius:28px">${i + 1}</body>`))
+    setTimeout(() => !w.isDestroyed() && w.destroy(), 2000)
+  })
+  return true
+})
+
+/* ------------------------------------------------------------------
+   Notifications Windows
+   ------------------------------------------------------------------ */
+ipcMain.handle('notify', (_e, { title, body, id }) => {
+  if (!Notification.isSupported()) return false
+  const n = new Notification({ title, body, icon: appIcon(), silent: !settings.notifySound })
+  n.on('click', () => { showMain(); mainWin?.webContents.send('notification:click', id) })
+  n.show()
+  return true
+})
+ipcMain.handle('app:focused', () => !!mainWin && mainWin.isVisible() && mainWin.isFocused())
+
+/* ------------------------------------------------------------------
+   Zone de notification
+   ------------------------------------------------------------------ */
+let trayStatus = ''
+ipcMain.handle('tray:status', (_e, text) => { trayStatus = text; refreshTray(); return true })
+
+function refreshTray() {
+  if (!tray) return
+  tray.setToolTip(`FrigateView${trayStatus ? ' — ' + trayStatus : ''}`)
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: `FrigateView${trayStatus ? ' · ' + trayStatus : ''}`, enabled: false },
+    { type: 'separator' },
+    { label: 'Afficher', click: showMain },
+    { label: 'Ne pas déranger', type: 'checkbox', checked: settings.dnd, click: (i) => { settings.dnd = i.checked; saveSettings(); applySettings() } },
+    { label: 'Réglages…', click: () => { showMain(); mainWin?.webContents.send('settings:open') } },
+    { type: 'separator' },
+    { label: 'Quitter FrigateView', click: () => { quitting = true; app.quit() } }
+  ]))
+}
+function createTray() {
+  const img = appIcon()
+  if (img.isEmpty()) return
+  tray = new Tray(img.resize({ width: 16, height: 16 }))
+  tray.on('click', showMain)
+  refreshTray()
+}
+
+/* ------------------------------------------------------------------
+   Démarrage
+   ------------------------------------------------------------------ */
+// Une seule instance : relancer l'application ramène la fenêtre existante
+if (!app.requestSingleInstanceLock()) app.quit()
+else app.on('second-instance', showMain)
+
+app.on('before-quit', () => { quitting = true })
+
 app.whenReady().then(() => {
+  app.setAppUserModelId('fr.idsynergy.frigateview') // nécessaire aux notifications Windows
+  settings = { ...DEFAULTS, ...readJson('settings.json', {}) }
   trusted = readJson('trusted-certs.json', {})
   installCertCheck()
   // Les <img> de la fenêtre (page locale) vers Frigate sont des requêtes « inter-sites » :
@@ -161,14 +316,17 @@ app.whenReady().then(() => {
     headers['Access-Control-Allow-Origin'] = ['*']
     done({ responseHeaders: headers })
   })
+  createTray()
   createWindow()
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+  syncWalls()
+  screen.on('display-added', syncWalls)
+  screen.on('display-removed', syncWalls)
+  applySettings()
+  app.on('activate', showMain)
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  if (process.platform !== 'darwin' && !tray) app.quit()
 })
 
 /* ------------------------------------------------------------------

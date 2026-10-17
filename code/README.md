@@ -23,7 +23,7 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 - Phase 2 : direct WebRTC avec repli sur les images ✅ (à valider sur le vrai serveur)
 - Phase 3 : timeline (enregistrements, mouvement, alertes) et relecture HLS synchronisée ✅
 - Phase 4 : panneau des événements (revues Frigate, recherche, vus, détail avec clip, temps réel par le WebSocket Frigate) ✅
-- Phase 5 : multi-écrans, notifications, zone de notification
+- Phase 5 : notifications Windows, zone de notification, démarrage avec Windows, murs vidéo multi-écrans, réglages, installateur x64 ✅
 
 ## Connexion
 

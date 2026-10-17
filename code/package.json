@@ -18,8 +18,31 @@
     "files": [
       "out/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ],
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "FrigateView"
+    },
+    "mac": {
+      "icon": "build/icon.png"
     }
   },
   "devDependencies": {
@@ -30,9 +53,7 @@
     "electron-vite": "^6.0.0",
     "tailwindcss": "^4.3.3",
     "vite": "^7.3.7",
-    "ws": "^8.22.0"
-  },
-  "dependencies": {
+    "ws": "^8.22.0",
     "hls.js": "^1.7.3",
     "pinia": "^3.0.4",
     "vue": "^3.5.44"
