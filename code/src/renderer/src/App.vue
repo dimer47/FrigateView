@@ -8,10 +8,13 @@ import AppToolbar from '@/components/AppToolbar.vue'
 import SideBar from '@/components/SideBar.vue'
 import CameraGrid from '@/components/CameraGrid.vue'
 import AppToast from '@/components/AppToast.vue'
+import TimelinePanel from '@/components/TimelinePanel.vue'
+import { useTimelineStore } from '@/stores/timeline'
 
 const server = useServerStore()
 const layouts = useLayoutStore()
 const ui = useUiStore()
+const tl = useTimelineStore()
 
 onMounted(() => server.resume())
 
@@ -24,6 +27,12 @@ function onKey(e) {
     else if (ui.expand) ui.expand = false
   }
   if (e.ctrlKey && e.key === '1') { e.preventDefault(); ui.toggleSidebar() }
+  if (e.ctrlKey && e.key === '3') { e.preventDefault(); tl.visible = !tl.visible; tl.persist() }
+  if (e.target.matches?.('input, textarea, select') || e.ctrlKey || e.metaKey) return
+  if (e.key === ' ') { e.preventDefault(); tl.togglePlay() }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); tl.skip(e.shiftKey ? -30 : -10) }
+  else if (e.key === 'ArrowRight' && !tl.live) { e.preventDefault(); tl.skip(e.shiftKey ? 30 : 10) }
+  else if (e.key.toLowerCase() === 'l') tl.goLive()
   if (e.ctrlKey && e.key.toLowerCase() === 'e') { e.preventDefault(); ui.expand = !ui.expand }
 }
 onMounted(() => addEventListener('keydown', onKey))
@@ -46,6 +55,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
       <SideBar v-if="ui.sidebar && !ui.expand" />
       <CameraGrid class="min-w-0 flex-1" />
     </div>
+    <TimelinePanel v-if="tl.visible && !ui.expand && server.status !== 'connecting'" />
     <button v-if="ui.expand" class="fixed right-2.5 top-2.5 z-50 rounded-md border border-white/25 bg-black/70 px-3.5 py-1.5 text-xs font-semibold opacity-0 transition-opacity hover:opacity-100" @click="ui.expand = false">
       Quitter le mur vidéo (Échap)
     </button>

@@ -1,9 +1,11 @@
 <script setup>
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
+import { useTimelineStore } from '@/stores/timeline'
 
 const server = useServerStore()
 const ui = useUiStore()
+const tl = useTimelineStore()
 
 const roleLabel = { admin: 'administrateur', viewer: 'consultation' }
 function fullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }
@@ -36,6 +38,9 @@ function fullscreen() { document.fullscreenElement ? document.exitFullscreen() :
     <div v-if="server.profile.username" class="h-[22px] w-px bg-line" />
     <button class="tbtn" :class="{ on: ui.sidebar }" title="Layouts et caméras (Ctrl+1)" @click="ui.toggleSidebar()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2" /><line x1="6" y1="1" x2="6" y2="17" /></svg>
+    </button>
+    <button class="tbtn" :class="{ on: tl.visible }" title="Timeline (Ctrl+3)" @click="tl.visible = !tl.visible; tl.persist()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2" /><line x1="1" y1="12" x2="17" y2="12" /></svg>
     </button>
     <button class="tbtn" title="Mur vidéo seul (Ctrl+E)" @click="ui.expand = true">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="11,1 17,1 17,7" /><polyline points="7,17 1,17 1,11" /><line x1="17" y1="1" x2="10" y2="8" /><line x1="1" y1="17" x2="8" y2="10" /></svg>

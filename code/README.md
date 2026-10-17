@@ -21,7 +21,7 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 
 - Phase 1 : connexion, caméras, layouts, grille avec images 1/s ✅
 - Phase 2 : direct WebRTC avec repli sur les images ✅ (à valider sur le vrai serveur)
-- Phase 3 : timeline et relecture HLS
+- Phase 3 : timeline (enregistrements, mouvement, alertes) et relecture HLS synchronisée ✅
 - Phase 4 : événements (API + MQTT)
 - Phase 5 : multi-écrans, notifications, zone de notification
 

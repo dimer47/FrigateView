@@ -144,13 +144,22 @@ app.whenReady().then(() => {
   // Les <img> de la fenêtre (page locale) vers Frigate sont des requêtes « inter-sites » :
   // le cookie de session (SameSite=Lax) n'y est pas joint. On l'ajoute ici, uniquement
   // pour l'hôte visé par la requête.
-  session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ['https://*/api/*'] }, async (details, done) => {
+  const frigateUrls = ['https://*/api/*', 'https://*/vod/*', 'http://*/api/*', 'http://*/vod/*']
+  session.defaultSession.webRequest.onBeforeSendHeaders({ urls: frigateUrls }, async (details, done) => {
     const headers = details.requestHeaders
     if (!headers.Cookie && details.webContentsId) {
       const cookies = await session.defaultSession.cookies.get({ url: details.url })
       if (cookies.length) headers.Cookie = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
     }
     done({ requestHeaders: headers })
+  })
+  // La relecture (hls.js) lit les listes et segments vidéo par XHR : Frigate n'envoie pas
+  // d'en-têtes CORS, on autorise donc la fenêtre de l'application à lire ces réponses.
+  session.defaultSession.webRequest.onHeadersReceived({ urls: frigateUrls }, (details, done) => {
+    if (!details.webContentsId) return done({})
+    const headers = Object.fromEntries(Object.entries(details.responseHeaders || {}).filter(([k]) => k.toLowerCase() !== 'access-control-allow-origin'))
+    headers['Access-Control-Allow-Origin'] = ['*']
+    done({ responseHeaders: headers })
   })
   createWindow()
   app.on('activate', () => {

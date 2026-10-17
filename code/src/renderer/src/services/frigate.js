@@ -78,3 +78,17 @@ export async function getOnline(server) {
 
 export const snapshotUrl = (server, cam, height) =>
   `${baseUrl(server)}/api/${encodeURIComponent(cam)}/latest.webp?height=${height}&t=${Date.now()}`
+
+/* ---- Enregistrements et relecture ---- */
+
+// Segments enregistrés (≈ 10 s chacun) : { start_time, end_time, duration, motion, objects }
+export const getRecordings = (server, cam, after, before) =>
+  getJson(server, `/api/${encodeURIComponent(cam)}/recordings?after=${Math.floor(after)}&before=${Math.ceil(before)}`)
+
+// Revues Frigate : alertes (personnes…) et détections, avec les objets détectés
+export const getReviews = (server, cams, after, before) =>
+  getJson(server, `/api/review?cameras=${cams.map(encodeURIComponent).join(',')}&after=${Math.floor(after)}&before=${Math.ceil(before)}&limit=2000`)
+
+// Liste de lecture HLS d'une plage. Les coupures d'enregistrement sont retirées par Frigate.
+export const vodUrl = (server, cam, start, end) =>
+  `${baseUrl(server)}/vod/${encodeURIComponent(cam)}/start/${Math.floor(start)}/end/${Math.ceil(end)}/index.m3u8`

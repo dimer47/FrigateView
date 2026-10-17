@@ -2,12 +2,16 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
-import { snapshotUrl } from '@/services/frigate'
+import Hls from 'hls.js'
+import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
+import { useTimelineStore } from '@/stores/timeline'
 
 const props = defineProps({ camId: { type: String, required: true } })
 const server = useServerStore()
 const ui = useUiStore()
+const tl = useTimelineStore()
+const playback = computed(() => tl.isPlayback(props.camId))
 
 const root = ref(null)
 const video = ref(null)
@@ -20,7 +24,7 @@ const now = ref(Date.now())
 const cam = computed(() => server.camById(props.camId))
 const offline = computed(() => server.online[props.camId] === false)
 const frozen = computed(() => server.status === 'lost')
-const wantVideo = computed(() => ui.liveMode === 'webrtc' && !frozen.value && !offline.value)
+const wantVideo = computed(() => ui.liveMode === 'webrtc' && !frozen.value && !offline.value && !playback.value)
 const showVideo = computed(() => wantVideo.value && rtc.value === 'playing')
 
 /* ---- Images fixes (mode Images, ou en attendant / à défaut de la vidéo) ---- */
@@ -30,7 +34,7 @@ function snapHeight() {
   return Math.max(180, Math.min(1080, Math.round(h / 60) * 60)) // paliers de 60 px pour profiter du cache
 }
 function loadSnapshot() {
-  if (frozen.value || showVideo.value || !server.server) return
+  if (frozen.value || showVideo.value || playback.value || !server.server) return
   const url = snapshotUrl(server.server, props.camId, snapHeight())
   const img = new Image()
   img.onload = () => { imgSrc.value = url; imgError.value = false; lastFrame.value = Date.now() }
@@ -67,7 +71,76 @@ function stopVideo() {
 function onPlaying() { rtc.value = 'playing'; lastFrame.value = Date.now() }
 
 watch(wantVideo, (v) => (v ? startVideo() : stopVideo()))
-watch(() => props.camId, () => { imgSrc.value = ''; startSnapshots(); if (wantVideo.value) startVideo() })
+watch(() => props.camId, () => { imgSrc.value = ''; stopPlayback(); startSnapshots(); if (wantVideo.value) startVideo(); if (playback.value) syncPlayback() })
+
+/* ---- Relecture HLS ----
+   Frigate assemble les segments enregistrés en retirant les coupures : la position dans
+   la vidéo ne correspond donc à l'heure réelle qu'à travers la liste des segments. */
+const pbVideo = ref(null)
+const pbState = ref('idle') // idle | loading | playing | norec | error
+let hls = null
+let chunk = null // { start, end, segs: [{ s, e }] } en ms
+let chunkLoading = false
+const CHUNK = 30 * 60 * 1000
+
+function toOffset(t) {
+  let acc = 0
+  for (const g of chunk.segs) {
+    if (t < g.s) return null
+    if (t < g.e) return acc + (t - g.s) / 1000
+    acc += (g.e - g.s) / 1000
+  }
+  return null
+}
+
+async function loadChunk(t) {
+  chunkLoading = true
+  pbState.value = 'loading'
+  try {
+    const recs = await getRecordings(server.server, props.camId, t / 1000 - 15, (t + CHUNK) / 1000)
+    const segs = []
+    for (const r of recs.map((x) => ({ s: x.start_time * 1000, e: x.end_time * 1000 })).sort((a, b) => a.s - b.s)) {
+      if (r.e <= t) continue
+      const last = segs[segs.length - 1]
+      if (last && r.s - last.e < 1000) last.e = r.e
+      else segs.push(r)
+    }
+    if (!segs.length) { chunk = { start: t, end: t + CHUNK, segs: [] }; destroyHls(); pbState.value = 'norec'; return }
+    chunk = { start: Math.min(t, segs[0].s), end: segs[segs.length - 1].e, segs }
+    destroyHls()
+    if (!Hls.isSupported()) { pbState.value = 'error'; return }
+    hls = new Hls({ maxBufferLength: 30, backBufferLength: 30 })
+    hls.on(Hls.Events.ERROR, (_e, d) => { if (d.fatal) pbState.value = 'error' })
+    hls.on(Hls.Events.MANIFEST_PARSED, () => syncPlayback(true))
+    hls.loadSource(vodUrl(server.server, props.camId, segs[0].s / 1000, chunk.end / 1000))
+    hls.attachMedia(pbVideo.value)
+  } catch {
+    pbState.value = 'error'
+    chunk = { start: t, end: t + 10000, segs: [] } // nouvel essai dans 10 s
+  } finally {
+    chunkLoading = false
+  }
+}
+
+function syncPlayback(force = false) {
+  if (!playback.value || chunkLoading) return
+  const t = tl.time, v = pbVideo.value
+  if (!chunk || t < chunk.start || t >= chunk.end) { loadChunk(t); return }
+  if (!hls || !v) return
+  const off = toOffset(t)
+  if (off === null) { pbState.value = 'norec'; if (!v.paused) v.pause(); return }
+  if (pbState.value !== 'error') pbState.value = 'playing'
+  if (force || Math.abs(v.currentTime - off) > 1.5) v.currentTime = off
+  v.playbackRate = tl.speed
+  if (tl.playing && v.paused) v.play().catch(() => {})
+  if (!tl.playing && !v.paused) v.pause()
+}
+
+function destroyHls() { if (hls) { hls.destroy(); hls = null } }
+function stopPlayback() { destroyHls(); chunk = null; pbState.value = 'idle' }
+
+watch(playback, (p) => (p ? syncPlayback() : stopPlayback()))
+watch(() => [tl.time, tl.playing, tl.speed], () => syncPlayback())
 
 let clock = null
 onMounted(() => {
@@ -75,18 +148,20 @@ onMounted(() => {
   if (wantVideo.value) startVideo()
   clock = setInterval(() => (now.value = Date.now()), 1000)
 })
-onBeforeUnmount(() => { stopSnapshots(); stopVideo(); clearInterval(clock) })
+onBeforeUnmount(() => { stopSnapshots(); stopVideo(); stopPlayback(); clearInterval(clock) })
 
-const time = computed(() => new Date(frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString('fr-FR'))
+const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString('fr-FR'))
 </script>
 
 <template>
   <div ref="root" class="absolute inset-0 bg-[linear-gradient(160deg,#1b2636,#0b121c)]">
-    <img v-if="imgSrc && !showVideo" :src="imgSrc" class="absolute inset-0 size-full object-contain" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
+    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full object-contain" :class="{ 'brightness-50': pbState === 'norec' }" muted playsinline />
+    <img v-if="imgSrc && !showVideo && !playback" :src="imgSrc" class="absolute inset-0 size-full object-contain" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
     <video ref="video" class="absolute inset-0 size-full object-contain" :class="{ invisible: !showVideo }" autoplay muted playsinline @playing="onPlaying" />
 
     <div class="absolute left-1.5 top-1.5 z-[3] flex gap-1">
-      <span v-if="frozen" class="badge"><i class="bg-bad" />FLUX INTERROMPU</span>
+      <span v-if="playback" class="badge text-warn"><i class="bg-warn" />RELECTURE{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>
+      <span v-else-if="frozen" class="badge"><i class="bg-bad" />FLUX INTERROMPU</span>
       <span v-else-if="offline" class="badge"><i class="bg-bad" />HORS LIGNE</span>
       <span v-else-if="showVideo" class="badge" title="Vidéo en direct (WebRTC)"><i class="bg-ok" />LIVE</span>
       <span v-else class="badge" :title="wantVideo ? 'Vidéo indisponible : images rafraîchies chaque seconde' : 'Images rafraîchies chaque seconde'">
@@ -94,7 +169,14 @@ const time = computed(() => new Date(frozen.value ? lastFrame.value || now.value
       </span>
     </div>
 
-    <div v-if="frozen || offline || (imgError && !showVideo)" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
+    <div v-if="playback && pbState !== 'playing'" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
+      <span v-if="pbState === 'loading'" class="spin" />
+      <template v-else>
+        <strong class="text-ink">{{ pbState === 'error' ? 'Relecture impossible' : 'Aucun enregistrement' }}</strong>
+        <span>{{ pbState === 'error' ? 'Le serveur n\'a pas fourni la vidéo' : 'à ' + time }}</span>
+      </template>
+    </div>
+    <div v-else-if="!playback && (frozen || offline || (imgError && !showVideo))" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
       <strong :class="offline || frozen ? 'text-bad' : 'text-ink'">{{ frozen ? 'Flux interrompu' : offline ? 'Hors ligne' : 'Image indisponible' }}</strong>
       <span v-if="frozen && lastFrame">Dernière image à {{ time }}</span>
       <span v-else-if="offline">La caméra n'envoie plus d'images à Frigate</span>
@@ -103,7 +185,7 @@ const time = computed(() => new Date(frozen.value ? lastFrame.value || now.value
 
     <div class="absolute inset-x-0 bottom-0 z-[3] flex items-end justify-between gap-2 bg-gradient-to-t from-black/75 to-transparent px-2.5 py-1.5">
       <span class="truncate text-[13px] font-semibold [text-shadow:0_1px_2px_#000]">{{ cam?.name || camId }}</span>
-      <span class="whitespace-nowrap font-mono text-xs text-ink-2">{{ time }}</span>
+      <span class="whitespace-nowrap font-mono text-xs" :class="playback ? 'text-warn' : 'text-ink-2'">{{ time }}</span>
     </div>
   </div>
 </template>
