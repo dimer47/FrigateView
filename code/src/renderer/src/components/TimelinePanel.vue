@@ -83,6 +83,17 @@ const rows = computed(() => {
   })
 })
 
+// Clic droit sur un événement (ou un mouvement) : export du clip déjà calé dessus, 5 s de marge
+function exportAt(e, cam) {
+  const t = timeAt(e.clientX), d = tl.rangesFor(cam), tol = (tl.view.end - tl.view.start) * 0.004
+  // Bloc sous la souris, sinon le plus proche à quelques pixels près
+  const dist = (r) => (t < r.s ? r.s - t : t > r.e ? t - r.e : 0)
+  const hit = (list) => list.filter((r) => dist(r) <= tol).sort((a, b) => dist(a) - dist(b))[0]
+  const r = hit(d.reviews.filter((x) => tl.filters[x.type])) || (tl.filters.motion && hit(d.motion))
+  const start = r ? r.s - 5e3 : t - 30e3, end = Math.min(r ? r.e + 5e3 : t + 30e3, Date.now())
+  media.openExport({ cams: [cam], start, end })
+}
+
 /* ---------- Souris : clic = relire, glisser = déplacer, molette = zoom ---------- */
 let drag = null
 const timeAt = (clientX) => { const r = ruler.value.getBoundingClientRect(); return tl.view.start + ((clientX - r.left) / r.width) * (tl.view.end - tl.view.start) }
@@ -230,7 +241,7 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
               :class="r.id === selectedCam ? 'border-l-accent bg-accent/5 font-semibold text-accent' : 'border-l-transparent text-ink-2 hover:text-ink'" @click="selectCam(r.id)">
               <span class="size-1.5 shrink-0 rounded-full" :class="r.offline ? 'bg-bad' : 'bg-ok'" /><span class="truncate">{{ r.name }}</span>
             </button>
-            <div data-track class="relative flex-1 cursor-crosshair overflow-hidden group-hover:bg-white/[.025]" :class="{ 'bg-accent/5': r.id === selectedCam }">
+            <div data-track @contextmenu.prevent="exportAt($event, r.id)" class="relative flex-1 cursor-crosshair overflow-hidden group-hover:bg-white/[.025]" :class="{ 'bg-accent/5': r.id === selectedCam }">
               <div v-for="(b, i) in r.rec" :key="'r' + i" class="pointer-events-none absolute top-[18px] h-1 bg-[#1e3a5f]" :style="b" />
               <div v-for="(b, i) in r.motion" :key="'m' + i" class="pointer-events-none absolute top-[5px] h-3 rounded-sm bg-motion opacity-55" :style="b" />
               <div v-for="(b, i) in r.reviews" :key="'v' + i" class="pointer-events-none absolute top-[5px] h-3 min-w-[2px] rounded-sm" :style="{ left: b.left, width: b.width, background: COLORS[b.type] }" />

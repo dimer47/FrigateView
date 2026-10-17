@@ -240,7 +240,7 @@
     "playing": "正在回放",
     "paused": "回放已暂停",
     "recording": "录像",
-    "help": "单击：回放 · 拖动：移动 · 滚轮：缩放"
+    "help": "单击：回放 · 拖动：移动 · 滚轮：缩放 · 右键：导出"
   },
   "settings": {
     "wallsOpened": "已打开 {n} 个视频墙 | 已打开 {n} 个视频墙",
@@ -503,8 +503,10 @@
     "title": "导出片段",
     "cameras": "摄像头",
     "start": "开始",
+    "end": "结束",
     "duration": "时长",
     "badDate": "日期无效",
+    "badRange": "结束时间必须晚于开始时间",
     "future": "片段结束时间在未来",
     "noCamera": "请至少选择一个摄像头",
     "summary": "从 {start} 到 {end}",

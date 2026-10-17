@@ -240,7 +240,7 @@
     "playing": "Playback in progress",
     "paused": "Playback paused",
     "recording": "Recording",
-    "help": "Click: play back · Drag: pan · Wheel: zoom"
+    "help": "Click: play back · Drag: pan · Wheel: zoom · Right-click: export"
   },
   "settings": {
     "wallsOpened": "{n} video wall opened | {n} video walls opened",
@@ -503,8 +503,10 @@
     "title": "Export a clip",
     "cameras": "Cameras",
     "start": "Start",
+    "end": "End",
     "duration": "Duration",
     "badDate": "Invalid date",
+    "badRange": "The end must be after the start",
     "future": "The end of the clip is in the future",
     "noCamera": "Choose at least one camera",
     "summary": "From {start} to {end}",

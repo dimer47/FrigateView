@@ -240,7 +240,7 @@
     "playing": "Reproduzindo",
     "paused": "Reprodução pausada",
     "recording": "Gravação",
-    "help": "Clique: reproduzir · Arraste: mover · Roda: zoom"
+    "help": "Clique: reproduzir · Arraste: mover · Roda: zoom · Clique direito: exportar"
   },
   "settings": {
     "wallsOpened": "{n} mural de vídeo aberto | {n} murais de vídeo abertos",
@@ -503,8 +503,10 @@
     "title": "Exportar um clipe",
     "cameras": "Câmeras",
     "start": "Início",
+    "end": "Fim",
     "duration": "Duração",
     "badDate": "Data inválida",
+    "badRange": "O fim deve ser posterior ao início",
     "future": "O fim do clipe está no futuro",
     "noCamera": "Escolha pelo menos uma câmera",
     "summary": "De {start} a {end}",

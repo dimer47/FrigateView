@@ -240,7 +240,7 @@
     "playing": "Pemutaran ulang berjalan",
     "paused": "Pemutaran ulang dijeda",
     "recording": "Rekaman",
-    "help": "Klik: putar ulang · Seret: geser · Roda gulir: zoom"
+    "help": "Klik: putar ulang · Seret: geser · Roda gulir: zoom · Klik kanan: ekspor"
   },
   "settings": {
     "wallsOpened": "{n} dinding video dibuka | {n} dinding video dibuka",
@@ -503,8 +503,10 @@
     "title": "Ekspor klip",
     "cameras": "Kamera",
     "start": "Mulai",
+    "end": "Selesai",
     "duration": "Durasi",
     "badDate": "Tanggal tidak valid",
+    "badRange": "Waktu selesai harus setelah waktu mulai",
     "future": "Akhir klip berada di masa depan",
     "noCamera": "Pilih setidaknya satu kamera",
     "summary": "Dari {start} hingga {end}",

@@ -240,7 +240,7 @@
     "playing": "Relecture en cours",
     "paused": "Relecture en pause",
     "recording": "Enregistrement",
-    "help": "Clic : relire · Glisser : déplacer · Molette : zoom"
+    "help": "Clic : relire · Glisser : déplacer · Molette : zoom · Clic droit : exporter"
   },
   "settings": {
     "wallsOpened": "{n} mur vidéo ouvert | {n} murs vidéo ouverts",
@@ -503,8 +503,10 @@
     "title": "Exporter un clip",
     "cameras": "Caméras",
     "start": "Début",
+    "end": "Fin",
     "duration": "Durée",
     "badDate": "Date invalide",
+    "badRange": "La fin doit être après le début",
     "future": "La fin du clip est dans le futur",
     "noCamera": "Choisissez au moins une caméra",
     "summary": "Du {start} à {end}",
