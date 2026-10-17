@@ -34,3 +34,17 @@ export function isAppUrl(url, { devUrl, appFile } = {}) {
   if (appFile && u.protocol === 'file:') return decodeURIComponent(u.pathname).replace(/\\/g, '/').replace(/^\/([A-Za-z]:)/, '$1') === appFile.replace(/\\/g, '/')
   return false
 }
+
+// Envoi d'une image (IPC 'http' avec upload) : corps multipart/form-data construit dans le processus principal.
+// upload = { field, filename, type, base64 } — images uniquement, taille limitée.
+export const UPLOAD_MAX = 15 * 1024 * 1024
+export function buildMultipart(upload, boundary) {
+  if (!upload || typeof upload.base64 !== 'string') throw new Error('upload invalide')
+  const type = String(upload.type || '')
+  if (!/^image\/(jpeg|png|webp)$/.test(type)) throw new Error(`type refusé : ${type}`)
+  const data = Buffer.from(upload.base64, 'base64')
+  if (!data.length || data.length > UPLOAD_MAX) throw new Error('taille refusée')
+  const clean = (s, d) => String(s || d).replace(/["\r\n\\]/g, '_').slice(0, 120)
+  const head = `--${boundary}\r\nContent-Disposition: form-data; name="${clean(upload.field, 'file')}"; filename="${clean(upload.filename, 'image')}"\r\nContent-Type: ${type}\r\n\r\n`
+  return { body: Buffer.concat([Buffer.from(head), data, Buffer.from(`\r\n--${boundary}--\r\n`)]), contentType: `multipart/form-data; boundary=${boundary}` }
+}

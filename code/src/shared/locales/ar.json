@@ -14,7 +14,8 @@
     "settings": "الإعدادات",
     "serverTitle": "Frigate {version} — الاتصال، الحساب، تغيير الخادم",
     "showUser": "انقر لإظهار الاسم",
-    "hideUser": "انقر لإخفاء الاسم"
+    "hideUser": "انقر لإخفاء الاسم",
+    "faces": "معرض الوجوه"
   },
   "roles": {
     "admin": "مسؤول",
@@ -338,7 +339,8 @@
     "title": "اختصارات لوحة المفاتيح",
     "capture": "لقطة من الكاميرا المحددة",
     "exportClip": "تصدير مقطع",
-    "sound": "صوت الكاميرا المحددة"
+    "sound": "صوت الكاميرا المحددة",
+    "faces": "معرض الوجوه"
   },
   "app": {
     "serverUnreachable": "تعذّر الوصول إلى الخادم",
@@ -422,7 +424,8 @@
     "checkUpdates": "التحقق من التحديثات…",
     "capture": "لقطة صورة",
     "exportClip": "تصدير مقطع…",
-    "sound": "صوت الكاميرا المحددة"
+    "sound": "صوت الكاميرا المحددة",
+    "faces": "الوجوه…"
   },
   "main": {
     "aboutText": "جدار فيديو لـ Frigate NVR.",
@@ -586,5 +589,46 @@
     "package": "طرد",
     "face": "وجه",
     "license_plate": "لوحة"
+  },
+  "faces": {
+    "title": "الوجوه",
+    "readOnly": "للقراءة فقط",
+    "reload": "تحديث",
+    "loading": "جارٍ التحميل…",
+    "disabledTitle": "التعرّف على الوجوه معطّل",
+    "disabledText": "لم يُفعَّل التعرّف على الوجوه على خادم Frigate هذا (يتطلب Frigate 0.16 أو أحدث). فعّله في إعدادات Frigate ثم أعد تشغيله.",
+    "errorTitle": "تعذّر تحميل الوجوه",
+    "retry": "إعادة المحاولة",
+    "recent": "وجوه حديثة غير معروفة",
+    "recentHint": "انسبها إلى شخص لتحسين التعرّف.",
+    "people": "الأشخاص",
+    "noPeople": "لا يوجد أشخاص مسجّلون.",
+    "images": "{n} صورة | {n} صور",
+    "newPerson": "شخص جديد",
+    "namePlaceholder": "اسم الشخص",
+    "rename": "إعادة التسمية",
+    "addImages": "إضافة صور…",
+    "deletePerson": "حذف الشخص",
+    "confirmDeletePerson": "تأكيد الحذف؟",
+    "selectAll": "تحديد الكل",
+    "selectHint": "انقر للتحديد، Shift+نقر لتحديد نطاق",
+    "selected": "تم تحديد {n} | تم تحديد {n}",
+    "assignTo": "نسب إلى…",
+    "newPersonOption": "شخص جديد…",
+    "assign": "نسب",
+    "deleteSelected": "حذف",
+    "confirmDelete": "حذف {n} صورة؟ | حذف {n} صور؟",
+    "emptyRecent": "لا توجد وجوه حديثة لنسبها.",
+    "emptyPerson": "لا توجد صور تدريب لهذا الشخص.",
+    "unknown": "غير معروف",
+    "appearances": "آخر الظهورات",
+    "noAppearances": "لا توجد ظهورات حديثة.",
+    "replay": "إعادة تشغيل هذا الحدث",
+    "badName": "اسم غير صالح: أحرف وأرقام ومسافات و' _ - (50 حرفًا كحد أقصى).",
+    "failed": "فشل: {msg}",
+    "assigned": "تم نسب {n} وجه إلى {name} | تم نسب {n} وجوه إلى {name}",
+    "deleted": "تم حذف {n} صورة | تم حذف {n} صور",
+    "uploaded": "تمت إضافة {n} صورة | تمت إضافة {n} صور",
+    "personDeleted": "تم حذف {name}"
   }
 }

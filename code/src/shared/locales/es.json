@@ -14,7 +14,8 @@
     "settings": "Ajustes",
     "serverTitle": "Frigate {version} — conexión, cuenta, cambiar de servidor",
     "showUser": "clic para mostrar el nombre",
-    "hideUser": "clic para ocultar el nombre"
+    "hideUser": "clic para ocultar el nombre",
+    "faces": "Galería de rostros"
   },
   "roles": {
     "admin": "administrador",
@@ -338,7 +339,8 @@
     "title": "Atajos de teclado",
     "capture": "Captura de la cámara seleccionada",
     "exportClip": "Exportar un clip",
-    "sound": "Sonido de la cámara seleccionada"
+    "sound": "Sonido de la cámara seleccionada",
+    "faces": "Galería de rostros"
   },
   "app": {
     "serverUnreachable": "servidor inaccesible",
@@ -422,7 +424,8 @@
     "checkUpdates": "Buscar actualizaciones…",
     "capture": "Captura de imagen",
     "exportClip": "Exportar un clip…",
-    "sound": "Sonido de la cámara seleccionada"
+    "sound": "Sonido de la cámara seleccionada",
+    "faces": "Rostros…"
   },
   "main": {
     "aboutText": "Videowall para Frigate NVR.",
@@ -586,5 +589,46 @@
     "package": "paquete",
     "face": "rostro",
     "license_plate": "matrícula"
+  },
+  "faces": {
+    "title": "Rostros",
+    "readOnly": "Solo lectura",
+    "reload": "Actualizar",
+    "loading": "Cargando…",
+    "disabledTitle": "Reconocimiento facial desactivado",
+    "disabledText": "Este servidor Frigate no tiene activado el reconocimiento facial (se requiere Frigate 0.16 o posterior). Actívelo en la configuración de Frigate y reinícielo.",
+    "errorTitle": "No se pudieron cargar los rostros",
+    "retry": "Reintentar",
+    "recent": "Rostros recientes no reconocidos",
+    "recentHint": "Asígnelos a una persona para mejorar el reconocimiento.",
+    "people": "Personas",
+    "noPeople": "No hay personas registradas.",
+    "images": "{n} imagen | {n} imágenes",
+    "newPerson": "Nueva persona",
+    "namePlaceholder": "Nombre de la persona",
+    "rename": "Renombrar",
+    "addImages": "Añadir imágenes…",
+    "deletePerson": "Eliminar persona",
+    "confirmDeletePerson": "¿Confirmar la eliminación?",
+    "selectAll": "Seleccionar todo",
+    "selectHint": "Clic para seleccionar, Mayús+clic para un rango",
+    "selected": "{n} seleccionada | {n} seleccionadas",
+    "assignTo": "Asignar a…",
+    "newPersonOption": "Nueva persona…",
+    "assign": "Asignar",
+    "deleteSelected": "Eliminar",
+    "confirmDelete": "¿Eliminar {n} imagen? | ¿Eliminar {n} imágenes?",
+    "emptyRecent": "No hay rostros recientes que asignar.",
+    "emptyPerson": "No hay imágenes de entrenamiento para esta persona.",
+    "unknown": "Desconocido",
+    "appearances": "Últimas apariciones",
+    "noAppearances": "Sin apariciones recientes.",
+    "replay": "Volver a ver este evento",
+    "badName": "Nombre no válido: letras, cifras, espacios, ' _ - (50 caracteres como máximo).",
+    "failed": "Error: {msg}",
+    "assigned": "{n} rostro asignado a {name} | {n} rostros asignados a {name}",
+    "deleted": "{n} imagen eliminada | {n} imágenes eliminadas",
+    "uploaded": "{n} imagen añadida | {n} imágenes añadidas",
+    "personDeleted": "{name} eliminado/a"
   }
 }

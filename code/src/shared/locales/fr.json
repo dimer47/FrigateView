@@ -14,7 +14,8 @@
     "settings": "Réglages",
     "serverTitle": "Frigate {version} — connexion, compte, changement de serveur",
     "showUser": "clic pour afficher le nom",
-    "hideUser": "clic pour masquer le nom"
+    "hideUser": "clic pour masquer le nom",
+    "faces": "Galerie des visages"
   },
   "roles": {
     "admin": "administrateur",
@@ -338,7 +339,8 @@
     "title": "Raccourcis clavier",
     "capture": "Capture d'image de la caméra sélectionnée",
     "exportClip": "Exporter un clip",
-    "sound": "Son de la caméra sélectionnée"
+    "sound": "Son de la caméra sélectionnée",
+    "faces": "Galerie des visages"
   },
   "app": {
     "serverUnreachable": "serveur injoignable",
@@ -422,7 +424,8 @@
     "checkUpdates": "Rechercher des mises à jour…",
     "capture": "Capture d'image",
     "exportClip": "Exporter un clip…",
-    "sound": "Son de la caméra sélectionnée"
+    "sound": "Son de la caméra sélectionnée",
+    "faces": "Visages…"
   },
   "main": {
     "aboutText": "Mur vidéo pour Frigate NVR.",
@@ -586,5 +589,46 @@
     "package": "colis",
     "face": "visage",
     "license_plate": "plaque"
+  },
+  "faces": {
+    "title": "Visages",
+    "readOnly": "Lecture seule",
+    "reload": "Actualiser",
+    "loading": "Chargement…",
+    "disabledTitle": "Reconnaissance faciale désactivée",
+    "disabledText": "Ce serveur Frigate n'a pas la reconnaissance faciale activée (Frigate 0.16 ou plus récent requis). Activez-la dans la configuration de Frigate, puis redémarrez-le.",
+    "errorTitle": "Impossible de charger les visages",
+    "retry": "Réessayer",
+    "recent": "Visages récents non reconnus",
+    "recentHint": "Attribuez-les à une personne pour améliorer la reconnaissance.",
+    "people": "Personnes",
+    "noPeople": "Aucune personne enregistrée.",
+    "images": "{n} image | {n} images",
+    "newPerson": "Nouvelle personne",
+    "namePlaceholder": "Nom de la personne",
+    "rename": "Renommer",
+    "addImages": "Ajouter des images…",
+    "deletePerson": "Supprimer la personne",
+    "confirmDeletePerson": "Confirmer la suppression ?",
+    "selectAll": "Tout sélectionner",
+    "selectHint": "Clic pour sélectionner, Maj+clic pour une plage",
+    "selected": "{n} sélectionnée | {n} sélectionnées",
+    "assignTo": "Attribuer à…",
+    "newPersonOption": "Nouvelle personne…",
+    "assign": "Attribuer",
+    "deleteSelected": "Supprimer",
+    "confirmDelete": "Supprimer {n} image ? | Supprimer {n} images ?",
+    "emptyRecent": "Aucun visage récent à attribuer.",
+    "emptyPerson": "Aucune image d'entraînement pour cette personne.",
+    "unknown": "Inconnu",
+    "appearances": "Dernières apparitions",
+    "noAppearances": "Aucune apparition récente.",
+    "replay": "Relire cet événement",
+    "badName": "Nom invalide : lettres, chiffres, espaces, ' _ - (50 caractères au plus).",
+    "failed": "Échec : {msg}",
+    "assigned": "{n} visage attribué à {name} | {n} visages attribués à {name}",
+    "deleted": "{n} image supprimée | {n} images supprimées",
+    "uploaded": "{n} image ajoutée | {n} images ajoutées",
+    "personDeleted": "{name} supprimé(e)"
   }
 }

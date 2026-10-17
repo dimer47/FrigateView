@@ -14,7 +14,8 @@
     "settings": "设置",
     "serverTitle": "Frigate {version} — 连接、账户、更换服务器",
     "showUser": "点击显示名称",
-    "hideUser": "点击隐藏名称"
+    "hideUser": "点击隐藏名称",
+    "faces": "人脸库"
   },
   "roles": {
     "admin": "管理员",
@@ -338,7 +339,8 @@
     "title": "键盘快捷键",
     "capture": "所选摄像头的截图",
     "exportClip": "导出片段",
-    "sound": "所选摄像头的声音"
+    "sound": "所选摄像头的声音",
+    "faces": "人脸库"
   },
   "app": {
     "serverUnreachable": "服务器无法连接",
@@ -422,7 +424,8 @@
     "checkUpdates": "检查更新…",
     "capture": "截图",
     "exportClip": "导出片段…",
-    "sound": "所选摄像头的声音"
+    "sound": "所选摄像头的声音",
+    "faces": "人脸…"
   },
   "main": {
     "aboutText": "适用于 Frigate NVR 的视频墙。",
@@ -586,5 +589,46 @@
     "package": "包裹",
     "face": "人脸",
     "license_plate": "车牌"
+  },
+  "faces": {
+    "title": "人脸",
+    "readOnly": "只读",
+    "reload": "刷新",
+    "loading": "加载中…",
+    "disabledTitle": "人脸识别未启用",
+    "disabledText": "此 Frigate 服务器未启用人脸识别（需要 Frigate 0.16 或更高版本）。请在 Frigate 配置中启用它，然后重启 Frigate。",
+    "errorTitle": "无法加载人脸",
+    "retry": "重试",
+    "recent": "最近未识别的人脸",
+    "recentHint": "将其分配给某人以提高识别准确度。",
+    "people": "人员",
+    "noPeople": "尚无已登记的人员。",
+    "images": "{n} 张图片 | {n} 张图片",
+    "newPerson": "新建人员",
+    "namePlaceholder": "人员姓名",
+    "rename": "重命名",
+    "addImages": "添加图片…",
+    "deletePerson": "删除人员",
+    "confirmDeletePerson": "确认删除？",
+    "selectAll": "全选",
+    "selectHint": "单击选择，Shift+单击选择范围",
+    "selected": "已选 {n} 张 | 已选 {n} 张",
+    "assignTo": "分配给…",
+    "newPersonOption": "新建人员…",
+    "assign": "分配",
+    "deleteSelected": "删除",
+    "confirmDelete": "删除 {n} 张图片？ | 删除 {n} 张图片？",
+    "emptyRecent": "没有待分配的最近人脸。",
+    "emptyPerson": "此人没有训练图片。",
+    "unknown": "未知",
+    "appearances": "最近出现",
+    "noAppearances": "最近没有出现。",
+    "replay": "回放此事件",
+    "badName": "名称无效：仅限字母、数字、空格及 ' _ -（最多 50 个字符）。",
+    "failed": "失败：{msg}",
+    "assigned": "已将 {n} 张人脸分配给 {name} | 已将 {n} 张人脸分配给 {name}",
+    "deleted": "已删除 {n} 张图片 | 已删除 {n} 张图片",
+    "uploaded": "已添加 {n} 张图片 | 已添加 {n} 张图片",
+    "personDeleted": "已删除 {name}"
   }
 }

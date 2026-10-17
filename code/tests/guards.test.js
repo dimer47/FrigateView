@@ -62,3 +62,21 @@ describe('isAppUrl', () => {
     expect(isAppUrl('???')).toBe(false)
   })
 })
+
+describe('buildMultipart', () => {
+  it('corps multipart avec le fichier', async () => {
+    const { buildMultipart } = await import('../src/main/guards.js')
+    const m = buildMultipart({ field: 'file', filename: 'a"b.jpg', type: 'image/jpeg', base64: Buffer.from('JPEG').toString('base64') }, 'XX')
+    expect(m.contentType).toBe('multipart/form-data; boundary=XX')
+    const s = m.body.toString()
+    expect(s).toContain('name="file"; filename="a_b.jpg"')
+    expect(s).toContain('Content-Type: image/jpeg\r\n\r\nJPEG\r\n--XX--')
+  })
+  it('refuse type, vide, trop gros', async () => {
+    const { buildMultipart, UPLOAD_MAX } = await import('../src/main/guards.js')
+    expect(() => buildMultipart({ type: 'text/html', base64: 'QQ==' }, 'X')).toThrow()
+    expect(() => buildMultipart({ type: 'image/png', base64: '' }, 'X')).toThrow()
+    expect(() => buildMultipart({ type: 'image/png', base64: Buffer.alloc(UPLOAD_MAX + 1).toString('base64') }, 'X')).toThrow()
+    expect(() => buildMultipart(null, 'X')).toThrow()
+  })
+})

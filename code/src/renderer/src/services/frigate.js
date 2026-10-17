@@ -140,3 +140,16 @@ export const recordingFrameUrl = (server, cam, ts, height) =>
 export async function getPtzInfo(server, cam) {
   try { return await getJson(server, `/api/${encodeURIComponent(cam)}/ptz/info`) } catch { return {} }
 }
+
+/* ---- Requêtes qui modifient (admin) ---- */
+
+// Corps JSON ; la réponse est relue en JSON si possible (Frigate renvoie { success, message })
+export async function sendJson(server, path, method = 'POST', json) {
+  const text = await request(server, path, { method, timeout: 15000, headers: { 'Content-Type': 'application/json' }, body: json === undefined ? undefined : JSON.stringify(json) })
+  try { return JSON.parse(text) } catch { return {} }
+}
+// Image envoyée en multipart/form-data (champ « file »), construit par le processus principal
+export async function uploadImage(server, path, { filename, type, base64 }) {
+  const text = await request(server, path, { method: 'POST', timeout: 30000, upload: { field: 'file', filename, type, base64 } })
+  try { return JSON.parse(text) } catch { return {} }
+}

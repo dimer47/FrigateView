@@ -14,7 +14,8 @@
     "settings": "Pengaturan",
     "serverTitle": "Frigate {version} — koneksi, akun, ganti server",
     "showUser": "klik untuk menampilkan nama",
-    "hideUser": "klik untuk menyembunyikan nama"
+    "hideUser": "klik untuk menyembunyikan nama",
+    "faces": "Galeri wajah"
   },
   "roles": {
     "admin": "administrator",
@@ -338,7 +339,8 @@
     "title": "Pintasan keyboard",
     "capture": "Tangkapan kamera yang dipilih",
     "exportClip": "Ekspor klip",
-    "sound": "Suara kamera yang dipilih"
+    "sound": "Suara kamera yang dipilih",
+    "faces": "Galeri wajah"
   },
   "app": {
     "serverUnreachable": "server tidak terjangkau",
@@ -422,7 +424,8 @@
     "checkUpdates": "Periksa pembaruan…",
     "capture": "Tangkapan gambar",
     "exportClip": "Ekspor klip…",
-    "sound": "Suara kamera yang dipilih"
+    "sound": "Suara kamera yang dipilih",
+    "faces": "Wajah…"
   },
   "main": {
     "aboutText": "Dinding video untuk Frigate NVR.",
@@ -586,5 +589,46 @@
     "package": "paket",
     "face": "wajah",
     "license_plate": "pelat"
+  },
+  "faces": {
+    "title": "Wajah",
+    "readOnly": "Hanya baca",
+    "reload": "Muat ulang",
+    "loading": "Memuat…",
+    "disabledTitle": "Pengenalan wajah dinonaktifkan",
+    "disabledText": "Pengenalan wajah tidak aktif di server Frigate ini (perlu Frigate 0.16 atau lebih baru). Aktifkan di konfigurasi Frigate, lalu mulai ulang Frigate.",
+    "errorTitle": "Gagal memuat wajah",
+    "retry": "Coba lagi",
+    "recent": "Wajah terbaru yang tidak dikenali",
+    "recentHint": "Tetapkan ke seseorang untuk meningkatkan pengenalan.",
+    "people": "Orang",
+    "noPeople": "Belum ada orang terdaftar.",
+    "images": "{n} gambar | {n} gambar",
+    "newPerson": "Orang baru",
+    "namePlaceholder": "Nama orang",
+    "rename": "Ganti nama",
+    "addImages": "Tambah gambar…",
+    "deletePerson": "Hapus orang",
+    "confirmDeletePerson": "Konfirmasi penghapusan?",
+    "selectAll": "Pilih semua",
+    "selectHint": "Klik untuk memilih, Shift+klik untuk rentang",
+    "selected": "{n} dipilih | {n} dipilih",
+    "assignTo": "Tetapkan ke…",
+    "newPersonOption": "Orang baru…",
+    "assign": "Tetapkan",
+    "deleteSelected": "Hapus",
+    "confirmDelete": "Hapus {n} gambar? | Hapus {n} gambar?",
+    "emptyRecent": "Tidak ada wajah terbaru untuk ditetapkan.",
+    "emptyPerson": "Tidak ada gambar pelatihan untuk orang ini.",
+    "unknown": "Tidak dikenal",
+    "appearances": "Kemunculan terakhir",
+    "noAppearances": "Tidak ada kemunculan terbaru.",
+    "replay": "Putar ulang peristiwa ini",
+    "badName": "Nama tidak valid: huruf, angka, spasi, ' _ - (maks. 50 karakter).",
+    "failed": "Gagal: {msg}",
+    "assigned": "{n} wajah ditetapkan ke {name} | {n} wajah ditetapkan ke {name}",
+    "deleted": "{n} gambar dihapus | {n} gambar dihapus",
+    "uploaded": "{n} gambar ditambahkan | {n} gambar ditambahkan",
+    "personDeleted": "{name} dihapus"
   }
 }

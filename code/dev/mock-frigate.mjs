@@ -67,8 +67,66 @@ function frame(id, h) {
 </svg>`
 }
 
+// Bibliothèque de visages (reconnaissance faciale, 0.16+) : dossiers en mémoire, images SVG générées.
+// MOCK_NO_FACES=1 : reconnaissance désactivée (face_recognition.enabled false, modifications refusées en 400)
+const FACES_ON = !process.env.MOCK_NO_FACES
+const now0 = Math.floor(Date.now() / 1000)
+const faces = { Alex: [], Marie: [], train: [] }
+for (let i = 0; i < 4; i++) faces.Alex.push(`Alex-${now0 - 86400 * (i + 1)}.${i}.webp`)
+for (let i = 0; i < 3; i++) faces.Marie.push(`Marie-${now0 - 86400 * (i + 2)}.${i}.webp`)
+for (let i = 0; i < 9; i++) {
+  const ts = now0 - 1800 * (i + 1) - Math.floor(rnd('f' + i) * 900), guess = rnd('g' + i) < 0.4 ? (rnd('h' + i) < 0.5 ? 'Alex' : 'Marie') : 'unknown'
+  faces.train.push(`${ts}.${String(i).padStart(6, '0')}-ab${i}cd-${ts}.5-${guess}-${(0.35 + rnd('s' + i) * 0.6).toFixed(2)}.webp`)
+}
+function faceSvg(seed) {
+  const h = Math.floor(rnd(seed) * 360), skin = 25 + Math.floor(rnd(seed + 's') * 25)
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><rect width="160" height="160" fill="hsl(${h},30%,22%)"/>
+  <ellipse cx="80" cy="84" rx="44" ry="54" fill="hsl(30,45%,${skin + 30}%)"/><path d="M36 70q44-60 88 0q-10-34-44-36q-34 2-44 36z" fill="hsl(${h},35%,18%)"/>
+  <circle cx="63" cy="80" r="5" fill="#222"/><circle cx="97" cy="80" r="5" fill="#222"/><path d="M62 112q18 ${8 + Math.floor(rnd(seed + 'm') * 10)} 36 0" stroke="#7a3b2e" stroke-width="4" fill="none"/></svg>`
+}
+const readBody = (req) => new Promise((resolve) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => resolve(Buffer.concat(c))) })
+async function facesApi(req, url, send) {
+  const json = (code, o) => send(code, 'application/json', JSON.stringify(o))
+  const p = url.pathname
+  if (p === '/api/faces' && req.method === 'GET') return json(200, faces), true
+  let m = p.match(/^\/clips\/faces\/([^/]+)\/([^/]+)$/)
+  if (m) { const n = decodeURIComponent(m[1]), f = decodeURIComponent(m[2]); return faces[n]?.includes(f) ? send(200, 'image/svg+xml', faceSvg(f)) : send(404, 'text/plain', 'not found'), true }
+  m = p.match(/^\/api\/faces\/(.+)$/)
+  if (!m || req.method === 'GET') return false
+  if (!FACES_ON) return json(400, { success: false, message: 'Face recognition is not enabled.' }), true
+  const raw = await readBody(req)
+  let b = {}; try { b = JSON.parse(raw.toString()) } catch { /* multipart ou vide */ }
+  const parts = m[1].split('/').map(decodeURIComponent)
+  console.log('VISAGES', req.method, parts.join('/'), raw.length > 300 ? `(${raw.length} octets)` : raw.toString())
+  const stamp = () => `${Date.now() / 1000}`
+  if (parts[0] === 'train' && parts[2] === 'classify') {
+    const i = faces.train.indexOf(b.training_file)
+    if (i < 0) return json(404, { success: false, message: `Invalid filename or no file exists: ${b.training_file}` }), true
+    faces.train.splice(i, 1); (faces[parts[1]] ||= []).push(`${parts[1]}-${stamp()}.webp`)
+    return json(200, { success: true, message: 'ok' }), true
+  }
+  const [name, action] = parts
+  if (action === 'create') { faces[name.replace(/ /g, '_')] ||= []; return json(200, { success: false, message: 'Successfully created face folder.' }), true }
+  if (action === 'register') {
+    if (!/multipart\/form-data/.test(req.headers['content-type'] || '') || !raw.includes('name="file"')) return json(400, { success: false, message: 'no file' }), true
+    ;(faces[name] ||= []).push(`${name}-${stamp()}.webp`); return json(200, { success: true, message: 'Successfully registered face.' }), true
+  }
+  if (action === 'delete') {
+    if (!faces[name]) return json(404, { success: false }), true
+    faces[name] = faces[name].filter((f) => !(b.ids || []).includes(f))
+    if (name !== 'train' && !faces[name].length) delete faces[name]
+    return json(200, { success: true, message: 'Successfully deleted faces.' }), true
+  }
+  if (action === 'rename' && req.method === 'PUT') {
+    if (!faces[name] || !/^[\p{L}\p{N}\s'_-]{1,50}$/u.test(b.new_name || '') || faces[b.new_name]) return json(400, { success: false, message: 'Error renaming face. Check Frigate logs.' }), true
+    faces[b.new_name] = faces[name].map((f) => f.replace(name + '-', b.new_name + '-')); delete faces[name]
+    return json(200, { success: true }), true
+  }
+  return json(404, { success: false }), true
+}
+
 function handler(secure) {
-  return (req, res) => {
+  return async (req, res) => {
   const url = new URL(req.url, 'http://x')
   const send = (code, type, body, extra = {}) => { res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store', ...extra }); res.end(body) }
   if (secure) {
@@ -88,11 +146,14 @@ function handler(secure) {
     if (!sessions.has(token)) return send(401, 'application/json', '{"message":"Unauthorized"}')
     if (url.pathname === '/api/profile') { const name = sessions.get(token); return send(200, 'application/json', JSON.stringify({ username: name, role: USERS[name].role })) }
   }
+  // Rôle admin exigé pour modifier les visages
+  if (secure && url.pathname.startsWith('/api/faces/') && req.method !== 'GET') { const tk = /frigate_token=([a-f0-9]+)/.exec(req.headers.cookie || '')?.[1]; if (USERS[sessions.get(tk)]?.role !== 'admin') return send(403, 'application/json', '{"message":"Forbidden"}') }
+  if (await facesApi(req, url, send)) return
   // Caméra « devant » motorisée (commandes reçues par le WebSocket, affichées dans la console)
   const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
   if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
-  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
+  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)

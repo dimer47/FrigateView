@@ -14,7 +14,8 @@
     "settings": "Settings",
     "serverTitle": "Frigate {version} — connection, account, change server",
     "showUser": "click to show the name",
-    "hideUser": "click to hide the name"
+    "hideUser": "click to hide the name",
+    "faces": "Face gallery"
   },
   "roles": {
     "admin": "administrator",
@@ -338,7 +339,8 @@
     "title": "Keyboard shortcuts",
     "capture": "Snapshot of the selected camera",
     "exportClip": "Export a clip",
-    "sound": "Sound of the selected camera"
+    "sound": "Sound of the selected camera",
+    "faces": "Face gallery"
   },
   "app": {
     "serverUnreachable": "server unreachable",
@@ -422,7 +424,8 @@
     "checkUpdates": "Check for updates…",
     "capture": "Snapshot",
     "exportClip": "Export a clip…",
-    "sound": "Sound of the selected camera"
+    "sound": "Sound of the selected camera",
+    "faces": "Faces…"
   },
   "main": {
     "aboutText": "Video wall for Frigate NVR.",
@@ -586,5 +589,46 @@
     "package": "package",
     "face": "face",
     "license_plate": "license plate"
+  },
+  "faces": {
+    "title": "Faces",
+    "readOnly": "Read only",
+    "reload": "Refresh",
+    "loading": "Loading…",
+    "disabledTitle": "Face recognition is disabled",
+    "disabledText": "This Frigate server does not have face recognition enabled (Frigate 0.16 or later required). Enable it in the Frigate configuration, then restart Frigate.",
+    "errorTitle": "Could not load faces",
+    "retry": "Try again",
+    "recent": "Recent unrecognized faces",
+    "recentHint": "Assign them to a person to improve recognition.",
+    "people": "People",
+    "noPeople": "No people registered.",
+    "images": "{n} image | {n} images",
+    "newPerson": "New person",
+    "namePlaceholder": "Person's name",
+    "rename": "Rename",
+    "addImages": "Add images…",
+    "deletePerson": "Delete person",
+    "confirmDeletePerson": "Confirm deletion?",
+    "selectAll": "Select all",
+    "selectHint": "Click to select, Shift+click for a range",
+    "selected": "{n} selected | {n} selected",
+    "assignTo": "Assign to…",
+    "newPersonOption": "New person…",
+    "assign": "Assign",
+    "deleteSelected": "Delete",
+    "confirmDelete": "Delete {n} image? | Delete {n} images?",
+    "emptyRecent": "No recent faces to assign.",
+    "emptyPerson": "No training images for this person.",
+    "unknown": "Unknown",
+    "appearances": "Recent appearances",
+    "noAppearances": "No recent appearances.",
+    "replay": "Replay this event",
+    "badName": "Invalid name: letters, digits, spaces, ' _ - (50 characters max).",
+    "failed": "Failed: {msg}",
+    "assigned": "{n} face assigned to {name} | {n} faces assigned to {name}",
+    "deleted": "{n} image deleted | {n} images deleted",
+    "uploaded": "{n} image added | {n} images added",
+    "personDeleted": "{name} deleted"
   }
 }

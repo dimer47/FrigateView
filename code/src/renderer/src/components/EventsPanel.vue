@@ -5,13 +5,12 @@ import { FILTER_KEYS, filterOptions, toggleFilter, rangePreset, rangeFromDates }
 import { t, dayTitle, fmtDuration } from '@/i18n'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
-import { useTimelineStore } from '@/stores/timeline'
 import { useUiStore } from '@/stores/ui'
+import { playEvent } from '@/stores/playEvent'
 
 const ev = useEventsStore()
 const layouts = useLayoutStore()
 const server = useServerStore()
-const tl = useTimelineStore()
 const ui = useUiStore()
 const list = ref(null)
 
@@ -51,14 +50,7 @@ onBeforeUnmount(() => { clearTimeout(timer); document.removeEventListener('mouse
 function onScroll(e) { const el = e.target; if (ev.historyMode && el.scrollTop + el.clientHeight > el.scrollHeight - 80) ev.searchHistory(false, layouts.cams) }
 
 // Clic : relecture 5 s avant le début, sur la case de la caméra
-function open(e) {
-  ev.activeId = e.id
-  ev.markSeen([e.id])
-  const i = layouts.active?.cells.indexOf(e.cam) ?? -1
-  if (i >= 0) layouts.selected = i
-  else if (layouts.active) ui.notify(t('events.notInLayout', { cam: camName(e.cam) }), { label: t('events.addIt'), run: () => { const empty = layouts.active.cells.indexOf(null); layouts.place(e.cam, empty >= 0 ? empty : layouts.selected) } })
-  tl.seek(e.s - 5000, e.cam, true)
-}
+const open = playEvent
 async function allSeen() {
   const n = ev.unseenCount
   if (!(await ev.markAllSeen())) ui.notify(t('events.markFailed'))
