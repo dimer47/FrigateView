@@ -30,7 +30,7 @@ const viewed = new Set()
 const live = [] // revues créées pendant que le serveur tourne
 function review(c, s0, obj, end) {
   const id = `${s0}-${c}`
-  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [['Dimitri', 0.88]] : []
+  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [['Alex', 0.88]] : []
   return { id, camera: c, start_time: s0, end_time: end, severity: obj === 'person' ? 'alert' : 'detection', thumb_path: `/media/frigate/clips/review/thumb-${c}-${id}.webp`,
     data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id] } }
 }
