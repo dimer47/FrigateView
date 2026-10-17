@@ -178,7 +178,35 @@
     "itemHint": "Klik: putar ulang · Klik dua kali: detail",
     "unseenDot": "Belum dilihat",
     "ongoing": "BERLANGSUNG",
-    "details": "Detail"
+    "details": "Detail",
+    "filter": {
+      "object": "Objek",
+      "face": "Wajah",
+      "plate": "Pelat",
+      "zone": "Zona",
+      "cam": "Kamera",
+      "noValues": "Tidak ada nilai yang dikenal",
+      "remove": "Hapus filter ini",
+      "clear": "Hapus semua"
+    },
+    "range": {
+      "any": "Tanggal apa pun",
+      "today": "Hari ini",
+      "7d": "7 hari",
+      "30d": "30 hari",
+      "from": "Dari",
+      "to": "Sampai",
+      "title": "Periode yang dicari di server"
+    },
+    "history": {
+      "label": "Riwayat server",
+      "title": "Hasil dicari di server, melampaui 2 hari terakhir",
+      "loading": "Mencari…",
+      "error": "Pencarian gagal: server tidak terjangkau atau versi tidak kompatibel.",
+      "none": "Tidak ada peristiwa yang cocok dengan filter ini.",
+      "end": "Akhir hasil",
+      "more": "Muat lagi"
+    }
   },
   "detail": {
     "camera": "Kamera",
@@ -543,5 +571,20 @@
     "resetHint": "Kembali ke gambar utuh (klik ganda)",
     "miniHint": "Klik atau seret untuk memindahkan area yang terlihat",
     "wheelHint": "Roda gulir: zoom"
+  },
+  "labels": {
+    "person": "orang",
+    "car": "mobil",
+    "dog": "anjing",
+    "cat": "kucing",
+    "bird": "burung",
+    "horse": "kuda",
+    "bicycle": "sepeda",
+    "motorcycle": "motor",
+    "truck": "truk",
+    "bus": "bus",
+    "package": "paket",
+    "face": "wajah",
+    "license_plate": "pelat"
   }
 }

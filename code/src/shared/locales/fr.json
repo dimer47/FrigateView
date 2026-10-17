@@ -178,7 +178,35 @@
     "itemHint": "Clic : relire · Double-clic : détails",
     "unseenDot": "Non vu",
     "ongoing": "EN COURS",
-    "details": "Détails"
+    "details": "Détails",
+    "filter": {
+      "object": "Objet",
+      "face": "Visage",
+      "plate": "Plaque",
+      "zone": "Zone",
+      "cam": "Caméra",
+      "noValues": "Aucune valeur connue",
+      "remove": "Retirer ce filtre",
+      "clear": "Tout effacer"
+    },
+    "range": {
+      "any": "Toutes dates",
+      "today": "Aujourd'hui",
+      "7d": "7 jours",
+      "30d": "30 jours",
+      "from": "Du",
+      "to": "Au",
+      "title": "Période recherchée sur le serveur"
+    },
+    "history": {
+      "label": "Historique du serveur",
+      "title": "Résultats cherchés sur le serveur, au-delà des 2 derniers jours",
+      "loading": "Recherche…",
+      "error": "Recherche impossible : serveur injoignable ou version non compatible.",
+      "none": "Aucun événement ne correspond à ces filtres.",
+      "end": "Fin des résultats",
+      "more": "Charger plus"
+    }
   },
   "detail": {
     "camera": "Caméra",
@@ -543,5 +571,20 @@
     "resetHint": "Revenir à l’image entière (double-clic)",
     "miniHint": "Cliquer ou glisser pour déplacer la zone affichée",
     "wheelHint": "Molette : zoom"
+  },
+  "labels": {
+    "person": "personne",
+    "car": "voiture",
+    "dog": "chien",
+    "cat": "chat",
+    "bird": "oiseau",
+    "horse": "cheval",
+    "bicycle": "vélo",
+    "motorcycle": "moto",
+    "truck": "camion",
+    "bus": "bus",
+    "package": "colis",
+    "face": "visage",
+    "license_plate": "plaque"
   }
 }

@@ -106,6 +106,13 @@ export const vodUrl = (server, cam, start, end) =>
 export const getRecentReviews = (server, after, limit = 500) =>
   getJson(server, `/api/review?after=${Math.floor(after)}&limit=${limit}`)
 
+// Recherche dans l'historique (chemin construit par historyQuery) et listes de valeurs connues
+export const getPath = (server, path) => getJson(server, path, { timeout: 15000 })
+export async function getList(server, path) {
+  try { const v = await getJson(server, path); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [] } catch { return [] }
+}
+export const eventThumbUrl = (server, id) => `${baseUrl(server)}/api/events/${encodeURIComponent(id)}/thumbnail.webp`
+
 export const markReviewed = (server, ids) =>
   request(server, '/api/reviews/viewed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 

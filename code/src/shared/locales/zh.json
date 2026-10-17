@@ -178,7 +178,35 @@
     "itemHint": "单击：回放 · 双击：详情",
     "unseenDot": "未查看",
     "ongoing": "进行中",
-    "details": "详情"
+    "details": "详情",
+    "filter": {
+      "object": "对象",
+      "face": "人脸",
+      "plate": "车牌",
+      "zone": "区域",
+      "cam": "摄像头",
+      "noValues": "没有已知值",
+      "remove": "移除此筛选",
+      "clear": "全部清除"
+    },
+    "range": {
+      "any": "任意日期",
+      "today": "今天",
+      "7d": "7 天",
+      "30d": "30 天",
+      "from": "从",
+      "to": "到",
+      "title": "在服务器上搜索的时间段"
+    },
+    "history": {
+      "label": "服务器历史",
+      "title": "在服务器上搜索的结果，超出最近 2 天",
+      "loading": "正在搜索…",
+      "error": "无法搜索：服务器无法访问或版本不兼容。",
+      "none": "没有符合这些筛选条件的事件。",
+      "end": "没有更多结果",
+      "more": "加载更多"
+    }
   },
   "detail": {
     "camera": "摄像头",
@@ -543,5 +571,20 @@
     "resetHint": "恢复完整画面（双击）",
     "miniHint": "点击或拖动以移动显示区域",
     "wheelHint": "滚轮：缩放"
+  },
+  "labels": {
+    "person": "人",
+    "car": "汽车",
+    "dog": "狗",
+    "cat": "猫",
+    "bird": "鸟",
+    "horse": "马",
+    "bicycle": "自行车",
+    "motorcycle": "摩托车",
+    "truck": "卡车",
+    "bus": "公交车",
+    "package": "包裹",
+    "face": "人脸",
+    "license_plate": "车牌"
   }
 }

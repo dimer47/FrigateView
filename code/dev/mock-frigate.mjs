@@ -30,9 +30,28 @@ const viewed = new Set()
 const live = [] // revues créées pendant que le serveur tourne
 function review(c, s0, obj, end) {
   const id = `${s0}-${c}`
-  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [['Alex', 0.88]] : []
+  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [[rnd(id + 'f') < 0.6 ? 'Alex' : 'Marie', 0.88]] : []
   return { id, camera: c, start_time: s0, end_time: end, severity: obj === 'person' ? 'alert' : 'detection', thumb_path: `/media/frigate/clips/review/thumb-${c}-${id}.webp`,
     data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id] } }
+}
+// Toutes les revues d'une plage (30 jours de rétention), de la plus récente à la plus ancienne
+const RETAIN = 30 * 86400
+function allReviews(after, before, list) {
+  after = Math.max(after, Date.now() / 1000 - RETAIN)
+  const out = live.filter((x) => list.includes(x.camera) && x.start_time >= after && x.start_time < before).map(withViewed)
+  for (const c of list) for (let t = Math.floor(after / 600) * 600; t < before; t += 600) {
+    const x = rnd(c + t)
+    if (x > 0.45 || isGap(c, t)) continue
+    const s0 = t + Math.floor(rnd(c + t + 'o') * 500), obj = x < 0.25 ? 'person' : x < 0.42 ? 'car' : 'dog'
+    if (s0 > Date.now() / 1000 || s0 < after || s0 >= before) continue
+    out.push(withViewed(review(c, s0, obj, s0 + 20 + Math.floor(rnd(c + s0) * 90))))
+  }
+  return out.sort((a, b) => b.start_time - a.start_time)
+}
+const toEvent = (r) => {
+  const sub = r.data.sub_labels[0], plate = sub && /\d/.test(sub) ? sub : null
+  return { id: r.id + '-ev', camera: r.camera, label: r.data.objects[0], sub_label: plate ? null : sub || null, zones: r.data.zones, start_time: r.start_time, end_time: r.end_time,
+    has_clip: true, has_snapshot: true, top_score: 0.8, false_positive: null, box: null, data: { type: 'object', score: 0.8, recognized_license_plate: plate } }
 }
 const withViewed = (r) => ({ ...r, has_been_reviewed: viewed.has(r.id) || r.start_time < Date.now() / 1000 - 3600 })
 const hue = (id) => (cams.indexOf(id) * 67) % 360
@@ -73,7 +92,7 @@ function handler(secure) {
   const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
   if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
-  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true }])) }))
+  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)
@@ -96,19 +115,29 @@ function handler(secure) {
   }
   r = url.pathname.match(/^\/clips\/review\/thumb-([a-z_]+)-.+\.webp$/)
   if (r && cams.includes(r[1])) return send(200, 'image/svg+xml', frame(r[1], 180))
+  // Revues sur 30 jours de rétention. Paramètres de Frigate : cameras, labels, zones, reviewed, severity, after, before, limit
   if (url.pathname === '/api/review') {
-    const after = +url.searchParams.get('after') || 0, before = +url.searchParams.get('before') || Date.now() / 1000
-    const list = (url.searchParams.get('cameras') || cams.join(',')).split(',')
-    const out = live.filter((x) => list.includes(x.camera) && x.start_time >= after && x.start_time < before).map(withViewed)
-    for (const c of list) for (let t = Math.floor(after / 600) * 600; t < before; t += 600) {
-      const x = rnd(c + t)
-      if (x > 0.45 || isGap(c, t)) continue
-      const s0 = t + Math.floor(rnd(c + t + 'o') * 500), obj = x < 0.25 ? 'person' : x < 0.42 ? 'car' : 'dog'
-      if (s0 > Date.now() / 1000) continue
-      out.push(withViewed(review(c, s0, obj, s0 + 20 + Math.floor(rnd(c + s0) * 90))))
-    }
-    return send(200, 'application/json', JSON.stringify(out.sort((a, b) => b.start_time - a.start_time)))
+    const p = url.searchParams, set = (k) => (p.get(k) && p.get(k) !== 'all' ? p.get(k).split(',') : null)
+    const labels = set('labels'), zones = set('zones'), sev = p.get('severity'), rv = p.get('reviewed')
+    let out = allReviews(+p.get('after') || 0, +p.get('before') || Date.now() / 1000, set('cameras') || cams)
+      .filter((x) => (!labels || x.data.objects.some((o) => labels.includes(o))) && (!zones || x.data.zones.some((z) => zones.includes(z))) && (!sev || x.severity === sev) && (rv == null || +x.has_been_reviewed === +rv))
+    if (p.get('limit')) out = out.slice(0, +p.get('limit'))
+    return send(200, 'application/json', JSON.stringify(out))
   }
+  // Événements (un par revue) : sub_label = visage (chaîne), plaque dans data.recognized_license_plate (0.16+)
+  if (url.pathname === '/api/events') {
+    const p = url.searchParams, set = (k) => (p.get(k) && p.get(k) !== 'all' ? p.get(k).split(',').map((x) => x.toLowerCase()) : null)
+    const labels = set('labels') || set('label'), zones = set('zones') || set('zone'), subs = set('sub_labels') || set('sub_label'), plates = set('recognized_license_plate')
+    const out = allReviews(+p.get('after') || 0, +p.get('before') || Date.now() / 1000, set('cameras') || cams).map(toEvent)
+      .filter((e) => (!labels || labels.includes(e.label)) && (!zones || e.zones.some((z) => zones.includes(z))) &&
+        (!subs || (e.sub_label && subs.includes(e.sub_label.toLowerCase()))) && (!plates || (e.data.recognized_license_plate && plates.includes(e.data.recognized_license_plate.toLowerCase()))))
+    return send(200, 'application/json', JSON.stringify(out.slice(+p.get('offset') || 0).slice(0, +p.get('limit') || 100)))
+  }
+  if (url.pathname === '/api/sub_labels') return send(200, 'application/json', JSON.stringify(['Alex', 'Marie']))
+  if (url.pathname === '/api/recognized_license_plates') return send(200, 'application/json', JSON.stringify(['AB-123-CD', 'AB-456-CD']))
+  if (url.pathname === '/api/labels') return send(200, 'application/json', JSON.stringify(['car', 'dog', 'person']))
+  r = url.pathname.match(/^\/api\/events\/(\d+)-([a-z_]+)-ev\/thumbnail\.webp$/)
+  if (r && cams.includes(r[2])) return send(200, 'image/svg+xml', frame(r[2], 180))
   // Relecture HLS : même clip de 10 s répété, une entrée par segment enregistré
   r = url.pathname.match(/^\/vod\/([^/]+)\/start\/([\d.]+)\/end\/([\d.]+)\/index\.m3u8$/)
   if (r && cams.includes(r[1])) {

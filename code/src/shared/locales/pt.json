@@ -178,7 +178,35 @@
     "itemHint": "Clique: reproduzir · Clique duplo: detalhes",
     "unseenDot": "Não visto",
     "ongoing": "EM ANDAMENTO",
-    "details": "Detalhes"
+    "details": "Detalhes",
+    "filter": {
+      "object": "Objeto",
+      "face": "Rosto",
+      "plate": "Matrícula",
+      "zone": "Zona",
+      "cam": "Câmara",
+      "noValues": "Nenhum valor conhecido",
+      "remove": "Remover este filtro",
+      "clear": "Limpar tudo"
+    },
+    "range": {
+      "any": "Qualquer data",
+      "today": "Hoje",
+      "7d": "7 dias",
+      "30d": "30 dias",
+      "from": "De",
+      "to": "Até",
+      "title": "Período pesquisado no servidor"
+    },
+    "history": {
+      "label": "Histórico do servidor",
+      "title": "Resultados pesquisados no servidor, além dos últimos 2 dias",
+      "loading": "A pesquisar…",
+      "error": "Pesquisa impossível: servidor inacessível ou versão incompatível.",
+      "none": "Nenhum evento corresponde a estes filtros.",
+      "end": "Fim dos resultados",
+      "more": "Carregar mais"
+    }
   },
   "detail": {
     "camera": "Câmera",
@@ -543,5 +571,20 @@
     "resetHint": "Voltar à imagem inteira (duplo clique)",
     "miniHint": "Clique ou arraste para mover a área visível",
     "wheelHint": "Roda: zoom"
+  },
+  "labels": {
+    "person": "pessoa",
+    "car": "carro",
+    "dog": "cão",
+    "cat": "gato",
+    "bird": "pássaro",
+    "horse": "cavalo",
+    "bicycle": "bicicleta",
+    "motorcycle": "mota",
+    "truck": "camião",
+    "bus": "autocarro",
+    "package": "encomenda",
+    "face": "rosto",
+    "license_plate": "matrícula"
   }
 }

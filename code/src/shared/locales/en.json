@@ -178,7 +178,35 @@
     "itemHint": "Click: play back · Double-click: details",
     "unseenDot": "Unseen",
     "ongoing": "ONGOING",
-    "details": "Details"
+    "details": "Details",
+    "filter": {
+      "object": "Object",
+      "face": "Face",
+      "plate": "Plate",
+      "zone": "Zone",
+      "cam": "Camera",
+      "noValues": "No known values",
+      "remove": "Remove this filter",
+      "clear": "Clear all"
+    },
+    "range": {
+      "any": "Any date",
+      "today": "Today",
+      "7d": "7 days",
+      "30d": "30 days",
+      "from": "From",
+      "to": "To",
+      "title": "Period searched on the server"
+    },
+    "history": {
+      "label": "Server history",
+      "title": "Results searched on the server, beyond the last 2 days",
+      "loading": "Searching…",
+      "error": "Search failed: server unreachable or incompatible version.",
+      "none": "No events match these filters.",
+      "end": "End of results",
+      "more": "Load more"
+    }
   },
   "detail": {
     "camera": "Camera",
@@ -543,5 +571,20 @@
     "resetHint": "Back to the whole image (double-click)",
     "miniHint": "Click or drag to move the visible area",
     "wheelHint": "Wheel: zoom"
+  },
+  "labels": {
+    "person": "person",
+    "car": "car",
+    "dog": "dog",
+    "cat": "cat",
+    "bird": "bird",
+    "horse": "horse",
+    "bicycle": "bicycle",
+    "motorcycle": "motorcycle",
+    "truck": "truck",
+    "bus": "bus",
+    "package": "package",
+    "face": "face",
+    "license_plate": "license plate"
   }
 }
