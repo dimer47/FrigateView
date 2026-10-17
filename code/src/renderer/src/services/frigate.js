@@ -75,6 +75,8 @@ export async function getCameras(server) {
 }
 
 // En ligne = la caméra envoie des images (camera_fps > 0)
+export const getStats = (server) => getJson(server, '/api/stats')
+export const onlineFromStats = (stats) => Object.fromEntries(Object.entries(stats.cameras || {}).map(([id, s]) => [id, (s.camera_fps ?? 0) > 0]))
 export async function getOnline(server) {
   const stats = await getJson(server, '/api/stats')
   const out = {}

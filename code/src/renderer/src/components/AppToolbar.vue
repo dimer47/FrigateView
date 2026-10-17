@@ -4,7 +4,7 @@ import { useUiStore } from '@/stores/ui'
 import { useTimelineStore } from '@/stores/timeline'
 import { useEventsStore } from '@/stores/events'
 import { useAppSettings } from '@/stores/appSettings'
-import { useStatsStore, fmtRate } from '@/stores/stats'
+import { useStatsStore, fmtRate, serverSummary } from '@/stores/stats'
 import { computed } from 'vue'
 import { loc, t } from '@/i18n'
 
@@ -17,6 +17,29 @@ const stats = useStatsStore()
 const num = (v, d = 0) => v.toLocaleString(loc(), { minimumFractionDigits: d, maximumFractionDigits: d })
 const pct = (v, d = 0) => (v == null ? '—' : `${num(v, d)} %`)
 const m = computed(() => stats.metrics)
+// Segments des statistiques, selon les éléments cochés dans les réglages
+const statGroups = computed(() => {
+  const f = ui.statFields.global, mm = stats.metrics, s = serverSummary(server.stats), out = []
+  const seg = (on, text, title) => (on ? [{ text, title }] : [])
+  if (f.total) out.push({ items: seg(true, `↓ ${fmtRate(stats.totalKbps, loc())}`, t('stats.totalTitle')) })
+  if (mm) {
+    out.push({ label: t('stats.app'), title: t('stats.appTitle'), items: [...seg(f.appCpu, pct(mm.appCpu, 1), t('stats.cpuTitle')), ...seg(f.appMem, t('stats.mb', { n: num(mm.appMem / 1e6) }), t('stats.memTitle'))] })
+    out.push({ label: t('stats.pc'), title: t('stats.pcTitle'), items: [...seg(f.pcCpu, pct(mm.sysCpu), t('stats.cpuTitle')), ...seg(f.pcMem, t('stats.gbOf', { n: num(mm.sysMemUsed / 1e9, 1), total: num(mm.sysMemTotal / 1e9, 1) }), t('stats.memTitle'))] })
+  }
+  if (s) {
+    out.push({ label: 'Frigate', title: t('stats.srvTitle'), items: [
+      ...seg(f.srvCpu && s.cpu != null, pct(s.cpu), t('stats.srvCpuTitle')),
+      ...seg(f.srvMem && s.mem != null, `${t('stats.mem')} ${pct(s.mem)}`, t('stats.srvMemTitle')),
+      ...seg(f.srvGo2rtc && s.go2rtc != null, `go2rtc ${pct(s.go2rtc)}`, t('stats.go2rtcTitle')),
+      ...seg(f.srvRecord && s.record != null, `${t('stats.record')} ${pct(s.record)}`, t('stats.recordTitle')),
+      ...seg(f.srvStorage && s.storageUsed != null, `${t('stats.disk')} ${t('stats.gbOf', { n: num(s.storageUsed), total: num(s.storageTotal) })}`, t('stats.diskTitle')),
+      ...seg(f.srvDetector && s.inference != null, `${t('stats.detector')} ${num(s.inference)} ms`, t('stats.detectorTitle')),
+      ...seg(f.srvUptime && s.uptime != null, `⏱ ${t('stats.uptimeVal', { h: Math.floor(s.uptime / 3600), m: Math.floor((s.uptime % 3600) / 60) })}`, t('stats.uptimeTitle'))
+    ] })
+  }
+  return out.filter((g) => g.items.length)
+})
+const diskFull = computed(() => { const s = serverSummary(server.stats); return s?.storageUsed && s.storageUsed / s.storageTotal > 0.9 })
 const roleName = computed(() => { const r = server.profile.role; return t('roles.' + r) !== 'roles.' + r ? t('roles.' + r) : r })
 
 function fullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }
@@ -41,12 +64,11 @@ function fullscreen() { document.fullscreenElement ? document.exitFullscreen() :
       <button class="px-2.5 py-1" :class="ui.liveMode === 'webrtc' ? 'bg-accent text-white' : 'text-ink-2'" @click="ui.setLiveMode('webrtc')">{{ $t('toolbar.video') }}</button>
       <button class="border-l border-line px-2.5 py-1" :class="ui.liveMode === 'snapshot' ? 'bg-accent text-white' : 'text-ink-2'" @click="ui.setLiveMode('snapshot')">{{ $t('toolbar.images') }}</button>
     </div>
-    <div v-if="ui.showStats" class="flex h-[30px] shrink-0 items-center divide-x divide-line rounded-md border border-line font-mono text-[11px] text-ink-2">
-      <span class="px-2" :title="$t('stats.totalTitle')">↓ {{ fmtRate(stats.totalKbps, loc()) }}</span>
-      <template v-if="m">
-        <span class="px-2" :title="$t('stats.appTitle') + '\n' + $t('stats.mb', { n: num(m.appMem / 1e6) })">{{ $t('stats.app') }} {{ pct(m.appCpu, 1) }}</span>
-        <span class="px-2" :title="$t('stats.pcTitle') + '\n' + $t('stats.gbOf', { n: num(m.sysMemUsed / 1e9, 1), total: num(m.sysMemTotal / 1e9, 1) })">{{ $t('stats.pc') }} {{ pct(m.sysCpu) }}</span>
-      </template>
+    <div v-if="ui.showStats && statGroups.length" class="flex h-[30px] min-w-0 shrink items-center divide-x divide-line overflow-hidden rounded-md border border-line font-mono text-[11px] text-ink-2">
+      <span v-for="(g, i) in statGroups" :key="i" class="flex items-center gap-1.5 px-2" :title="g.title">
+        <b v-if="g.label" class="font-sans font-semibold text-ink-3">{{ g.label }}</b>
+        <span v-for="(it, j) in g.items" :key="j" :title="it.title" :class="{ 'text-warn': g.label === 'Frigate' && it.title === $t('stats.diskTitle') && diskFull }">{{ it.text }}</span>
+      </span>
     </div>
     <div class="h-[22px] w-px shrink-0 bg-line" />
     <button v-if="server.profile.username" class="flex shrink-0 items-center gap-2 rounded-full py-0.5 pl-0.5 text-xs text-ink-2 hover:bg-raised hover:text-ink" :class="ui.showUser ? 'pr-2.5' : 'pr-0.5'"

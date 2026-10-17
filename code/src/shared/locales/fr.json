@@ -410,6 +410,54 @@
     "gbOf": "{n}/{total} Go",
     "toggle": "Statistiques : débit, processeur, mémoire",
     "settingsTitle": "Statistiques",
-    "settingsHint": "Débit reçu sur chaque caméra, et charge processeur / mémoire dans la barre du haut. Aussi par le bouton de la barre d'outils."
+    "settingsHint": "Débit reçu sur chaque caméra, et charge processeur / mémoire dans la barre du haut. Aussi par le bouton de la barre d'outils.",
+    "cpuTitle": "Processeur",
+    "memTitle": "Mémoire",
+    "srvTitle": "Serveur Frigate (VM entière et ses services)",
+    "srvCpuTitle": "Processeur de la VM Frigate",
+    "mem": "RAM",
+    "srvMemTitle": "Mémoire utilisée par la VM Frigate",
+    "go2rtcTitle": "Processeur de go2rtc, le relais vidéo de Frigate (augmente avec le nombre de flux regardés)",
+    "record": "Enreg.",
+    "recordTitle": "Processeur de l'enregistrement Frigate",
+    "disk": "Disque",
+    "diskTitle": "Place utilisée par les enregistrements (orange au-delà de 90 %)",
+    "detector": "Détect.",
+    "detectorTitle": "Temps d'analyse d'une image par le détecteur IA",
+    "uptimeVal": "{h} h {m} min",
+    "uptimeTitle": "Frigate fonctionne depuis",
+    "fpsOf": "{n}/{total} i/s",
+    "quality": {
+      "excellent": "connexion excellente",
+      "fair": "connexion moyenne",
+      "poor": "connexion faible",
+      "unusable": "connexion inutilisable"
+    },
+    "group": {
+      "global": "Barre du haut",
+      "camera": "Sur chaque caméra"
+    },
+    "field": {
+      "total": "Débit total reçu",
+      "appCpu": "FrigateView : processeur",
+      "appMem": "FrigateView : mémoire",
+      "pcCpu": "PC : processeur",
+      "pcMem": "PC : mémoire",
+      "srvCpu": "Serveur Frigate : processeur",
+      "srvMem": "Serveur Frigate : mémoire",
+      "srvGo2rtc": "Serveur : relais vidéo go2rtc",
+      "srvRecord": "Serveur : enregistrement",
+      "srvStorage": "Serveur : disque des enregistrements",
+      "srvDetector": "Serveur : vitesse du détecteur IA",
+      "srvUptime": "Serveur : durée de fonctionnement",
+      "rate": "Débit reçu",
+      "res": "Résolution",
+      "fps": "Images par seconde reçues",
+      "source": "Type de flux",
+      "srvFps": "Images/s reçues par Frigate",
+      "srvQuality": "Qualité de connexion caméra → Frigate",
+      "srvReconnects": "Reconnexions de la dernière heure",
+      "srvCamCpu": "Processeur utilisé par la caméra sur le serveur"
+    }
   }
 }

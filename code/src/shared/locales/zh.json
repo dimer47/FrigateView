@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "图像"
+    },
+    "cpuTitle": "CPU",
+    "memTitle": "内存",
+    "srvTitle": "Frigate 服务器（整个虚拟机及其服务）",
+    "srvCpuTitle": "Frigate 虚拟机 CPU",
+    "mem": "内存",
+    "srvMemTitle": "Frigate 虚拟机使用的内存",
+    "go2rtcTitle": "go2rtc（Frigate 的视频中继）的 CPU（随观看的流数量增加）",
+    "record": "录制",
+    "recordTitle": "Frigate 录制的 CPU",
+    "disk": "磁盘",
+    "diskTitle": "录像占用的空间（超过 90% 时显示橙色）",
+    "detector": "检测",
+    "detectorTitle": "AI 检测器分析一帧的时间",
+    "uptimeVal": "{h} 小时 {m} 分",
+    "uptimeTitle": "Frigate 已运行",
+    "fpsOf": "{n}/{total} 帧/秒",
+    "quality": {
+      "excellent": "连接极佳",
+      "fair": "连接一般",
+      "poor": "连接较弱",
+      "unusable": "连接不可用"
+    },
+    "group": {
+      "global": "顶部栏",
+      "camera": "每个摄像头上"
+    },
+    "field": {
+      "total": "接收的总带宽",
+      "appCpu": "FrigateView：CPU",
+      "appMem": "FrigateView：内存",
+      "pcCpu": "电脑：CPU",
+      "pcMem": "电脑：内存",
+      "srvCpu": "Frigate 服务器：CPU",
+      "srvMem": "Frigate 服务器：内存",
+      "srvGo2rtc": "服务器：go2rtc 视频中继",
+      "srvRecord": "服务器：录制",
+      "srvStorage": "服务器：录像磁盘",
+      "srvDetector": "服务器：AI 检测器速度",
+      "srvUptime": "服务器：运行时间",
+      "rate": "接收的带宽",
+      "res": "分辨率",
+      "fps": "接收的帧率",
+      "source": "流类型",
+      "srvFps": "Frigate 接收的帧/秒",
+      "srvQuality": "摄像头 → Frigate 连接质量",
+      "srvReconnects": "最近一小时的重连次数",
+      "srvCamCpu": "摄像头在服务器上使用的 CPU"
     }
   }
 }

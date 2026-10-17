@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "images"
+    },
+    "cpuTitle": "CPU",
+    "memTitle": "Memory",
+    "srvTitle": "Frigate server (whole VM and its services)",
+    "srvCpuTitle": "Frigate VM CPU",
+    "mem": "RAM",
+    "srvMemTitle": "Memory used by the Frigate VM",
+    "go2rtcTitle": "CPU of go2rtc, Frigate's video relay (rises with the number of streams watched)",
+    "record": "Rec.",
+    "recordTitle": "CPU of Frigate recording",
+    "disk": "Disk",
+    "diskTitle": "Space used by recordings (orange above 90%)",
+    "detector": "Detect.",
+    "detectorTitle": "Time for the AI detector to analyze one frame",
+    "uptimeVal": "{h} h {m} min",
+    "uptimeTitle": "Frigate running for",
+    "fpsOf": "{n}/{total} fps",
+    "quality": {
+      "excellent": "excellent connection",
+      "fair": "fair connection",
+      "poor": "poor connection",
+      "unusable": "unusable connection"
+    },
+    "group": {
+      "global": "Top bar",
+      "camera": "On each camera"
+    },
+    "field": {
+      "total": "Total bandwidth received",
+      "appCpu": "FrigateView: CPU",
+      "appMem": "FrigateView: memory",
+      "pcCpu": "PC: CPU",
+      "pcMem": "PC: memory",
+      "srvCpu": "Frigate server: CPU",
+      "srvMem": "Frigate server: memory",
+      "srvGo2rtc": "Server: go2rtc video relay",
+      "srvRecord": "Server: recording",
+      "srvStorage": "Server: recordings disk",
+      "srvDetector": "Server: AI detector speed",
+      "srvUptime": "Server: uptime",
+      "rate": "Bandwidth received",
+      "res": "Resolution",
+      "fps": "Frames per second received",
+      "source": "Stream type",
+      "srvFps": "Frames/s received by Frigate",
+      "srvQuality": "Camera → Frigate connection quality",
+      "srvReconnects": "Reconnections in the last hour",
+      "srvCamCpu": "CPU used by the camera on the server"
     }
   }
 }

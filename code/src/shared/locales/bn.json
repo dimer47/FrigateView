@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "ছবি"
+    },
+    "cpuTitle": "CPU",
+    "memTitle": "মেমরি",
+    "srvTitle": "Frigate সার্ভার (পুরো VM ও এর সেবাসমূহ)",
+    "srvCpuTitle": "Frigate VM-এর CPU",
+    "mem": "RAM",
+    "srvMemTitle": "Frigate VM-এর ব্যবহৃত মেমরি",
+    "go2rtcTitle": "go2rtc-এর CPU, Frigate-এর ভিডিও রিলে (দেখা স্ট্রিমের সংখ্যার সাথে বাড়ে)",
+    "record": "রেক.",
+    "recordTitle": "Frigate রেকর্ডিংয়ের CPU",
+    "disk": "ডিস্ক",
+    "diskTitle": "রেকর্ডিংয়ের ব্যবহৃত জায়গা (৯০%-এর বেশি হলে কমলা)",
+    "detector": "ডিটে.",
+    "detectorTitle": "AI ডিটেক্টরের একটি ফ্রেম বিশ্লেষণের সময়",
+    "uptimeVal": "{h} ঘ {m} মি",
+    "uptimeTitle": "Frigate চলছে",
+    "fpsOf": "{n}/{total} fps",
+    "quality": {
+      "excellent": "চমৎকার সংযোগ",
+      "fair": "মাঝারি সংযোগ",
+      "poor": "দুর্বল সংযোগ",
+      "unusable": "অব্যবহারযোগ্য সংযোগ"
+    },
+    "group": {
+      "global": "উপরের বার",
+      "camera": "প্রতিটি ক্যামেরায়"
+    },
+    "field": {
+      "total": "মোট প্রাপ্ত ব্যান্ডউইথ",
+      "appCpu": "FrigateView: CPU",
+      "appMem": "FrigateView: মেমরি",
+      "pcCpu": "PC: CPU",
+      "pcMem": "PC: মেমরি",
+      "srvCpu": "Frigate সার্ভার: CPU",
+      "srvMem": "Frigate সার্ভার: মেমরি",
+      "srvGo2rtc": "সার্ভার: go2rtc ভিডিও রিলে",
+      "srvRecord": "সার্ভার: রেকর্ডিং",
+      "srvStorage": "সার্ভার: রেকর্ডিং ডিস্ক",
+      "srvDetector": "সার্ভার: AI ডিটেক্টরের গতি",
+      "srvUptime": "সার্ভার: চালু থাকার সময়",
+      "rate": "প্রাপ্ত ব্যান্ডউইথ",
+      "res": "রেজোলিউশন",
+      "fps": "প্রতি সেকেন্ডে প্রাপ্ত ফ্রেম",
+      "source": "স্ট্রিমের ধরন",
+      "srvFps": "Frigate-এর প্রাপ্ত ফ্রেম/সে",
+      "srvQuality": "ক্যামেরা → Frigate সংযোগের মান",
+      "srvReconnects": "গত এক ঘণ্টায় পুনঃসংযোগ",
+      "srvCamCpu": "সার্ভারে ক্যামেরার ব্যবহৃত CPU"
     }
   }
 }

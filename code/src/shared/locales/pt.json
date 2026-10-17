@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "imagens"
+    },
+    "cpuTitle": "CPU",
+    "memTitle": "Memória",
+    "srvTitle": "Servidor Frigate (VM inteira e seus serviços)",
+    "srvCpuTitle": "CPU da VM Frigate",
+    "mem": "RAM",
+    "srvMemTitle": "Memória usada pela VM Frigate",
+    "go2rtcTitle": "CPU do go2rtc, o relé de vídeo do Frigate (aumenta com o número de fluxos assistidos)",
+    "record": "Grav.",
+    "recordTitle": "CPU da gravação do Frigate",
+    "disk": "Disco",
+    "diskTitle": "Espaço usado pelas gravações (laranja acima de 90%)",
+    "detector": "Detec.",
+    "detectorTitle": "Tempo de análise de um quadro pelo detector de IA",
+    "uptimeVal": "{h} h {m} min",
+    "uptimeTitle": "Frigate em execução há",
+    "fpsOf": "{n}/{total} q/s",
+    "quality": {
+      "excellent": "conexão excelente",
+      "fair": "conexão razoável",
+      "poor": "conexão fraca",
+      "unusable": "conexão inutilizável"
+    },
+    "group": {
+      "global": "Barra superior",
+      "camera": "Em cada câmera"
+    },
+    "field": {
+      "total": "Banda total recebida",
+      "appCpu": "FrigateView: CPU",
+      "appMem": "FrigateView: memória",
+      "pcCpu": "PC: CPU",
+      "pcMem": "PC: memória",
+      "srvCpu": "Servidor Frigate: CPU",
+      "srvMem": "Servidor Frigate: memória",
+      "srvGo2rtc": "Servidor: relé de vídeo go2rtc",
+      "srvRecord": "Servidor: gravação",
+      "srvStorage": "Servidor: disco das gravações",
+      "srvDetector": "Servidor: velocidade do detector de IA",
+      "srvUptime": "Servidor: tempo de atividade",
+      "rate": "Banda recebida",
+      "res": "Resolução",
+      "fps": "Quadros por segundo recebidos",
+      "source": "Tipo de fluxo",
+      "srvFps": "Quadros/s recebidos pelo Frigate",
+      "srvQuality": "Qualidade da conexão câmera → Frigate",
+      "srvReconnects": "Reconexões na última hora",
+      "srvCamCpu": "CPU usada pela câmera no servidor"
     }
   }
 }

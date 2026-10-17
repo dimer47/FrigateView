@@ -30,7 +30,7 @@ const tl = useTimelineStore()
 const ev = useEventsStore()
 const appSettings = useAppSettings()
 const stats = useStatsStore()
-watch(() => ui.showStats, (on) => (on ? stats.start() : stats.stop()), { immediate: true })
+watch(() => ui.showStats, (on) => { on ? stats.start() : stats.stop(); server._fast = on; if (server.status === 'ok') server.startPolling(on) }, { immediate: true })
 
 // Fenêtre « mur vidéo » ouverte sur un autre écran : grille seule, layout imposé
 const params = new URLSearchParams(location.search)

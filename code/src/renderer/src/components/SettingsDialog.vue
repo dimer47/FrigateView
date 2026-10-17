@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useAppSettings } from '@/stores/appSettings'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
-import { useUiStore } from '@/stores/ui'
+import { useUiStore, STAT_FIELDS } from '@/stores/ui'
 import { TYPE_KEYS, typeLabel } from '@/stores/events'
 import { t, loc, LANGS } from '@/i18n'
 import { isInternal } from '@/services/frigate'
@@ -59,6 +59,14 @@ const close = () => (app.open = false)
             </label>
             <h3 class="mb-1.5 mt-5 font-semibold">{{ $t('stats.settingsTitle') }}</h3>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('stats.toggle') }}<small class="block text-xs text-ink-3">{{ $t('stats.settingsHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.showStats" @change="ui.toggleStats()"></label>
+            <div class="grid grid-cols-2 gap-x-6 pt-2" :class="{ 'pointer-events-none opacity-40': !ui.showStats }">
+              <div v-for="g in ['global', 'camera']" :key="g">
+                <div class="mb-1 mt-2 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('stats.group.' + g) }}</div>
+                <label v-for="(_, k) in STAT_FIELDS[g]" :key="k" class="flex items-center gap-2 py-1 text-[13px]">
+                  <input type="checkbox" class="size-4 accent-accent" :checked="ui.statFields[g][k]" @change="ui.setStatField(g, k, $event.target.checked)">{{ $t('stats.field.' + k) }}
+                </label>
+              </div>
+            </div>
           </template>
 
           <!-- Notifications -->

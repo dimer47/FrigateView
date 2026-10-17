@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getVersion, getCameras, getOnline, getProfile, login, logout, isInternal, checkCert } from '@/services/frigate'
+import { getVersion, getCameras, getStats, onlineFromStats, getProfile, login, logout, isInternal, checkCert } from '@/services/frigate'
 import { resetWebRTCEndpoint } from '@/services/webrtc'
 import { load, save } from './storage'
 
@@ -14,6 +14,7 @@ export const useServerStore = defineStore('server', {
     profile: { username: '', role: 'viewer' },
     cameras: [],
     online: {},
+    stats: null, // dernière réponse brute de /api/stats (statistiques du serveur)
     lostAt: 0
   }),
   getters: {
@@ -29,7 +30,7 @@ export const useServerStore = defineStore('server', {
       if (!isInternal(server) && password !== undefined) await login(server, server.user, password)
       const [version, cameras, profile] = await Promise.all([getVersion(server), getCameras(server), getProfile(server)])
       let online = {}
-      try { online = await getOnline(server) } catch { /* statistiques facultatives */ }
+      try { this.stats = await getStats(server); online = onlineFromStats(this.stats) } catch { /* statistiques facultatives */ }
       Object.assign(this, { server, version, cameras, profile, online, status: 'ok', authReason: '' })
       save('fv-server', server)
       resetWebRTCEndpoint()
@@ -85,15 +86,18 @@ export const useServerStore = defineStore('server', {
       save('fv-server', null)
     },
 
-    startPolling() {
+    // fast : relevé toutes les 3 s quand les statistiques sont affichées
+    startPolling(fast = this._fast) {
+      this._fast = fast
       clearInterval(this._timer)
-      this._timer = setInterval(() => this.poll(), POLL_MS)
+      this._timer = setInterval(() => this.poll(), fast ? 3000 : POLL_MS)
     },
 
     async poll() {
       if (!this.server || this.status === 'auth') return
       try {
-        this.online = await getOnline(this.server)
+        this.stats = await getStats(this.server)
+        this.online = onlineFromStats(this.stats)
         if (this.status === 'lost') { this.cameras = await getCameras(this.server); this.status = 'ok' }
       } catch (e) {
         if (e.code === 'auth') { if (!(await this.relogin())) this.askLogin('connect.sessionExpired'); return }

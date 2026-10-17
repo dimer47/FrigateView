@@ -7,7 +7,8 @@ import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
 import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
-import { useStatsStore, fmtRate } from '@/stores/stats'
+import { useStatsStore, fmtRate, serverCamera } from '@/stores/stats'
+import { t } from '@/i18n'
 
 const props = defineProps({ camId: { type: String, required: true } })
 const server = useServerStore()
@@ -156,6 +157,23 @@ let hlsBytes = 0
 let lastSample = 0
 let statTimer = null
 const myStats = computed(() => stats.cams[props.camId])
+// Ligne de statistiques de la case, selon les éléments cochés dans les réglages
+const statLine = computed(() => {
+  const f = ui.statFields.camera, s = myStats.value, sv = serverCamera(server.stats, props.camId), parts = []
+  if (s) {
+    if (f.rate) parts.push(fmtRate(s.kbps, loc()))
+    if (f.res && s.w) parts.push(`${s.w}×${s.h}`)
+    if (f.fps && s.fps) parts.push(t('stats.fps', { n: Math.round(s.fps) }))
+    if (f.source) parts.push(t('stats.src.' + s.source))
+  }
+  if (sv) {
+    if (f.srvFps && sv.fps != null) parts.push(`Frigate ${t('stats.fpsOf', { n: sv.fps.toLocaleString(loc()), total: sv.expected ?? '?' })}`)
+    if (f.srvQuality && sv.quality) parts.push(t('stats.quality.' + sv.quality) !== 'stats.quality.' + sv.quality ? t('stats.quality.' + sv.quality) : sv.quality)
+    if (f.srvReconnects && sv.reconnects != null) parts.push(`↻ ${sv.reconnects}`)
+    if (f.srvCamCpu) parts.push(`CPU ${sv.cpu.toLocaleString(loc(), { maximumFractionDigits: 1 })} %`)
+  }
+  return parts.join(' · ')
+})
 async function sample() {
   const now = performance.now(), dt = (now - lastSample) / 1000
   lastSample = now
@@ -209,8 +227,8 @@ const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? l
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
     </div>
-    <div v-if="ui.showStats && myStats" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
-        {{ fmtRate(myStats.kbps, loc()) }}<template v-if="myStats.w"> · {{ myStats.w }}×{{ myStats.h }}</template><template v-if="myStats.fps"> · {{ $t('stats.fps', { n: Math.round(myStats.fps) }) }}</template> · {{ $t('stats.src.' + myStats.source) }}
+    <div v-if="ui.showStats && statLine" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
+        {{ statLine }}
     </div>
 
     <div v-if="playback && pbState !== 'playing'" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">

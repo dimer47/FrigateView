@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "صور"
+    },
+    "cpuTitle": "المعالج",
+    "memTitle": "الذاكرة",
+    "srvTitle": "خادم Frigate (الآلة الافتراضية بأكملها وخدماتها)",
+    "srvCpuTitle": "معالج الآلة الافتراضية لـ Frigate",
+    "mem": "RAM",
+    "srvMemTitle": "الذاكرة المستخدمة من الآلة الافتراضية لـ Frigate",
+    "go2rtcTitle": "معالج go2rtc، مرحّل الفيديو في Frigate (يزداد مع عدد البثوث المشاهدة)",
+    "record": "تسجيل",
+    "recordTitle": "معالج التسجيل في Frigate",
+    "disk": "القرص",
+    "diskTitle": "المساحة المستخدمة للتسجيلات (برتقالي فوق 90%)",
+    "detector": "كشف",
+    "detectorTitle": "زمن تحليل صورة واحدة بواسطة كاشف الذكاء الاصطناعي",
+    "uptimeVal": "{h} س {m} د",
+    "uptimeTitle": "يعمل Frigate منذ",
+    "fpsOf": "{n}/{total} إطار/ث",
+    "quality": {
+      "excellent": "اتصال ممتاز",
+      "fair": "اتصال متوسط",
+      "poor": "اتصال ضعيف",
+      "unusable": "اتصال غير صالح"
+    },
+    "group": {
+      "global": "الشريط العلوي",
+      "camera": "على كل كاميرا"
+    },
+    "field": {
+      "total": "إجمالي عرض النطاق المستقبل",
+      "appCpu": "FrigateView: المعالج",
+      "appMem": "FrigateView: الذاكرة",
+      "pcCpu": "الحاسوب: المعالج",
+      "pcMem": "الحاسوب: الذاكرة",
+      "srvCpu": "خادم Frigate: المعالج",
+      "srvMem": "خادم Frigate: الذاكرة",
+      "srvGo2rtc": "الخادم: مرحّل الفيديو go2rtc",
+      "srvRecord": "الخادم: التسجيل",
+      "srvStorage": "الخادم: قرص التسجيلات",
+      "srvDetector": "الخادم: سرعة كاشف الذكاء الاصطناعي",
+      "srvUptime": "الخادم: مدة التشغيل",
+      "rate": "عرض النطاق المستقبل",
+      "res": "الدقة",
+      "fps": "الإطارات المستقبلة في الثانية",
+      "source": "نوع البث",
+      "srvFps": "الإطارات/ث التي يستقبلها Frigate",
+      "srvQuality": "جودة اتصال الكاميرا ← Frigate",
+      "srvReconnects": "عمليات إعادة الاتصال في الساعة الأخيرة",
+      "srvCamCpu": "المعالج الذي تستخدمه الكاميرا على الخادم"
     }
   }
 }

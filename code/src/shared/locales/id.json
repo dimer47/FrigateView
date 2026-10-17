@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "gambar"
+    },
+    "cpuTitle": "CPU",
+    "memTitle": "Memori",
+    "srvTitle": "Server Frigate (seluruh VM dan layanannya)",
+    "srvCpuTitle": "CPU VM Frigate",
+    "mem": "RAM",
+    "srvMemTitle": "Memori yang digunakan VM Frigate",
+    "go2rtcTitle": "CPU go2rtc, relai video Frigate (naik seiring jumlah stream yang ditonton)",
+    "record": "Rek.",
+    "recordTitle": "CPU perekaman Frigate",
+    "disk": "Disk",
+    "diskTitle": "Ruang yang dipakai rekaman (oranye di atas 90%)",
+    "detector": "Detek.",
+    "detectorTitle": "Waktu analisis satu frame oleh detektor AI",
+    "uptimeVal": "{h} j {m} mnt",
+    "uptimeTitle": "Frigate berjalan selama",
+    "fpsOf": "{n}/{total} fps",
+    "quality": {
+      "excellent": "koneksi sangat baik",
+      "fair": "koneksi sedang",
+      "poor": "koneksi lemah",
+      "unusable": "koneksi tidak dapat digunakan"
+    },
+    "group": {
+      "global": "Bilah atas",
+      "camera": "Di setiap kamera"
+    },
+    "field": {
+      "total": "Total bandwidth diterima",
+      "appCpu": "FrigateView: CPU",
+      "appMem": "FrigateView: memori",
+      "pcCpu": "PC: CPU",
+      "pcMem": "PC: memori",
+      "srvCpu": "Server Frigate: CPU",
+      "srvMem": "Server Frigate: memori",
+      "srvGo2rtc": "Server: relai video go2rtc",
+      "srvRecord": "Server: perekaman",
+      "srvStorage": "Server: disk rekaman",
+      "srvDetector": "Server: kecepatan detektor AI",
+      "srvUptime": "Server: waktu aktif",
+      "rate": "Bandwidth diterima",
+      "res": "Resolusi",
+      "fps": "Frame per detik diterima",
+      "source": "Jenis stream",
+      "srvFps": "Frame/dtk diterima Frigate",
+      "srvQuality": "Kualitas koneksi kamera → Frigate",
+      "srvReconnects": "Koneksi ulang dalam satu jam terakhir",
+      "srvCamCpu": "CPU yang dipakai kamera di server"
     }
   }
 }

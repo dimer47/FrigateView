@@ -410,6 +410,54 @@
       "webrtc": "WebRTC",
       "hls": "HLS",
       "image": "imágenes"
+    },
+    "cpuTitle": "CPU",
+    "memTitle": "Memoria",
+    "srvTitle": "Servidor Frigate (VM completa y sus servicios)",
+    "srvCpuTitle": "CPU de la VM Frigate",
+    "mem": "RAM",
+    "srvMemTitle": "Memoria usada por la VM Frigate",
+    "go2rtcTitle": "CPU de go2rtc, el relé de vídeo de Frigate (aumenta con el número de flujos vistos)",
+    "record": "Grab.",
+    "recordTitle": "CPU de la grabación de Frigate",
+    "disk": "Disco",
+    "diskTitle": "Espacio usado por las grabaciones (naranja por encima del 90 %)",
+    "detector": "Detec.",
+    "detectorTitle": "Tiempo de análisis de una imagen por el detector IA",
+    "uptimeVal": "{h} h {m} min",
+    "uptimeTitle": "Frigate funciona desde hace",
+    "fpsOf": "{n}/{total} i/s",
+    "quality": {
+      "excellent": "conexión excelente",
+      "fair": "conexión regular",
+      "poor": "conexión débil",
+      "unusable": "conexión inutilizable"
+    },
+    "group": {
+      "global": "Barra superior",
+      "camera": "En cada cámara"
+    },
+    "field": {
+      "total": "Ancho de banda total recibido",
+      "appCpu": "FrigateView: CPU",
+      "appMem": "FrigateView: memoria",
+      "pcCpu": "PC: CPU",
+      "pcMem": "PC: memoria",
+      "srvCpu": "Servidor Frigate: CPU",
+      "srvMem": "Servidor Frigate: memoria",
+      "srvGo2rtc": "Servidor: relé de vídeo go2rtc",
+      "srvRecord": "Servidor: grabación",
+      "srvStorage": "Servidor: disco de grabaciones",
+      "srvDetector": "Servidor: velocidad del detector IA",
+      "srvUptime": "Servidor: tiempo de funcionamiento",
+      "rate": "Ancho de banda recibido",
+      "res": "Resolución",
+      "fps": "Imágenes por segundo recibidas",
+      "source": "Tipo de flujo",
+      "srvFps": "Imágenes/s recibidas por Frigate",
+      "srvQuality": "Calidad de conexión cámara → Frigate",
+      "srvReconnects": "Reconexiones en la última hora",
+      "srvCamCpu": "CPU usada por la cámara en el servidor"
     }
   }
 }
