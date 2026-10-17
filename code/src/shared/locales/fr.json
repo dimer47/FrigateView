@@ -384,13 +384,22 @@
     "copy": "Copier",
     "paste": "Coller",
     "selectAll": "Tout sélectionner",
-    "stats": "Statistiques (débit, processeur, mémoire)"
+    "stats": "Statistiques (débit, processeur, mémoire)",
+    "checkUpdates": "Rechercher des mises à jour…"
   },
   "main": {
     "aboutText": "Mur vidéo pour Frigate NVR.",
     "aboutServer": "Serveur : Frigate {version}",
     "stillRunning": "FrigateView reste actif",
-    "stillRunningBody": "Les alertes continuent d'arriver. Clic droit sur l'icône pour quitter."
+    "stillRunningBody": "Les alertes continuent d'arriver. Clic droit sur l'icône pour quitter.",
+    "updateAvailable": "FrigateView {version} est disponible",
+    "updateMacHint": "Téléchargez le nouveau dmg et remplacez l'application dans le dossier Applications.",
+    "updateDownload": "Télécharger",
+    "updateLater": "Plus tard",
+    "updateReady": "FrigateView {version} est prête à être installée",
+    "updateRestart": "Redémarrer maintenant",
+    "upToDate": "FrigateView {version} est à jour",
+    "updateError": "Impossible de vérifier les mises à jour"
   },
   "stats": {
     "cellTitle": "Débit reçu par FrigateView pour cette caméra, résolution, images par seconde et type de flux",

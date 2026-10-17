@@ -5,6 +5,8 @@ import tls from 'node:tls'
 import os from 'node:os'
 import { createHash } from 'node:crypto'
 import { resolveLang, translate } from '../shared/langs'
+import { initUpdater } from './updater'
+let checkUpdates = () => {}
 
 // Traductions (les mêmes fichiers que la fenêtre)
 const LOCALES = Object.fromEntries(Object.entries(import.meta.glob('../shared/locales/*.json', { eager: true, import: 'default' })).map(([p, m]) => [p.match(/(\w+)\.json$/)[1], m]))
@@ -391,6 +393,7 @@ function buildMenu() {
       label: tr('menu.help'),
       submenu: [
         { label: tr('menu.shortcuts'), accelerator: 'F1', click: () => send('help') },
+        { label: tr('menu.checkUpdates'), enabled: app.isPackaged, click: () => checkUpdates() },
         { label: tr('menu.docs'), click: () => shell.openExternal('https://docs.frigate.video') },
         { type: 'separator' },
         { label: tr('menu.dataFolder'), click: () => shell.openPath(app.getPath('userData')) },
@@ -495,6 +498,7 @@ app.whenReady().then(() => {
   screen.on('display-added', syncWalls)
   screen.on('display-removed', syncWalls)
   applySettings()
+  checkUpdates = initUpdater({ tr, win: () => mainWin })
   app.on('activate', showMain)
 })
 

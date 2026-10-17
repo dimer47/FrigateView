@@ -10,7 +10,9 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "mock": "node dev/mock-frigate.mjs",
-    "dist:win": "electron-vite build && electron-builder --win"
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:mac": "electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
+    "release": "electron-vite build && electron-builder --publish always"
   },
   "build": {
     "appId": "fr.idsynergy.frigateview",
@@ -33,17 +35,52 @@
           ]
         }
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "legalTrademarks": "IDSynergy"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "FrigateView"
+      "shortcutName": "FrigateView",
+      "artifactName": "FrigateView-Setup-${version}.${ext}",
+      "uninstallDisplayName": "FrigateView"
     },
     "mac": {
-      "icon": "build/icon.png"
-    }
+      "icon": "build/icon.png",
+      "category": "public.app-category.video",
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "copyright": "© 2026 IDSynergy",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "dimer47",
+        "repo": "FrigateView",
+        "releaseType": "release"
+      }
+    ],
+    "dmg": {
+      "artifactName": "FrigateView-${version}-${arch}.${ext}",
+      "title": "FrigateView ${version}"
+    },
+    "afterPack": "build/adhoc-sign.cjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -58,5 +95,17 @@
     "vue": "^3.5.44",
     "vue-i18n": "^11.4.14",
     "ws": "^8.22.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "author": {
+    "name": "IDSynergy",
+    "email": "iachi.dimitri@gmail.com"
+  },
+  "homepage": "https://github.com/dimer47/FrigateView",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dimer47/FrigateView.git"
   }
 }

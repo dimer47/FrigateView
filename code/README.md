@@ -8,6 +8,7 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 - `npm run dev` : lancer en développement
 - `npm run mock` : faux serveur Frigate — `127.0.0.1` port `5051` avec compte (admin/admin, viewer/viewer), port `5050` sans compte
 - `npm run dist:win` : installateur Windows
+- `npm run dist:mac` : dmg macOS (puce Apple et Intel), signé ad hoc sans clé du trousseau
 
 ## Structure
 
@@ -39,3 +40,19 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 - Le français (`fr.json`) est la langue source ; une clé absente d'une traduction s'affiche en anglais, puis en français
 - Choix : Réglages → Général → Langue ; par défaut, la langue du système
 - Pluriels au format vue-i18n : `singulier | pluriel`
+
+## Releases et mises à jour
+
+- Pousser un tag : `git tag v0.2.0 && git push origin v0.2.0`
+- GitHub Actions construit Windows et macOS, puis publie la release (`.github/workflows/release.yml`)
+- Version de l'app = numéro du tag
+- Windows : mise à jour téléchargée en arrière-plan, installée au redémarrage
+- macOS : nouvelle version signalée, téléchargement du dmg depuis la release (mise à jour en place impossible sans certificat Apple)
+- Menu Aide → Rechercher des mises à jour
+
+## Installation sans certificat
+
+- Windows : alerte SmartScreen « éditeur inconnu » → « Informations complémentaires » → « Exécuter quand même »
+- Éditeur affiché dans les propriétés du fichier et dans « Programmes et fonctionnalités » : IDSynergy
+- macOS : au premier lancement, clic droit sur l'app → Ouvrir → Ouvrir
+- macOS, si « endommagée » : `xattr -dr com.apple.quarantine /Applications/FrigateView.app`
