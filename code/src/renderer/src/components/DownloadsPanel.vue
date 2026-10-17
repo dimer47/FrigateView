@@ -5,7 +5,8 @@ import { useMediaStore } from '@/stores/media'
 import { loc } from '@/i18n'
 
 const media = useMediaStore()
-const mb = (b) => (b / 1048576).toLocaleString(loc(), { maximumFractionDigits: 1 }) + ' Mo'
+// Unité localisée par le navigateur (Mo, MB, МБ…)
+const mb = (b) => new Intl.NumberFormat(loc(), { style: 'unit', unit: 'megabyte', maximumFractionDigits: 1 }).format(b / 1048576)
 const pct = (d) => (d.total ? Math.round((d.loaded / d.total) * 100) : null)
 const reveal = (p) => window.native.reveal(p)
 const anyDone = computed(() => media.downloads.some((d) => d.state !== 'running'))

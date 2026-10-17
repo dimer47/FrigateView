@@ -80,7 +80,7 @@ export const useMediaStore = defineStore('media', {
       const d = this.downloads.find((x) => x.id === id)
       if (d) d.state = r.ok ? 'done' : r.error === 'aborted' ? 'canceled' : 'error'
       if (d && r.ok) d.loaded = r.size
-      if (d && !r.ok) d.error = r.status === 404 || r.status === 500 ? t('media.noRecording') : r.error || `HTTP ${r.status}`
+      if (d && !r.ok) d.error = [400, 404, 500].includes(r.status) ? t('media.noRecording') : r.error || `HTTP ${r.status}`
     },
     cancel(id) { window.native.cancelDownload(id) },
     clear() { this.downloads = this.downloads.filter((d) => d.state === 'running') },

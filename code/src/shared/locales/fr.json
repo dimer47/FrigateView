@@ -515,6 +515,7 @@
     "clear": "Effacer",
     "preparing": "Préparation par Frigate…",
     "done": "Terminé · {size}",
-    "canceled": "Annulé"
+    "canceled": "Annulé",
+    "noRecFor": "Aucun enregistrement sur cette période pour : {cams} (caméra enregistrant seulement en cas de mouvement)"
   }
 }

@@ -202,7 +202,8 @@
     "snapshotHint": "Miniatura salva pelo Frigate",
     "clipUnavailable": "Clipe indisponível para este período",
     "info": "Informações",
-    "toTimeline": "Reproduzir na linha do tempo"
+    "toTimeline": "Reproduzir na linha do tempo",
+    "download": "Baixar o clipe"
   },
   "timeline": {
     "hours": "{n} h",
@@ -289,7 +290,9 @@
     "accountHint": "As contas são gerenciadas na interface web do Frigate",
     "signOut": "Sair",
     "changeServer": "Trocar de servidor ou de modo",
-    "noServer": "Nenhum servidor configurado: informe-o na tela de conexão."
+    "noServer": "Nenhum servidor configurado: informe-o na tela de conexão.",
+    "wallModeSame": "Igual à janela principal",
+    "wallModeHint": "1 imagem/s: muito menos banda e carga no servidor, útil com vários murais"
   },
   "help": {
     "panels": "Layouts · Eventos · Linha do tempo",
@@ -304,7 +307,10 @@
     "eventStep": "Evento anterior / próximo (detalhes)",
     "esc": "Esc",
     "escAction": "Fechar · reduzir · sair do mural de vídeo",
-    "title": "Atalhos de teclado"
+    "title": "Atalhos de teclado",
+    "capture": "Captura da câmera selecionada",
+    "exportClip": "Exportar um clipe",
+    "sound": "Som da câmera selecionada"
   },
   "app": {
     "serverUnreachable": "servidor inacessível",
@@ -384,17 +390,34 @@
     "copy": "Copiar",
     "paste": "Colar",
     "selectAll": "Selecionar tudo",
-    "stats": "Estatísticas (banda, CPU, memória)"
+    "stats": "Estatísticas (banda, CPU, memória)",
+    "checkUpdates": "Verificar atualizações…",
+    "capture": "Captura de imagem",
+    "exportClip": "Exportar um clipe…",
+    "sound": "Som da câmera selecionada"
   },
   "main": {
     "aboutText": "Mural de vídeo para o Frigate NVR.",
     "aboutServer": "Servidor: Frigate {version}",
     "stillRunning": "O FrigateView continua ativo",
-    "stillRunningBody": "Os alertas continuam chegando. Clique com o botão direito no ícone para sair."
+    "stillRunningBody": "Os alertas continuam chegando. Clique com o botão direito no ícone para sair.",
+    "updateAvailable": "FrigateView {version} está disponível",
+    "updateMacHint": "Baixe o novo dmg e substitua o aplicativo na pasta Aplicativos.",
+    "updateDownload": "Baixar",
+    "updateLater": "Mais tarde",
+    "updateReady": "FrigateView {version} está pronto para instalar",
+    "updateRestart": "Reiniciar agora",
+    "upToDate": "FrigateView {version} está atualizado",
+    "updateError": "Não foi possível verificar atualizações"
   },
   "stats": {
     "cellTitle": "Largura de banda recebida pelo FrigateView para esta câmera, resolução, quadros por segundo e tipo de fluxo",
     "fps": "{n} q/s",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "imagens"
+    },
     "barTitle": "Estatísticas deste computador (opcional)",
     "totalTitle": "Largura de banda total recebida pelo FrigateView, todas as câmeras exibidas",
     "app": "App",
@@ -406,11 +429,6 @@
     "toggle": "Estatísticas: banda, CPU, memória",
     "settingsTitle": "Estatísticas",
     "settingsHint": "Largura de banda recebida em cada câmera e carga de CPU / memória na barra superior. Também pelo botão da barra de ferramentas.",
-    "src": {
-      "webrtc": "WebRTC",
-      "hls": "HLS",
-      "image": "imagens"
-    },
     "cpuTitle": "CPU",
     "memTitle": "Memória",
     "srvTitle": "Servidor Frigate (VM inteira e seus serviços)",
@@ -459,5 +477,45 @@
       "srvReconnects": "Reconexões na última hora",
       "srvCamCpu": "CPU usada pela câmera no servidor"
     }
+  },
+  "media": {
+    "captured": "Imagem salva",
+    "captureFailed": "Falha na captura",
+    "show": "Mostrar",
+    "noRecording": "Nenhuma gravação neste período",
+    "mute": "Silenciar",
+    "unmute": "Ativar som",
+    "capture": "Captura de imagem",
+    "exportClip": "Exportar um clipe"
+  },
+  "ptz": {
+    "unavailable": "Comando indisponível: conexão em tempo real com o servidor perdida",
+    "move": "Orientar a câmera (manter pressionado)",
+    "MOVE_UP": "Cima",
+    "MOVE_LEFT": "Esquerda",
+    "MOVE_RIGHT": "Direita",
+    "MOVE_DOWN": "Baixo",
+    "zoomIn": "Aproximar",
+    "zoomOut": "Afastar",
+    "presets": "Posições…"
+  },
+  "export": {
+    "title": "Exportar um clipe",
+    "cameras": "Câmeras",
+    "start": "Início",
+    "duration": "Duração",
+    "badDate": "Data inválida",
+    "future": "O fim do clipe está no futuro",
+    "noCamera": "Escolha pelo menos uma câmera",
+    "summary": "De {start} a {end}",
+    "folderHint": "{n} arquivos MP4, salvos na pasta escolhida",
+    "fileHint": "Um arquivo MP4, montado pelo Frigate sem perda de qualidade",
+    "go": "Exportar",
+    "downloads": "Clipes exportados",
+    "clear": "Limpar",
+    "preparing": "Frigate está preparando…",
+    "done": "Concluído · {size}",
+    "canceled": "Cancelado",
+    "noRecFor": "Nenhuma gravação neste período para: {cams} (câmera que grava apenas com movimento)"
   }
 }

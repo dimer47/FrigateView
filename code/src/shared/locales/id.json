@@ -202,7 +202,8 @@
     "snapshotHint": "Gambar mini yang disimpan oleh Frigate",
     "clipUnavailable": "Klip tidak tersedia untuk periode ini",
     "info": "Informasi",
-    "toTimeline": "Putar ulang di linimasa"
+    "toTimeline": "Putar ulang di linimasa",
+    "download": "Unduh klip"
   },
   "timeline": {
     "hours": "{n} j",
@@ -289,7 +290,9 @@
     "accountHint": "Akun dikelola di antarmuka web Frigate",
     "signOut": "Keluar",
     "changeServer": "Ganti server atau mode",
-    "noServer": "Belum ada server yang dikonfigurasi: masukkan di layar masuk."
+    "noServer": "Belum ada server yang dikonfigurasi: masukkan di layar masuk.",
+    "wallModeSame": "Sama seperti jendela utama",
+    "wallModeHint": "1 gambar/dtk: bandwidth dan beban server jauh lebih kecil, berguna dengan beberapa dinding"
   },
   "help": {
     "panels": "Layout · Peristiwa · Linimasa",
@@ -304,7 +307,10 @@
     "eventStep": "Peristiwa sebelumnya / berikutnya (detail)",
     "esc": "Esc",
     "escAction": "Tutup · perkecil · keluar dari dinding video",
-    "title": "Pintasan keyboard"
+    "title": "Pintasan keyboard",
+    "capture": "Tangkapan kamera yang dipilih",
+    "exportClip": "Ekspor klip",
+    "sound": "Suara kamera yang dipilih"
   },
   "app": {
     "serverUnreachable": "server tidak terjangkau",
@@ -384,17 +390,34 @@
     "copy": "Salin",
     "paste": "Tempel",
     "selectAll": "Pilih semua",
-    "stats": "Statistik (bandwidth, CPU, memori)"
+    "stats": "Statistik (bandwidth, CPU, memori)",
+    "checkUpdates": "Periksa pembaruan…",
+    "capture": "Tangkapan gambar",
+    "exportClip": "Ekspor klip…",
+    "sound": "Suara kamera yang dipilih"
   },
   "main": {
     "aboutText": "Dinding video untuk Frigate NVR.",
     "aboutServer": "Server: Frigate {version}",
     "stillRunning": "FrigateView tetap berjalan",
-    "stillRunningBody": "Peringatan tetap masuk. Klik kanan pada ikon untuk keluar."
+    "stillRunningBody": "Peringatan tetap masuk. Klik kanan pada ikon untuk keluar.",
+    "updateAvailable": "FrigateView {version} tersedia",
+    "updateMacHint": "Unduh dmg baru dan ganti aplikasi di folder Applications.",
+    "updateDownload": "Unduh",
+    "updateLater": "Nanti",
+    "updateReady": "FrigateView {version} siap dipasang",
+    "updateRestart": "Mulai ulang sekarang",
+    "upToDate": "FrigateView {version} sudah terbaru",
+    "updateError": "Tidak dapat memeriksa pembaruan"
   },
   "stats": {
     "cellTitle": "Bandwidth yang diterima FrigateView untuk kamera ini, resolusi, frame per detik, dan jenis stream",
     "fps": "{n} fps",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "gambar"
+    },
     "barTitle": "Statistik komputer ini (opsional)",
     "totalTitle": "Total bandwidth yang diterima FrigateView, semua kamera yang ditampilkan",
     "app": "Apl",
@@ -406,11 +429,6 @@
     "toggle": "Statistik: bandwidth, CPU, memori",
     "settingsTitle": "Statistik",
     "settingsHint": "Bandwidth yang diterima tiap kamera, serta beban CPU / memori di bilah atas. Juga lewat tombol bilah alat.",
-    "src": {
-      "webrtc": "WebRTC",
-      "hls": "HLS",
-      "image": "gambar"
-    },
     "cpuTitle": "CPU",
     "memTitle": "Memori",
     "srvTitle": "Server Frigate (seluruh VM dan layanannya)",
@@ -459,5 +477,45 @@
       "srvReconnects": "Koneksi ulang dalam satu jam terakhir",
       "srvCamCpu": "CPU yang dipakai kamera di server"
     }
+  },
+  "media": {
+    "captured": "Gambar disimpan",
+    "captureFailed": "Tangkapan gagal",
+    "show": "Tampilkan",
+    "noRecording": "Tidak ada rekaman pada periode ini",
+    "mute": "Bisukan",
+    "unmute": "Bunyikan",
+    "capture": "Tangkapan gambar",
+    "exportClip": "Ekspor klip"
+  },
+  "ptz": {
+    "unavailable": "Perintah tidak tersedia: koneksi real-time ke server terputus",
+    "move": "Arahkan kamera (tekan dan tahan)",
+    "MOVE_UP": "Atas",
+    "MOVE_LEFT": "Kiri",
+    "MOVE_RIGHT": "Kanan",
+    "MOVE_DOWN": "Bawah",
+    "zoomIn": "Perbesar",
+    "zoomOut": "Perkecil",
+    "presets": "Posisi…"
+  },
+  "export": {
+    "title": "Ekspor klip",
+    "cameras": "Kamera",
+    "start": "Mulai",
+    "duration": "Durasi",
+    "badDate": "Tanggal tidak valid",
+    "future": "Akhir klip berada di masa depan",
+    "noCamera": "Pilih setidaknya satu kamera",
+    "summary": "Dari {start} hingga {end}",
+    "folderHint": "{n} file MP4, disimpan di folder yang dipilih",
+    "fileHint": "Satu file MP4, digabung oleh Frigate tanpa kehilangan kualitas",
+    "go": "Ekspor",
+    "downloads": "Klip yang diekspor",
+    "clear": "Hapus",
+    "preparing": "Frigate sedang menyiapkan…",
+    "done": "Selesai · {size}",
+    "canceled": "Dibatalkan",
+    "noRecFor": "Tidak ada rekaman pada periode ini untuk: {cams} (kamera hanya merekam saat ada gerakan)"
   }
 }

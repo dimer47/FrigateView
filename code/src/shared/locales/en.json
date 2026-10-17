@@ -202,7 +202,8 @@
     "snapshotHint": "Snapshot saved by Frigate",
     "clipUnavailable": "Clip unavailable for this period",
     "info": "Information",
-    "toTimeline": "Play back in timeline"
+    "toTimeline": "Play back in timeline",
+    "download": "Download clip"
   },
   "timeline": {
     "hours": "{n} h",
@@ -289,7 +290,9 @@
     "accountHint": "Accounts are managed in the Frigate web interface",
     "signOut": "Sign out",
     "changeServer": "Change server or mode",
-    "noServer": "No server configured: enter it on the sign-in screen."
+    "noServer": "No server configured: enter it on the sign-in screen.",
+    "wallModeSame": "Same as main window",
+    "wallModeHint": "1 frame/s: much less bandwidth and server load, useful with several walls"
   },
   "help": {
     "panels": "Layouts · Events · Timeline",
@@ -304,7 +307,10 @@
     "eventStep": "Previous / next event (details)",
     "esc": "Esc",
     "escAction": "Close · shrink · exit video wall",
-    "title": "Keyboard shortcuts"
+    "title": "Keyboard shortcuts",
+    "capture": "Snapshot of the selected camera",
+    "exportClip": "Export a clip",
+    "sound": "Sound of the selected camera"
   },
   "app": {
     "serverUnreachable": "server unreachable",
@@ -384,17 +390,34 @@
     "copy": "Copy",
     "paste": "Paste",
     "selectAll": "Select All",
-    "stats": "Statistics (bandwidth, CPU, memory)"
+    "stats": "Statistics (bandwidth, CPU, memory)",
+    "checkUpdates": "Check for updates…",
+    "capture": "Snapshot",
+    "exportClip": "Export a clip…",
+    "sound": "Sound of the selected camera"
   },
   "main": {
     "aboutText": "Video wall for Frigate NVR.",
     "aboutServer": "Server: Frigate {version}",
     "stillRunning": "FrigateView is still running",
-    "stillRunningBody": "Alerts keep coming in. Right-click the icon to quit."
+    "stillRunningBody": "Alerts keep coming in. Right-click the icon to quit.",
+    "updateAvailable": "FrigateView {version} is available",
+    "updateMacHint": "Download the new dmg and replace the app in the Applications folder.",
+    "updateDownload": "Download",
+    "updateLater": "Later",
+    "updateReady": "FrigateView {version} is ready to install",
+    "updateRestart": "Restart now",
+    "upToDate": "FrigateView {version} is up to date",
+    "updateError": "Unable to check for updates"
   },
   "stats": {
     "cellTitle": "Bandwidth received by FrigateView for this camera, resolution, frames per second and stream type",
     "fps": "{n} fps",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "images"
+    },
     "barTitle": "Statistics for this computer (optional)",
     "totalTitle": "Total bandwidth received by FrigateView, all displayed cameras",
     "app": "App",
@@ -406,11 +429,6 @@
     "toggle": "Statistics: bandwidth, CPU, memory",
     "settingsTitle": "Statistics",
     "settingsHint": "Bandwidth received on each camera, and CPU / memory load in the top bar. Also from the toolbar button.",
-    "src": {
-      "webrtc": "WebRTC",
-      "hls": "HLS",
-      "image": "images"
-    },
     "cpuTitle": "CPU",
     "memTitle": "Memory",
     "srvTitle": "Frigate server (whole VM and its services)",
@@ -459,5 +477,45 @@
       "srvReconnects": "Reconnections in the last hour",
       "srvCamCpu": "CPU used by the camera on the server"
     }
+  },
+  "media": {
+    "captured": "Image saved",
+    "captureFailed": "Capture failed",
+    "show": "Show",
+    "noRecording": "No recording for this period",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "capture": "Snapshot",
+    "exportClip": "Export a clip"
+  },
+  "ptz": {
+    "unavailable": "Command unavailable: real-time connection to the server lost",
+    "move": "Move the camera (press and hold)",
+    "MOVE_UP": "Up",
+    "MOVE_LEFT": "Left",
+    "MOVE_RIGHT": "Right",
+    "MOVE_DOWN": "Down",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "presets": "Presets…"
+  },
+  "export": {
+    "title": "Export a clip",
+    "cameras": "Cameras",
+    "start": "Start",
+    "duration": "Duration",
+    "badDate": "Invalid date",
+    "future": "The end of the clip is in the future",
+    "noCamera": "Choose at least one camera",
+    "summary": "From {start} to {end}",
+    "folderHint": "{n} MP4 files, saved in the chosen folder",
+    "fileHint": "One MP4 file, assembled by Frigate without quality loss",
+    "go": "Export",
+    "downloads": "Exported clips",
+    "clear": "Clear",
+    "preparing": "Preparing in Frigate…",
+    "done": "Done · {size}",
+    "canceled": "Canceled",
+    "noRecFor": "No recording for this period for: {cams} (camera records only on motion)"
   }
 }

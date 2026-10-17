@@ -107,11 +107,13 @@ const allowedIn = (p) => typeof p === 'string' && (allowedPaths.has(p) || allowe
 const winOf = (e) => BrowserWindow.fromWebContents(e.sender)
 
 ipcMain.handle('file:chooseSave', async (e, { defaultName, kind }) => {
+  if (process.env.FV_SMOKE_SAVE) return allow(join(process.env.FV_SMOKE_SAVE, defaultName)) // tests automatiques
   const filters = kind === 'image' ? [{ name: 'Image', extensions: ['jpg', 'png'] }] : [{ name: 'Vidéo MP4', extensions: ['mp4'] }]
   const r = await dialog.showSaveDialog(winOf(e), { defaultPath: join(app.getPath(kind === 'image' ? 'pictures' : 'videos'), defaultName), filters })
   return r.canceled ? null : allow(r.filePath)
 })
 ipcMain.handle('file:chooseDir', async (e) => {
+  if (process.env.FV_SMOKE_SAVE) return allow(process.env.FV_SMOKE_SAVE)
   const r = await dialog.showOpenDialog(winOf(e), { defaultPath: app.getPath('videos'), properties: ['openDirectory', 'createDirectory'] })
   return r.canceled ? null : allow(r.filePaths[0])
 })
@@ -353,7 +355,8 @@ function buildMenu() {
         { label: tr('menu.signOut'), enabled: uiState.hasServer, click: () => send('server:signout') },
         { type: 'separator' },
         { label: tr('menu.closeWindow'), accelerator: 'CmdOrCtrl+W', click: () => mainWin?.close() },
-        { label: tr('menu.quit'), accelerator: 'CmdOrCtrl+Q', click: () => { quitting = true; app.quit() } }
+        // macOS : « Quitter » est déjà dans le menu de l'application
+        ...(isMac ? [] : [{ label: tr('menu.quit'), accelerator: 'CmdOrCtrl+Q', click: () => { quitting = true; app.quit() } }])
       ]
     },
     {

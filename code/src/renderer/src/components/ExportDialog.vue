@@ -4,11 +4,13 @@ import { ref, computed } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore } from '@/stores/layouts'
+import { useTimelineStore } from '@/stores/timeline'
 import { t, loc, fmtDuration } from '@/i18n'
 
 const media = useMediaStore()
 const server = useServerStore()
 const layouts = useLayoutStore()
+const tl = useTimelineStore()
 const o = media.exportOpen
 
 const tz = new Date().getTimezoneOffset() * 60e3
@@ -23,6 +25,8 @@ const end = computed(() => start.value + duration.value * 1000)
 // Caméras du layout d'abord, puis les autres
 const cams = computed(() => { const inLayout = layouts.cams; return [...inLayout, ...server.cameras.map((c) => c.id).filter((c) => !inLayout.includes(c))] })
 const error = computed(() => (isNaN(start.value) ? t('export.badDate') : end.value > Date.now() + 1000 ? t('export.future') : !picked.value.length ? t('export.noCamera') : ''))
+// Caméras sans enregistrement connu sur la période (d'après la timeline ; inconnu = pas d'avertissement)
+const empty = computed(() => picked.value.filter((c) => { const rec = tl.rangesFor(c).rec; return rec.length && !rec.some((r) => r.e > start.value && r.s < end.value) }))
 const busy = ref(false)
 async function run() { busy.value = true; try { await media.exportClips(picked.value, start.value, end.value) } finally { busy.value = false } }
 const close = () => (media.exportOpen = null)
@@ -55,6 +59,7 @@ const close = () => (media.exportOpen = null)
           <br>{{ picked.length > 1 ? $t('export.folderHint', { n: picked.length }) : $t('export.fileHint') }}
         </p>
         <p v-if="error" class="text-xs text-bad">{{ error }}</p>
+        <p v-else-if="empty.length" class="text-xs text-warn">{{ $t('export.noRecFor', { cams: empty.map((c) => server.camById(c)?.name || c).join(', ') }) }}</p>
         <div class="flex justify-end gap-2">
           <button class="btn" @click="close">{{ $t('common.cancel') }}</button>
           <button class="btn btn-primary" :disabled="!!error || busy" @click="run">{{ $t('export.go') }}</button>

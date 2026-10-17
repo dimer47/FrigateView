@@ -69,6 +69,9 @@ function handler(secure) {
     if (!sessions.has(token)) return send(401, 'application/json', '{"message":"Unauthorized"}')
     if (url.pathname === '/api/profile') { const name = sessions.get(token); return send(200, 'application/json', JSON.stringify({ username: name, role: USERS[name].role })) }
   }
+  // Caméra « devant » motorisée (commandes reçues par le WebSocket, affichées dans la console)
+  const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
+  if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
   if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
@@ -141,7 +144,10 @@ const wss = new WebSocketServer({ noServer: true })
 tlsServer.on('upgrade', (req, sock, head) => {
   const token = /frigate_token=([a-f0-9]+)/.exec(req.headers.cookie || '')?.[1]
   if (!req.url.startsWith('/ws') || !sessions.has(token)) { sock.destroy(); return }
-  wss.handleUpgrade(req, sock, head, (ws) => wss.emit('connection', ws))
+  wss.handleUpgrade(req, sock, head, (ws) => {
+    ws.on('message', (m) => { try { const j = JSON.parse(m); if (j.topic.endsWith('/ptz')) console.log('PTZ', j.topic, j.payload) } catch { /* message invalide */ } })
+    wss.emit('connection', ws)
+  })
 })
 setInterval(() => {
   const on = cams.filter((c) => !offline.has(c)), c = on[Math.floor(Math.random() * on.length)], now = Date.now() / 1000

@@ -26,6 +26,16 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 - Phase 4 : panneau des événements (revues Frigate, recherche, vus, détail avec clip, temps réel par le WebSocket Frigate) ✅
 - Phase 5 : notifications Windows, zone de notification, démarrage avec Windows, murs vidéo multi-écrans, réglages, installateur x64 ✅
 
+## Fonctions vidéo
+
+- Capture d'image (bouton appareil photo sur la case, Ctrl+Shift+S) : image affichée à sa résolution d'origine
+- Export de clip MP4 (ciseaux sur la case ou la timeline, Ctrl+Shift+E) : caméras, début, durée ; plusieurs caméras = un fichier chacune dans un dossier
+- Clip d'un événement : bouton « Télécharger le clip » dans le détail
+- Son : bouton haut-parleur, une caméra à la fois (seulement si le flux contient de l'audio)
+- PTZ : commandes sur la caméra agrandie, si Frigate a une config ONVIF pour elle
+- Timeline : vignette de l'instant survolé
+- Murs vidéo : mode vidéo ou images 1/s par écran (Réglages → Écrans) ; images conseillées avec plusieurs murs
+
 ## Connexion
 
 - Port 8971 (par défaut) : HTTPS + compte Frigate (rôles `admin` / `viewer`)

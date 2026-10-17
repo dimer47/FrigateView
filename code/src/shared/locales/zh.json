@@ -202,7 +202,8 @@
     "snapshotHint": "Frigate 保存的缩略图",
     "clipUnavailable": "此时段无视频片段",
     "info": "信息",
-    "toTimeline": "在时间轴中回放"
+    "toTimeline": "在时间轴中回放",
+    "download": "下载片段"
   },
   "timeline": {
     "hours": "{n} 小时",
@@ -289,7 +290,9 @@
     "accountHint": "账户在 Frigate 网页界面中管理",
     "signOut": "退出登录",
     "changeServer": "更换服务器或模式",
-    "noServer": "未配置服务器：请在登录界面中填写。"
+    "noServer": "未配置服务器：请在登录界面中填写。",
+    "wallModeSame": "与主窗口相同",
+    "wallModeHint": "每秒 1 帧：大幅降低带宽和服务器负载，适合多个视频墙"
   },
   "help": {
     "panels": "布局 · 事件 · 时间轴",
@@ -304,7 +307,10 @@
     "eventStep": "上一个 / 下一个事件（详情）",
     "esc": "Esc",
     "escAction": "关闭 · 还原 · 退出视频墙",
-    "title": "键盘快捷键"
+    "title": "键盘快捷键",
+    "capture": "所选摄像头的截图",
+    "exportClip": "导出片段",
+    "sound": "所选摄像头的声音"
   },
   "app": {
     "serverUnreachable": "服务器无法连接",
@@ -384,17 +390,34 @@
     "copy": "复制",
     "paste": "粘贴",
     "selectAll": "全选",
-    "stats": "统计（带宽、CPU、内存）"
+    "stats": "统计（带宽、CPU、内存）",
+    "checkUpdates": "检查更新…",
+    "capture": "截图",
+    "exportClip": "导出片段…",
+    "sound": "所选摄像头的声音"
   },
   "main": {
     "aboutText": "适用于 Frigate NVR 的视频墙。",
     "aboutServer": "服务器：Frigate {version}",
     "stillRunning": "FrigateView 仍在运行",
-    "stillRunningBody": "警报会继续送达。右键单击图标即可退出。"
+    "stillRunningBody": "警报会继续送达。右键单击图标即可退出。",
+    "updateAvailable": "FrigateView {version} 已发布",
+    "updateMacHint": "请下载新的 dmg 并替换“应用程序”文件夹中的应用。",
+    "updateDownload": "下载",
+    "updateLater": "稍后",
+    "updateReady": "FrigateView {version} 已准备好安装",
+    "updateRestart": "立即重启",
+    "upToDate": "FrigateView {version} 已是最新版本",
+    "updateError": "无法检查更新"
   },
   "stats": {
     "cellTitle": "FrigateView 为此摄像头接收的带宽、分辨率、帧率和流类型",
     "fps": "{n} 帧/秒",
+    "src": {
+      "webrtc": "WebRTC",
+      "hls": "HLS",
+      "image": "图像"
+    },
     "barTitle": "本机统计（可选）",
     "totalTitle": "FrigateView 接收的总带宽（所有显示的摄像头）",
     "app": "应用",
@@ -406,11 +429,6 @@
     "toggle": "统计：带宽、CPU、内存",
     "settingsTitle": "统计",
     "settingsHint": "每个摄像头的接收带宽，以及顶部栏中的 CPU/内存负载。也可通过工具栏按钮开启。",
-    "src": {
-      "webrtc": "WebRTC",
-      "hls": "HLS",
-      "image": "图像"
-    },
     "cpuTitle": "CPU",
     "memTitle": "内存",
     "srvTitle": "Frigate 服务器（整个虚拟机及其服务）",
@@ -459,5 +477,45 @@
       "srvReconnects": "最近一小时的重连次数",
       "srvCamCpu": "摄像头在服务器上使用的 CPU"
     }
+  },
+  "media": {
+    "captured": "图像已保存",
+    "captureFailed": "截图失败",
+    "show": "显示",
+    "noRecording": "此时段无录像",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "capture": "截图",
+    "exportClip": "导出片段"
+  },
+  "ptz": {
+    "unavailable": "无法执行命令：与服务器的实时连接已断开",
+    "move": "调整摄像头方向（按住）",
+    "MOVE_UP": "上",
+    "MOVE_LEFT": "左",
+    "MOVE_RIGHT": "右",
+    "MOVE_DOWN": "下",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "presets": "预置位…"
+  },
+  "export": {
+    "title": "导出片段",
+    "cameras": "摄像头",
+    "start": "开始",
+    "duration": "时长",
+    "badDate": "日期无效",
+    "future": "片段结束时间在未来",
+    "noCamera": "请至少选择一个摄像头",
+    "summary": "从 {start} 到 {end}",
+    "folderHint": "{n} 个 MP4 文件，保存到所选文件夹",
+    "fileHint": "一个 MP4 文件，由 Frigate 无损拼接",
+    "go": "导出",
+    "downloads": "已导出的片段",
+    "clear": "清除",
+    "preparing": "Frigate 正在准备…",
+    "done": "完成 · {size}",
+    "canceled": "已取消",
+    "noRecFor": "此时段无录像：{cams}（摄像头仅在检测到移动时录制）"
   }
 }
