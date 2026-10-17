@@ -518,6 +518,11 @@
     "preparing": "Préparation par Frigate…",
     "done": "Terminé · {size}",
     "canceled": "Annulé",
-    "noRecFor": "Aucun enregistrement sur cette période pour : {cams} (caméra enregistrant seulement en cas de mouvement)"
+    "noRecFor": "Aucun enregistrement sur cette période pour : {cams} (caméra enregistrant seulement en cas de mouvement)",
+    "runningN": "{n} en cours",
+    "allDone": "Terminé",
+    "someFailed": "Terminé avec erreurs",
+    "minimize": "Réduire",
+    "expand": "Agrandir"
   }
 }

@@ -518,6 +518,11 @@
     "preparing": "Frigate sedang menyiapkan…",
     "done": "Selesai · {size}",
     "canceled": "Dibatalkan",
-    "noRecFor": "Tidak ada rekaman pada periode ini untuk: {cams} (kamera hanya merekam saat ada gerakan)"
+    "noRecFor": "Tidak ada rekaman pada periode ini untuk: {cams} (kamera hanya merekam saat ada gerakan)",
+    "runningN": "{n} sedang berjalan",
+    "allDone": "Selesai",
+    "someFailed": "Selesai dengan galat",
+    "minimize": "Perkecil",
+    "expand": "Perbesar"
   }
 }

@@ -518,6 +518,11 @@
     "preparing": "Frigate lo está preparando…",
     "done": "Terminado · {size}",
     "canceled": "Cancelado",
-    "noRecFor": "Sin grabación en este periodo para: {cams} (cámara que solo graba con movimiento)"
+    "noRecFor": "Sin grabación en este periodo para: {cams} (cámara que solo graba con movimiento)",
+    "runningN": "{n} en curso",
+    "allDone": "Terminado",
+    "someFailed": "Terminado con errores",
+    "minimize": "Reducir",
+    "expand": "Ampliar"
   }
 }

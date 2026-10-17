@@ -518,6 +518,11 @@
     "preparing": "Preparing in Frigate…",
     "done": "Done · {size}",
     "canceled": "Canceled",
-    "noRecFor": "No recording for this period for: {cams} (camera records only on motion)"
+    "noRecFor": "No recording for this period for: {cams} (camera records only on motion)",
+    "runningN": "{n} in progress",
+    "allDone": "Done",
+    "someFailed": "Done with errors",
+    "minimize": "Minimize",
+    "expand": "Expand"
   }
 }

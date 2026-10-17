@@ -518,6 +518,11 @@
     "preparing": "Frigate 正在准备…",
     "done": "完成 · {size}",
     "canceled": "已取消",
-    "noRecFor": "此时段无录像：{cams}（摄像头仅在检测到移动时录制）"
+    "noRecFor": "此时段无录像：{cams}（摄像头仅在检测到移动时录制）",
+    "runningN": "{n} 个进行中",
+    "allDone": "已完成",
+    "someFailed": "已完成，有错误",
+    "minimize": "收起",
+    "expand": "展开"
   }
 }
