@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} 已准备好安装",
     "updateRestart": "立即重启",
     "upToDate": "FrigateView {version} 已是最新版本",
-    "updateError": "无法检查更新"
+    "updateError": "无法检查更新",
+    "aboutLicense": "采用 AGPL-3.0-or-later 许可，附加条款",
+    "aboutOrigin": "基于 FrigateView — 原始项目：{url}",
+    "aboutLicenses": "许可证"
   },
   "stats": {
     "cellTitle": "FrigateView 为此摄像头接收的带宽、分辨率、帧率和流类型",

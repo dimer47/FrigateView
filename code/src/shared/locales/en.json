@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} is ready to install",
     "updateRestart": "Restart now",
     "upToDate": "FrigateView {version} is up to date",
-    "updateError": "Unable to check for updates"
+    "updateError": "Unable to check for updates",
+    "aboutLicense": "Licensed under AGPL-3.0-or-later, with additional terms",
+    "aboutOrigin": "Based on FrigateView — original project: {url}",
+    "aboutLicenses": "Licenses"
   },
   "stats": {
     "cellTitle": "Bandwidth received by FrigateView for this camera, resolution, frames per second and stream type",

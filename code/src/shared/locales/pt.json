@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} está pronto para instalar",
     "updateRestart": "Reiniciar agora",
     "upToDate": "FrigateView {version} está atualizado",
-    "updateError": "Não foi possível verificar atualizações"
+    "updateError": "Não foi possível verificar atualizações",
+    "aboutLicense": "Licença AGPL-3.0-or-later, com termos adicionais",
+    "aboutOrigin": "Baseado no FrigateView — projeto original: {url}",
+    "aboutLicenses": "Licenças"
   },
   "stats": {
     "cellTitle": "Largura de banda recebida pelo FrigateView para esta câmera, resolução, quadros por segundo e tipo de fluxo",

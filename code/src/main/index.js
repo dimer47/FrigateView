@@ -490,7 +490,7 @@ function buildMenu() {
         { label: tr('menu.docs'), click: () => openExternal('https://docs.frigate.video') },
         { type: 'separator' },
         { label: tr('menu.dataFolder'), click: () => shell.openPath(app.getPath('userData')) },
-        { label: tr('menu.about'), click: () => dialog.showMessageBox(mainWin, { type: 'info', title: tr('menu.about'), message: `FrigateView ${app.getVersion()}`, detail: `${tr('main.aboutText')}\n${uiState.version ? `${tr('main.aboutServer', { version: uiState.version })}\n` : ''}Electron ${process.versions.electron} · Chromium ${process.versions.chrome}`, icon: appIcon() }) }
+        { label: tr('menu.about'), click: showAbout }
       ]
     }
   ]
@@ -603,6 +603,14 @@ app.on('window-all-closed', () => {
    Test rapide (développement) : FV_SMOKE=/chemin/capture.png
    Optionnel : FV_SMOKE_JS = script exécuté dans la fenêtre avant capture.
    ------------------------------------------------------------------ */
+// À propos : version, licence et mention d'origine (exigée par ADDITIONAL_TERMS.md)
+const REPO = 'https://github.com/dimer47/FrigateView'
+async function showAbout() {
+  const detail = `${tr('main.aboutText')}\n${uiState.version ? `${tr('main.aboutServer', { version: uiState.version })}\n` : ''}Electron ${process.versions.electron} · Chromium ${process.versions.chrome}\n\n${tr('main.aboutLicense')}\n${tr('main.aboutOrigin', { url: REPO })}`
+  const { response } = await dialog.showMessageBox(mainWin, { type: 'info', title: tr('menu.about'), message: `FrigateView ${app.getVersion()}`, detail, icon: appIcon(), buttons: [tr('common.close'), tr('main.aboutLicenses')], defaultId: 0, cancelId: 0 })
+  if (response === 1) openExternal(`${REPO}/blob/main/THIRD_PARTY_NOTICES.md`)
+}
+
 function smokeTest(win, out) {
   if (process.env.FV_DEBUG) win.webContents.on('console-message', (e) => console.log('[page]', e.message))
   win.webContents.once('did-finish-load', () => {

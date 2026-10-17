@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} جاهز للتثبيت",
     "updateRestart": "إعادة التشغيل الآن",
     "upToDate": "FrigateView {version} محدّث",
-    "updateError": "تعذّر التحقق من التحديثات"
+    "updateError": "تعذّر التحقق من التحديثات",
+    "aboutLicense": "مرخّص بموجب AGPL-3.0-or-later مع شروط إضافية",
+    "aboutOrigin": "مبني على FrigateView — المشروع الأصلي: {url}",
+    "aboutLicenses": "التراخيص"
   },
   "stats": {
     "cellTitle": "عرض النطاق الذي يستقبله FrigateView لهذه الكاميرا، الدقة، الإطارات في الثانية ونوع البث",

@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} готова к установке",
     "updateRestart": "Перезапустить",
     "upToDate": "FrigateView {version} — актуальная версия",
-    "updateError": "Не удалось проверить обновления"
+    "updateError": "Не удалось проверить обновления",
+    "aboutLicense": "Лицензия AGPL-3.0-or-later с дополнительными условиями",
+    "aboutOrigin": "Основано на FrigateView — исходный проект: {url}",
+    "aboutLicenses": "Лицензии"
   },
   "stats": {
     "cellTitle": "Пропускная способность, получаемая FrigateView для этой камеры, разрешение, кадры в секунду и тип потока",

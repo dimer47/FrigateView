@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} इंस्टॉल के लिए तैयार है",
     "updateRestart": "अभी रीस्टार्ट करें",
     "upToDate": "FrigateView {version} अप टू डेट है",
-    "updateError": "अपडेट जाँचे नहीं जा सके"
+    "updateError": "अपडेट जाँचे नहीं जा सके",
+    "aboutLicense": "AGPL-3.0-or-later लाइसेंस, अतिरिक्त शर्तों के साथ",
+    "aboutOrigin": "FrigateView पर आधारित — मूल परियोजना: {url}",
+    "aboutLicenses": "लाइसेंस"
   },
   "stats": {
     "cellTitle": "इस कैमरे के लिए FrigateView द्वारा प्राप्त बैंडविड्थ, रिज़ॉल्यूशन, फ़्रेम प्रति सेकंड और स्ट्रीम प्रकार",

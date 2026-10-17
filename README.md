@@ -1,6 +1,6 @@
 # 🎥 FrigateView
 
-![Version](https://img.shields.io/github/v/release/dimer47/FrigateView?color=red&style=flat-square) ![Last update](https://img.shields.io/github/last-commit/dimer47/FrigateView?color=yellow&label=Derni%C3%A8re%20mise%20%C3%A0%20jour&style=flat-square) ![Tests](https://img.shields.io/github/actions/workflow/status/dimer47/FrigateView/test.yml?label=tests&style=flat-square) ![Electron](https://img.shields.io/badge/Electron-44-47848F?style=flat-square&logo=electron&logoColor=white) ![Vue](https://img.shields.io/badge/Vue.js-3-4FC08D?style=flat-square&logo=vue.js&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-x64-0078D6?style=flat-square&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-Apple%20%26%20Intel-000000?style=flat-square&logo=apple&logoColor=white)
+![Version](https://img.shields.io/github/v/release/dimer47/FrigateView?color=red&style=flat-square) ![Last update](https://img.shields.io/github/last-commit/dimer47/FrigateView?color=yellow&label=Derni%C3%A8re%20mise%20%C3%A0%20jour&style=flat-square) ![Tests](https://img.shields.io/github/actions/workflow/status/dimer47/FrigateView/test.yml?label=tests&style=flat-square) ![License](https://img.shields.io/badge/licence-AGPL--3.0-blue?style=flat-square) ![Electron](https://img.shields.io/badge/Electron-44-47848F?style=flat-square&logo=electron&logoColor=white) ![Vue](https://img.shields.io/badge/Vue.js-3-4FC08D?style=flat-square&logo=vue.js&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-x64-0078D6?style=flat-square&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-Apple%20%26%20Intel-000000?style=flat-square&logo=apple&logoColor=white)
 
 **Poste de surveillance de bureau pour Frigate NVR.** 📺
 Vos caméras en direct, la relecture synchronisée, les événements et les murs vidéo multi-écrans, dans une vraie application Windows et macOS.
@@ -92,4 +92,9 @@ npm test         # tests Vitest
 
 ## 📄 Licence
 
-- À définir
+- **AGPL-3.0-or-later** ([`LICENSE`](LICENSE)), avec deux conditions supplémentaires ([`ADDITIONAL_TERMS.md`](ADDITIONAL_TERMS.md)) qui s'appliquent aux copies et versions modifiées :
+  - garder la mention d'origine du projet
+  - signaler toute version modifiée comme « version alternative de FrigateView »
+- Une version modifiée distribuée reste libre, avec son code source
+- Composants tiers : [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), aussi dans l'app (Aide → À propos → Licences)
+- Projet indépendant, sans lien avec les auteurs de [Frigate](https://github.com/blakeblackshear/frigate)

@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} ইনস্টলের জন্য প্রস্তুত",
     "updateRestart": "এখনই রিস্টার্ট করুন",
     "upToDate": "FrigateView {version} হালনাগাদ আছে",
-    "updateError": "আপডেট যাচাই করা যায়নি"
+    "updateError": "আপডেট যাচাই করা যায়নি",
+    "aboutLicense": "AGPL-3.0-or-later লাইসেন্স, অতিরিক্ত শর্তসহ",
+    "aboutOrigin": "FrigateView-এর উপর ভিত্তি করে — মূল প্রকল্প: {url}",
+    "aboutLicenses": "লাইসেন্স"
   },
   "stats": {
     "cellTitle": "এই ক্যামেরার জন্য FrigateView যে ব্যান্ডউইথ পায়, রেজোলিউশন, প্রতি সেকেন্ডে ফ্রেম ও স্ট্রিমের ধরন",

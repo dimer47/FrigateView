@@ -408,7 +408,10 @@
     "updateReady": "FrigateView {version} siap dipasang",
     "updateRestart": "Mulai ulang sekarang",
     "upToDate": "FrigateView {version} sudah terbaru",
-    "updateError": "Tidak dapat memeriksa pembaruan"
+    "updateError": "Tidak dapat memeriksa pembaruan",
+    "aboutLicense": "Lisensi AGPL-3.0-or-later, dengan ketentuan tambahan",
+    "aboutOrigin": "Berdasarkan FrigateView — proyek asli: {url}",
+    "aboutLicenses": "Lisensi"
   },
   "stats": {
     "cellTitle": "Bandwidth yang diterima FrigateView untuk kamera ini, resolusi, frame per detik, dan jenis stream",
