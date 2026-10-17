@@ -91,7 +91,23 @@ jobs:
         # identity: null (package.json) empêche toute signature sur un poste : levé ici seulement
         run: |
           node -e "const f='package.json',p=require('./'+f);delete p.build.mac.identity;require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
-          npx electron-builder --mac --publish never -c.extraMetadata.fvAppleSigned=true
+          npx electron-builder --mac --publish never -c.extraMetadata.fvAppleSigned=true -c.mac.notarize=false
+
+      # Notarisation séparée : l'agrafage (« staple ») échoue souvent juste après la notarisation,
+      # le ticket Apple n'étant pas encore diffusé (erreur 68) ; on réessaie pendant ~10 min.
+      # Le dmg notarisé couvre aussi l'app du zip (même signature) : Gatekeeper la vérifie en ligne.
+      - name: Notariser et agrafer les dmg
+        if: runner.os == 'macOS' && env.HAS_MAC_CERT == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for f in dist/*.dmg; do
+            xcrun notarytool submit "$f" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait --timeout 30m
+            for i in $(seq 1 20); do xcrun stapler staple "$f" && break; echo "agrafage $i échoué, nouvel essai dans 30 s"; sleep 30; done
+            xcrun stapler validate "$f"
+          done
 
       - name: Build macOS ad hoc
         if: runner.os == 'macOS' && env.HAS_MAC_CERT != 'true'
