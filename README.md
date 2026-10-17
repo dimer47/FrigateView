@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/brand/logo.png" width="128" alt="FrigateView"></p>
+
 # 🎥 FrigateView
 
 ![Version](https://img.shields.io/github/v/release/dimer47/FrigateView?color=red&style=flat-square) ![Last update](https://img.shields.io/github/last-commit/dimer47/FrigateView?color=yellow&label=Derni%C3%A8re%20mise%20%C3%A0%20jour&style=flat-square) ![Tests](https://img.shields.io/github/actions/workflow/status/dimer47/FrigateView/test.yml?label=tests&style=flat-square) ![License](https://img.shields.io/badge/licence-AGPL--3.0-blue?style=flat-square) ![Electron](https://img.shields.io/badge/Electron-44-47848F?style=flat-square&logo=electron&logoColor=white) ![Vue](https://img.shields.io/badge/Vue.js-3-4FC08D?style=flat-square&logo=vue.js&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-x64-0078D6?style=flat-square&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-Apple%20%26%20Intel-000000?style=flat-square&logo=apple&logoColor=white)
