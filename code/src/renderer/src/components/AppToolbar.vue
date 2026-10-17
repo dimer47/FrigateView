@@ -2,10 +2,12 @@
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
 import { useTimelineStore } from '@/stores/timeline'
+import { useEventsStore } from '@/stores/events'
 
 const server = useServerStore()
 const ui = useUiStore()
 const tl = useTimelineStore()
+const ev = useEventsStore()
 
 const roleLabel = { admin: 'administrateur', viewer: 'consultation' }
 function fullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }
@@ -38,6 +40,10 @@ function fullscreen() { document.fullscreenElement ? document.exitFullscreen() :
     <div v-if="server.profile.username" class="h-[22px] w-px bg-line" />
     <button class="tbtn" :class="{ on: ui.sidebar }" title="Layouts et caméras (Ctrl+1)" @click="ui.toggleSidebar()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2" /><line x1="6" y1="1" x2="6" y2="17" /></svg>
+    </button>
+    <button class="tbtn relative" :class="{ on: ev.visible }" title="Événements (Ctrl+2)" @click="ev.visible = !ev.visible; ev.persist()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2" /><line x1="12" y1="1" x2="12" y2="17" /></svg>
+      <span v-if="ev.unseenCount" class="absolute -right-1.5 -top-1 min-w-[15px] rounded-lg bg-accent px-1 text-center text-[10px] font-bold leading-[15px] text-white">{{ ev.unseenCount > 99 ? '99+' : ev.unseenCount }}</span>
     </button>
     <button class="tbtn" :class="{ on: tl.visible }" title="Timeline (Ctrl+3)" @click="tl.visible = !tl.visible; tl.persist()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2" /><line x1="1" y1="12" x2="17" y2="12" /></svg>

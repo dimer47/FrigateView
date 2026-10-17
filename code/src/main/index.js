@@ -144,7 +144,7 @@ app.whenReady().then(() => {
   // Les <img> de la fenêtre (page locale) vers Frigate sont des requêtes « inter-sites » :
   // le cookie de session (SameSite=Lax) n'y est pas joint. On l'ajoute ici, uniquement
   // pour l'hôte visé par la requête.
-  const frigateUrls = ['https://*/api/*', 'https://*/vod/*', 'http://*/api/*', 'http://*/vod/*']
+  const frigateUrls = ['https://*/api/*', 'https://*/vod/*', 'https://*/clips/*', 'wss://*/ws', 'http://*/api/*', 'http://*/vod/*', 'http://*/clips/*', 'ws://*/ws']
   session.defaultSession.webRequest.onBeforeSendHeaders({ urls: frigateUrls }, async (details, done) => {
     const headers = details.requestHeaders
     if (!headers.Cookie && details.webContentsId) {

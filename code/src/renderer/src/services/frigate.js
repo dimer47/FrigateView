@@ -15,6 +15,8 @@ export class FrigateError extends Error {
 }
 
 async function request(server, path, opts = {}) {
+  // Frigate exige cet en-tête sur les requêtes qui modifient quelque chose (protection CSRF)
+  if (opts.method && opts.method !== 'GET') opts = { ...opts, headers: { 'X-CSRF-TOKEN': '1', ...opts.headers } }
   const r = await window.native.http({ url: baseUrl(server) + path, timeout: 6000, ...opts })
   if (r.ok) return r.text
   if (r.error === 'cert') throw new FrigateError('Certificat non reconnu', { code: 'cert', cert: r.cert })
@@ -92,3 +94,18 @@ export const getReviews = (server, cams, after, before) =>
 // Liste de lecture HLS d'une plage. Les coupures d'enregistrement sont retirées par Frigate.
 export const vodUrl = (server, cam, start, end) =>
   `${baseUrl(server)}/vod/${encodeURIComponent(cam)}/start/${Math.floor(start)}/end/${Math.ceil(end)}/index.m3u8`
+
+/* ---- Revues (panneau des événements) ---- */
+
+export const getRecentReviews = (server, after, limit = 500) =>
+  getJson(server, `/api/review?after=${Math.floor(after)}&limit=${limit}`)
+
+export const markReviewed = (server, ids) =>
+  request(server, '/api/reviews/viewed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
+
+// thumb_path est un chemin disque du serveur (/media/frigate/clips/…) : servi sous /clips/…
+export const thumbUrl = (server, review) =>
+  review.thumb_path ? `${baseUrl(server)}/${review.thumb_path.replace(/^\/media\/frigate\//, '')}` : ''
+
+// Flux temps réel de Frigate (mêmes sujets que MQTT, authentifié par le cookie de session)
+export const wsUrl = (server) => `${isInternal(server) ? 'ws' : 'wss'}://${server.host}:${server.port}/ws`

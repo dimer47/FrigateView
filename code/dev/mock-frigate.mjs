@@ -7,6 +7,7 @@ import https from 'node:https'
 import { execSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
+import { WebSocketServer } from 'ws'
 
 const PORT = 5050
 const PORT_TLS = 5051
@@ -24,6 +25,16 @@ if (!existsSync(mediaDir + 'route.ts')) {
   for (const c of ['route', 'devant', 'devant_local', 'bureau_arriere', 'bureau_devant'])
     execSync(`ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=640x360:rate=15 -vf hue=h=${Math.floor(rnd(c) * 360)} -t 10 -c:v libx264 -pix_fmt yuv420p -g 15 -f mpegts "${mediaDir}${c}.ts"`)
 }
+const ZONES = { route: ['chaussee', 'trottoir'], devant: ['portail', 'allee'], devant_local: ['parking'], bureau_arriere: ['cour'], bureau_devant: ['entree'] }
+const viewed = new Set()
+const live = [] // revues créées pendant que le serveur tourne
+function review(c, s0, obj, end) {
+  const id = `${s0}-${c}`
+  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [['Dimitri', 0.88]] : []
+  return { id, camera: c, start_time: s0, end_time: end, severity: obj === 'person' ? 'alert' : 'detection', thumb_path: `/media/frigate/clips/review/thumb-${c}-${id}.webp`,
+    data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id] } }
+}
+const withViewed = (r) => ({ ...r, has_been_reviewed: viewed.has(r.id) || r.start_time < Date.now() / 1000 - 3600 })
 const hue = (id) => (cams.indexOf(id) * 67) % 360
 
 function frame(id, h) {
@@ -63,6 +74,7 @@ function handler(secure) {
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)
+  if (url.pathname === '/ws') return send(426, 'text/plain', 'upgrade required')
   if (r && cams.includes(r[1])) {
     const after = +url.searchParams.get('after'), before = Math.min(+url.searchParams.get('before'), Date.now() / 1000)
     const out = []
@@ -73,16 +85,24 @@ function handler(secure) {
     return send(200, 'application/json', JSON.stringify(out))
   }
   // Revues (alertes / détections)
+  if (url.pathname === '/api/reviews/viewed' && req.method === 'POST') {
+    let raw = ''
+    req.on('data', (c) => (raw += c))
+    req.on('end', () => { try { for (const id of JSON.parse(raw).ids || []) viewed.add(id) } catch { /* corps invalide */ } send(200, 'application/json', '{"success":true}') })
+    return
+  }
+  r = url.pathname.match(/^\/clips\/review\/thumb-([a-z_]+)-.+\.webp$/)
+  if (r && cams.includes(r[1])) return send(200, 'image/svg+xml', frame(r[1], 180))
   if (url.pathname === '/api/review') {
-    const after = +url.searchParams.get('after'), before = +url.searchParams.get('before')
+    const after = +url.searchParams.get('after') || 0, before = +url.searchParams.get('before') || Date.now() / 1000
     const list = (url.searchParams.get('cameras') || cams.join(',')).split(',')
-    const out = []
+    const out = live.filter((x) => list.includes(x.camera) && x.start_time >= after && x.start_time < before).map(withViewed)
     for (const c of list) for (let t = Math.floor(after / 600) * 600; t < before; t += 600) {
       const x = rnd(c + t)
       if (x > 0.45 || isGap(c, t)) continue
       const s0 = t + Math.floor(rnd(c + t + 'o') * 500), obj = x < 0.25 ? 'person' : x < 0.42 ? 'car' : 'dog'
       if (s0 > Date.now() / 1000) continue
-      out.push({ id: `${s0}-${c}`, camera: c, start_time: s0, end_time: s0 + 20 + Math.floor(rnd(c + s0) * 90), severity: obj === 'person' ? 'alert' : 'detection', data: { objects: [obj], zones: [] } })
+      out.push(withViewed(review(c, s0, obj, s0 + 20 + Math.floor(rnd(c + s0) * 90))))
     }
     return send(200, 'application/json', JSON.stringify(out.sort((a, b) => b.start_time - a.start_time)))
   }
@@ -115,5 +135,20 @@ if (!existsSync(certDir + 'cert.pem')) {
   execSync(`openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=frigate-mock" -keyout "${certDir}key.pem" -out "${certDir}cert.pem"`, { stdio: 'ignore' })
 }
 http.createServer(handler(false)).listen(PORT, () => console.log(`Faux Frigate sans compte : http://127.0.0.1:${PORT}`))
-https.createServer({ key: readFileSync(certDir + 'key.pem'), cert: readFileSync(certDir + 'cert.pem') }, handler(true))
-  .listen(PORT_TLS, () => console.log(`Faux Frigate avec compte : https://127.0.0.1:${PORT_TLS} (admin/admin ou viewer/viewer)`))
+const tlsServer = https.createServer({ key: readFileSync(certDir + 'key.pem'), cert: readFileSync(certDir + 'cert.pem') }, handler(true))
+// WebSocket Frigate (/ws) : messages { topic, payload } — ici une nouvelle revue toutes les 30 s
+const wss = new WebSocketServer({ noServer: true })
+tlsServer.on('upgrade', (req, sock, head) => {
+  const token = /frigate_token=([a-f0-9]+)/.exec(req.headers.cookie || '')?.[1]
+  if (!req.url.startsWith('/ws') || !sessions.has(token)) { sock.destroy(); return }
+  wss.handleUpgrade(req, sock, head, (ws) => wss.emit('connection', ws))
+})
+setInterval(() => {
+  const on = cams.filter((c) => !offline.has(c)), c = on[Math.floor(Math.random() * on.length)], now = Date.now() / 1000
+  const rv = review(c, Math.floor(now), Math.random() < 0.6 ? 'person' : 'car', null)
+  live.unshift(rv)
+  const msg = (type, after) => JSON.stringify({ topic: 'reviews', payload: JSON.stringify({ type, before: after, after }) })
+  for (const ws of wss.clients) ws.send(msg('new', withViewed(rv)))
+  setTimeout(() => { rv.end_time = Date.now() / 1000; for (const ws of wss.clients) ws.send(msg('end', withViewed(rv))) }, 25000)
+}, 30000)
+tlsServer.listen(PORT_TLS, () => console.log(`Faux Frigate avec compte : https://127.0.0.1:${PORT_TLS} (admin/admin ou viewer/viewer)`))
