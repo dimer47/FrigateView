@@ -38,7 +38,7 @@ function review(c, s0, obj, end) {
   const id = `${s0}-${c}`
   const sub = obj === 'car' && LPR_ON && rnd(id) < 0.6 ? [[PLATES[Math.floor(rnd(id + 'p') ** 2 * PLATES.length)], 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [[rnd(id + 'f') < 0.6 ? 'Alex' : 'Marie', 0.88]] : []
   return { id, camera: c, start_time: s0, end_time: end, severity: obj === 'person' ? 'alert' : 'detection', thumb_path: `/media/frigate/clips/review/thumb-${c}-${id}.webp`,
-    data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id] } }
+    data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id + '-ev'] } }
 }
 // Toutes les revues d'une plage (30 jours de rétention), de la plus récente à la plus ancienne
 const RETAIN = 30 * 86400
@@ -54,10 +54,46 @@ function allReviews(after, before, list) {
   }
   return out.sort((a, b) => b.start_time - a.start_time)
 }
+// Cadres (Frigate : [x, y, largeur, hauteur] en fractions de l'image de détection) : objet, région, attributs visage / plaque
+const r4 = (a) => a.map((v) => Math.round(v * 1e4) / 1e4)
+function boxesFor(id, label, plate, face) {
+  const x = 0.08 + rnd(id + 'bx') * 0.6, score = 0.7 + rnd(id + 'sc') * 0.28
+  const box = label === 'person' ? [x, 0.3, 0.11, 0.55] : label === 'car' ? [x, 0.48, 0.28, 0.3] : [x, 0.62, 0.14, 0.18]
+  const region = [Math.max(0, box[0] - 0.05), Math.max(0, box[1] - 0.08), Math.min(1, box[2] + 0.1), Math.min(1, box[3] + 0.12)]
+  const attributes = []
+  if (label === 'person') attributes.push({ label: 'face', score: face ? 0.88 : 0.64, box: [box[0] + box[2] * 0.3, box[1] + 0.02, box[2] * 0.4, 0.09] })
+  if (label === 'car' && plate) attributes.push({ label: 'license_plate', score: 0.91, box: [box[0] + box[2] * 0.36, box[1] + box[3] * 0.72, box[2] * 0.28, 0.045] })
+  return { box: r4(box), region: r4(region), score: Math.round(score * 100) / 100, attributes: attributes.map((a) => ({ ...a, box: r4(a.box) })) }
+}
 const toEvent = (r) => {
-  const sub = r.data.sub_labels[0], plate = sub && /\d/.test(sub) ? sub : null
-  return { id: r.id + '-ev', camera: r.camera, label: r.data.objects[0], sub_label: plate ? knownName(plate) : sub || null, zones: r.data.zones, start_time: r.start_time, end_time: r.end_time,
-    has_clip: true, has_snapshot: true, top_score: 0.8, false_positive: null, box: null, data: { type: 'object', score: 0.8, recognized_license_plate: plate } }
+  const sub = r.data.sub_labels[0], plate = sub && /\d/.test(sub) ? sub : null, label = r.data.objects[0]
+  const b = boxesFor(r.id, label, plate, !plate && sub)
+  return { id: r.id + '-ev', camera: r.camera, label, sub_label: plate ? knownName(plate) : sub || null, zones: r.data.zones, start_time: r.start_time, end_time: r.end_time,
+    has_clip: true, has_snapshot: true, top_score: b.score, false_positive: null, thumb_path: r.thumb_path,
+    data: { type: 'object', score: b.score, top_score: b.score, box: b.box, region: b.region, attributes: b.attributes, recognized_license_plate: plate, description: describe(r, label, sub) } }
+}
+// Description textuelle (Frigate : IA générative, data.description) pour la recherche sémantique fictive
+const COLORS = ['rouge', 'bleue', 'blanche', 'noire', 'grise']
+function describe(r, label, sub) {
+  const col = COLORS[Math.floor(rnd(r.id + 'col') * COLORS.length)]
+  return label === 'person' ? `Une personne${sub ? ' (' + sub + ')' : ''} en veste ${col} marche près de ${r.data.zones[0]}` : label === 'car' ? `Une voiture ${col} passe sur ${r.data.zones[0]}` : `Un chien traverse ${r.data.zones[0]}`
+}
+// Meilleure image entière : la forme dessinée occupe le cadre, pour vérifier l'alignement des cadres de l'app
+function snapshotSvg(ev) {
+  const W = 1280, H = 720, [x, y, w, h] = ev.data.box.map((v, i) => v * (i % 2 ? H : W))
+  const body = ev.label === 'person'
+    ? `<rect x="${x}" y="${y + h * 0.18}" width="${w}" height="${h * 0.82}" rx="${w * 0.3}" fill="#6b7280"/><circle cx="${x + w / 2}" cy="${y + h * 0.1}" r="${h * 0.09}" fill="#e5c3a0"/>`
+    : ev.label === 'car' ? `<rect x="${x}" y="${y + h * 0.3}" width="${w}" height="${h * 0.55}" rx="12" fill="#9ca3af"/><rect x="${x + w * 0.15}" y="${y}" width="${w * 0.7}" height="${h * 0.4}" rx="10" fill="#9ca3af"/><circle cx="${x + w * 0.22}" cy="${y + h * 0.88}" r="${h * 0.12}" fill="#111"/><circle cx="${x + w * 0.78}" cy="${y + h * 0.88}" r="${h * 0.12}" fill="#111"/>`
+    : `<ellipse cx="${x + w / 2}" cy="${y + h / 2}" rx="${w / 2}" ry="${h / 2.4}" fill="#a16207"/>`
+  const plate = (ev.data.attributes || []).find((a) => a.label === 'license_plate')
+  const pl = plate ? `<rect x="${plate.box[0] * W}" y="${plate.box[1] * H}" width="${plate.box[2] * W}" height="${plate.box[3] * H}" fill="#f8fafc"/><text x="${(plate.box[0] + plate.box[2] / 2) * W}" y="${(plate.box[1] + plate.box[3] * 0.75) * H}" font-family="monospace" font-size="${plate.box[3] * H * 0.7}" text-anchor="middle">${ev.data.recognized_license_plate}</text>` : ''
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="hsl(${hue(ev.camera)},25%,18%)"/><rect y="${H * 0.62}" width="100%" height="${H * 0.38}" fill="hsl(${hue(ev.camera)},15%,12%)"/>${body}${pl}</svg>`
+}
+const eventById = (id) => {
+  const m = /^(\d+)-([a-z_]+)-ev$/.exec(id)
+  if (!m || !cams.includes(m[2])) return null
+  const t = +m[1], r = live.find((x) => x.id === `${t}-${m[2]}`) || allReviews(t - 1, t + 1, [m[2]]).find((x) => x.id === `${t}-${m[2]}`)
+  return r ? toEvent(r) : null
 }
 const withViewed = (r) => ({ ...r, has_been_reviewed: viewed.has(r.id) || r.start_time < Date.now() / 1000 - 3600 })
 const hue = (id) => (cams.indexOf(id) * 67) % 360
@@ -205,6 +241,10 @@ function handler(secure) {
   if (url.pathname === '/api/labels') return send(200, 'application/json', JSON.stringify(['car', 'dog', 'person']))
   r = url.pathname.match(/^\/api\/events\/(\d+)-([a-z_]+)-ev\/thumbnail\.webp$/)
   if (r && cams.includes(r[2])) return send(200, 'image/svg+xml', frame(r[2], 180))
+  r = url.pathname.match(/^\/api\/events\/([^/]+)\/snapshot\.jpg$/)
+  if (r) { const e = eventById(decodeURIComponent(r[1])); return e ? send(200, 'image/svg+xml', snapshotSvg(e)) : send(404, 'application/json', '{"success":false,"message":"Event not found"}') }
+  r = url.pathname.match(/^\/api\/events\/([^/]+)$/)
+  if (r && r[1] !== 'search') { const e = eventById(decodeURIComponent(r[1])); return e ? send(200, 'application/json', JSON.stringify(e)) : send(404, 'application/json', '{"success":false,"message":"Event not found"}') }
   // Relecture HLS : même clip de 10 s répété, une entrée par segment enregistré
   r = url.pathname.match(/^\/vod\/([^/]+)\/start\/([\d.]+)\/end\/([\d.]+)\/index\.m3u8$/)
   if (r && cams.includes(r[1])) {

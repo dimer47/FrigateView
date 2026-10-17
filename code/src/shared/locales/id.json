@@ -233,7 +233,9 @@
     "clipUnavailable": "Klip tidak tersedia untuk periode ini",
     "info": "Informasi",
     "toTimeline": "Putar ulang di linimasa",
-    "download": "Unduh klip"
+    "download": "Unduh klip",
+    "boxes": "Kotak",
+    "boxesTitle": "Tampilkan atau sembunyikan kotak deteksi (objek, wajah, pelat)"
   },
   "timeline": {
     "hours": "{n} j",

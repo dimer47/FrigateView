@@ -22,6 +22,7 @@ export const useUiStore = defineStore('ui', {
     // Image dans la case : contain = entière, cover = remplir en rognant, fill = étirer
     fit: load('fv-ui', {}).fit ?? (load('fv-ui', {}).cover ? 'cover' : 'contain'),
     statFields: loadFields(),
+    showBoxes: load('fv-ui', {}).showBoxes ?? true, // cadres de détection sur la meilleure image
     expand: false,
     layoutDialog: undefined, // undefined = fermé, null = création, id = édition
     helpOpen: false,
@@ -30,7 +31,7 @@ export const useUiStore = defineStore('ui', {
     toast: null
   }),
   actions: {
-    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, fit: this.fit, statFields: this.statFields }) },
+    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, fit: this.fit, statFields: this.statFields, showBoxes: this.showBoxes }) },
     toggleSidebar() { this.sidebar = !this.sidebar; this.persist() },
     setLiveMode(m) { this.liveMode = m; this.persist() },
     setStatField(group, key, on) { this.statFields[group][key] = on; this.persist() },

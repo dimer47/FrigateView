@@ -111,6 +111,9 @@ export const getPath = (server, path) => getJson(server, path, { timeout: 15000 
 export async function getList(server, path) {
   try { const v = await getJson(server, path); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [] } catch { return [] }
 }
+// Meilleure image entière, sans cadre ni horodatage incrusté (cadres dessinés par l'app)
+export const eventSnapshotUrl = (server, id) => `${baseUrl(server)}/api/events/${encodeURIComponent(id)}/snapshot.jpg?bbox=0&crop=0&timestamp=0`
+export const getEvent = (server, id) => getJson(server, `/api/events/${encodeURIComponent(id)}`)
 export const eventThumbUrl = (server, id) => `${baseUrl(server)}/api/events/${encodeURIComponent(id)}/thumbnail.webp`
 
 export const markReviewed = (server, ids) =>

@@ -233,7 +233,9 @@
     "clipUnavailable": "Clipe indisponível para este período",
     "info": "Informações",
     "toTimeline": "Reproduzir na linha do tempo",
-    "download": "Baixar o clipe"
+    "download": "Baixar o clipe",
+    "boxes": "Caixas",
+    "boxesTitle": "Mostrar ou ocultar as caixas de detecção (objeto, rosto, placa)"
   },
   "timeline": {
     "hours": "{n} h",

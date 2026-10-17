@@ -24,6 +24,7 @@ export function normalize(server, r) {
     objects: r.data?.objects || [],
     subLabels: r.data?.sub_labels || [], // visages reconnus, plaques…
     zones: r.data?.zones || [],
+    detections: r.data?.detections || [], // identifiants des objets suivis (/api/events/{id})
     thumb: thumbUrl(server, r),
     seen: !!r.has_been_reviewed
   }

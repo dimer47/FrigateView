@@ -233,7 +233,9 @@
     "clipUnavailable": "Clip indisponible pour cette période",
     "info": "Informations",
     "toTimeline": "Relire dans la timeline",
-    "download": "Télécharger le clip"
+    "download": "Télécharger le clip",
+    "boxes": "Cadres",
+    "boxesTitle": "Afficher ou masquer les cadres de détection (objet, visage, plaque)"
   },
   "timeline": {
     "hours": "{n} h",

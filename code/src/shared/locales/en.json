@@ -233,7 +233,9 @@
     "clipUnavailable": "Clip unavailable for this period",
     "info": "Information",
     "toTimeline": "Play back in timeline",
-    "download": "Download clip"
+    "download": "Download clip",
+    "boxes": "Boxes",
+    "boxesTitle": "Show or hide detection boxes (object, face, plate)"
   },
   "timeline": {
     "hours": "{n} h",

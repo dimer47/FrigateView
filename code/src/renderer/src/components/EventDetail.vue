@@ -6,7 +6,9 @@ import { t, loc, fmtDuration } from '@/i18n'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore } from '@/stores/layouts'
 import { useTimelineStore } from '@/stores/timeline'
-import { vodUrl } from '@/services/frigate'
+import { vodUrl, getEvent, eventSnapshotUrl } from '@/services/frigate'
+import { eventBoxes, boxCaption, pickEvent } from '@/services/boxes'
+import { useUiStore } from '@/stores/ui'
 import { useMediaStore } from '@/stores/media'
 
 const ev = useEventsStore()
@@ -14,6 +16,7 @@ const server = useServerStore()
 const layouts = useLayoutStore()
 const tl = useTimelineStore()
 const media = useMediaStore()
+const ui = useUiStore()
 
 const e = computed(() => ev.byId(ev.detailId))
 const view = ref('clip')
@@ -54,9 +57,34 @@ function loadClip() {
   hls.loadSource(vodUrl(server.server, x.cam, (x.s - 3000) / 1000, ((x.e ?? Date.now()) + 3000) / 1000))
   hls.attachMedia(video.value)
 }
+/* ---- Meilleure image avec cadres de détection ---- */
+const snapEvents = ref([]) // objets suivis de la revue (/api/events/{id})
+const snapId = ref(null)
+const snapRatio = ref(16 / 9)
+const snapFailed = ref(false)
+let snapFor = null
+const snapEvent = computed(() => snapEvents.value.find((x) => x.id === snapId.value) || null)
+const boxes = computed(() => (snapEvent.value ? eventBoxes(snapEvent.value) : []))
+const objLabel = (o) => { const k = 'labels.' + o, v = t(k); return v === k ? String(o).replace(/_/g, ' ') : v }
+const caption = (b) => boxCaption(b, objLabel)
+async function loadSnap() {
+  const x = e.value
+  snapFailed.value = false
+  if (!x || view.value !== 'snap') return
+  const ids = (x.detections || []).slice(0, 6), key = x.id
+  if (snapFor === key) return
+  snapFor = key; snapEvents.value = []; snapId.value = null
+  const list = (await Promise.all(ids.map((id) => getEvent(server.server, id).catch(() => null)))).filter(Boolean)
+  if (snapFor !== key) return
+  snapEvents.value = list
+  snapId.value = pickEvent(list.filter((v) => v.has_snapshot !== false))?.id || null
+}
+function onSnapLoad(img) { if (img.naturalWidth && img.naturalHeight) snapRatio.value = img.naturalWidth / img.naturalHeight }
+function toggleBoxes() { ui.showBoxes = !ui.showBoxes; ui.persist() }
+
 function destroy() { if (hls) { hls.destroy(); hls = null } }
 
-watch(() => [ev.detailId, view.value], async () => { if (e.value) ev.markSeen([e.value.id]); await nextTick(); loadClip() })
+watch(() => [ev.detailId, view.value], async () => { if (e.value) ev.markSeen([e.value.id]); await nextTick(); loadClip(); loadSnap() })
 onMounted(() => { ev.markSeen([e.value.id]); loadClip(); addEventListener('keydown', onKey) })
 onBeforeUnmount(() => { destroy(); removeEventListener('keydown', onKey) })
 
@@ -115,10 +143,32 @@ function toTimeline() {
               <button v-for="[k, l] in [['clip', $t('detail.clip')], ['snap', $t('detail.snapshot')]]" :key="k" class="rounded px-3 py-1 font-semibold"
                 :class="view === k ? 'bg-raised text-ink' : 'text-ink-3 hover:text-ink'" @click="view = k">{{ l }}</button>
             </div>
-            <span class="text-xs text-ink-3">{{ view === 'clip' ? $t('detail.clipHint') : $t('detail.snapshotHint') }}</span>
+            <span v-if="view === 'clip' || !snapId" class="text-xs text-ink-3">{{ view === 'clip' ? $t('detail.clipHint') : $t('detail.snapshotHint') }}</span>
+            <div v-else class="flex items-center gap-1.5">
+              <button v-for="o in snapEvents.length > 1 ? snapEvents : []" :key="o.id" class="rounded border px-1.5 py-0.5 text-[11px]"
+                :class="o.id === snapId ? 'border-accent text-ink' : 'border-line text-ink-3 hover:text-ink'" @click="snapId = o.id">{{ objLabel(o.label) }}</button>
+              <button class="flex items-center gap-1 rounded border px-2 py-0.5 text-[11px]" :class="ui.showBoxes ? 'border-accent bg-accent/15 text-ink' : 'border-line text-ink-3 hover:text-ink'"
+                :title="$t('detail.boxesTitle')" :aria-pressed="ui.showBoxes" @click="toggleBoxes">
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="2" width="10" height="8" rx="1" stroke-dasharray="2 1.5" /></svg>{{ $t('detail.boxes') }}
+              </button>
+            </div>
           </div>
           <div class="relative aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-line">
             <video v-if="view === 'clip'" ref="video" class="size-full" controls muted playsinline />
+            <div v-else-if="snapId && !snapFailed" class="flex size-full items-center justify-center">
+              <!-- Conteneur aux proportions de l'image : les cadres (fractions 0–1) tombent juste -->
+              <div class="relative max-h-full max-w-full" :style="{ aspectRatio: snapRatio, height: snapRatio >= 16 / 9 ? 'auto' : '100%', width: snapRatio >= 16 / 9 ? '100%' : 'auto' }">
+                <img :src="eventSnapshotUrl(server.server, snapId)" class="size-full" alt="" @load="onSnapLoad($event.target)" @error="snapFailed = true">
+                <template v-if="ui.showBoxes">
+                  <svg class="pointer-events-none absolute inset-0 size-full" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+                    <rect v-for="(b, i) in boxes" :key="i" :x="b.x" :y="b.y" :width="b.w" :height="b.h" fill="none" vector-effect="non-scaling-stroke"
+                      :stroke="b.kind === 'object' ? TYPE_COLORS[e.type] : '#38bdf8'" :stroke-width="b.kind === 'object' ? 2.5 : 2" :stroke-dasharray="b.kind === 'object' ? '' : '5 3'" />
+                  </svg>
+                  <span v-for="(b, i) in boxes" :key="'l' + i" class="pointer-events-none absolute max-w-[60%] truncate rounded-sm px-1 text-[11px] font-semibold leading-4 text-black"
+                    :style="{ left: b.x * 100 + '%', ...(b.kind === 'object' && b.y > 0.06 ? { bottom: (1 - b.y) * 100 + '%' } : { top: (b.y + b.h) * 100 + '%' }), background: b.kind === 'object' ? TYPE_COLORS[e.type] : '#38bdf8' }">{{ caption(b) }}</span>
+                </template>
+              </div>
+            </div>
             <img v-else-if="e.thumb" :src="e.thumb" class="size-full object-contain" alt="">
             <div v-if="view === 'clip' && clipError" class="absolute inset-0 flex items-center justify-center text-[13px] text-ink-2">{{ $t('detail.clipUnavailable') }}</div>
           </div>

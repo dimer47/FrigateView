@@ -233,7 +233,9 @@
     "clipUnavailable": "此时段无视频片段",
     "info": "信息",
     "toTimeline": "在时间轴中回放",
-    "download": "下载片段"
+    "download": "下载片段",
+    "boxes": "框选",
+    "boxesTitle": "显示或隐藏检测框（物体、人脸、车牌）"
   },
   "timeline": {
     "hours": "{n} 小时",

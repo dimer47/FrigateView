@@ -106,6 +106,7 @@ export function fromEvent(ev, thumb) {
     objects: [ev.label],
     subLabels: [...new Set([...subs, ...(plate ? [plate] : [])])],
     zones: ev.zones || [],
+    detections: [ev.id],
     thumb,
     seen: true, // « vu » concerne les revues, pas les événements
     fromEvents: true

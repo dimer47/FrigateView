@@ -233,7 +233,9 @@
     "clipUnavailable": "Clip no disponible para este periodo",
     "info": "Información",
     "toTimeline": "Reproducir en la línea de tiempo",
-    "download": "Descargar el clip"
+    "download": "Descargar el clip",
+    "boxes": "Recuadros",
+    "boxesTitle": "Mostrar u ocultar los recuadros de detección (objeto, rostro, matrícula)"
   },
   "timeline": {
     "hours": "{n} h",
