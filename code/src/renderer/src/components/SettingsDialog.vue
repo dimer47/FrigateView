@@ -5,6 +5,7 @@ import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
 import { TYPE_LABELS } from '@/stores/events'
+import { isInternal } from '@/services/frigate'
 
 const app = useAppSettings()
 const layouts = useLayoutStore()
@@ -93,9 +94,9 @@ const close = () => (app.open = false)
           <!-- Serveur -->
           <template v-else>
             <h3 class="mb-1.5 font-semibold">Serveur Frigate</h3>
-            <div class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ server.server.host }}:{{ server.server.port }}<small class="block text-xs text-ink-3">Frigate {{ server.version }} · {{ server.cameras.length }} caméras</small></span><span :class="server.status === 'ok' ? 'text-ok' : 'text-bad'">{{ server.status === 'ok' ? 'Connecté' : 'Injoignable' }}</span></div>
+            <div class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ server.server.host }}:{{ server.server.port }}<small class="block text-xs text-ink-3">Frigate {{ server.version }} · {{ server.cameras.length }} caméras · {{ isInternal(server.server) ? 'sans compte (HTTP)' : 'avec compte (HTTPS)' }}</small></span><span :class="server.status === 'ok' ? 'text-ok' : 'text-bad'">{{ server.status === 'ok' ? 'Connecté' : 'Injoignable' }}</span></div>
             <div v-if="server.profile.username" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>Compte<small class="block text-xs text-ink-3">Les comptes se gèrent dans l'interface web de Frigate</small></span><span>{{ server.profile.username }} · {{ server.profile.role }}</span></div>
-            <div class="mt-4 flex gap-2"><button class="btn" @click="close(); server.signOut()">Se déconnecter</button><button class="btn" @click="close(); server.changeServer()">Changer de serveur</button></div>
+            <div class="mt-4 flex gap-2"><button class="btn" @click="close(); server.signOut()">Se déconnecter</button><button class="btn" @click="close(); server.changeServer()">Changer de serveur ou de mode</button></div>
           </template>
         </div>
       </div>

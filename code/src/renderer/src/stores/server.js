@@ -36,8 +36,8 @@ export const useServerStore = defineStore('server', {
       this.startPolling()
     },
 
-    async connect({ host, port, user, password, remember }) {
-      const server = { host, port, user: isInternal({ port }) ? '' : user }
+    async connect({ mode, host, port, user, password, remember }) {
+      const server = { mode, host, port, user: mode === 'local' ? '' : user }
       await this.open(server, password)
       if (remember && !isInternal(server)) await window.native.saveSecret({ host, port, user, password })
       else await window.native.clearSecret()
@@ -62,7 +62,7 @@ export const useServerStore = defineStore('server', {
     async relogin() {
       const s = await window.native.loadSecret()
       if (!s || s.host !== this.server.host || String(s.port) !== String(this.server.port)) return false
-      try { await this.open({ host: s.host, port: s.port, user: s.user }, s.password); return true } catch { return false }
+      try { await this.open({ mode: 'secure', host: s.host, port: s.port, user: s.user }, s.password); return true } catch { return false }
     },
 
     askLogin(reason) {

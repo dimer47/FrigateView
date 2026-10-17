@@ -7,8 +7,16 @@ const server = useServerStore()
 const layouts = useLayoutStore()
 
 const prev = server.server
-const host = ref(prev?.host || '192.168.0.137')
-const port = ref(String(prev?.port || '8971'))
+const host = ref(prev?.host || '')
+const PORTS = { secure: '8971', local: '5000' }
+const mode = ref(prev?.mode || (String(prev?.port) === '5000' ? 'local' : 'secure'))
+const port = ref(String(prev?.port || PORTS[mode.value]))
+// Changer de mode remet le port habituel, sauf s'il a été personnalisé
+function setMode(m) {
+  if (port.value === PORTS[mode.value]) port.value = PORTS[m]
+  mode.value = m
+  state.value = 'idle'
+}
 const user = ref(prev?.user || '')
 const password = ref('')
 const remember = ref(true)
@@ -17,7 +25,7 @@ const error = ref(null)
 const firstInput = ref(null)
 const passInput = ref(null)
 
-const internal = computed(() => port.value.trim() === '5000')
+const internal = computed(() => mode.value === 'local')
 const reconnecting = computed(() => !!prev && server.status === 'auth')
 const canGo = computed(() => host.value.trim() && /^\d+$/.test(port.value.trim()) && (internal.value || (user.value.trim() && password.value)))
 
@@ -27,7 +35,7 @@ async function go() {
   if (!canGo.value || state.value === 'busy') return
   state.value = 'busy'
   try {
-    await server.connect({ host: host.value.trim(), port: port.value.trim(), user: user.value.trim(), password: password.value, remember: remember.value })
+    await server.connect({ mode: mode.value, host: host.value.trim(), port: port.value.trim(), user: user.value.trim(), password: password.value, remember: remember.value })
     // Premier lancement : un layout avec toutes les caméras, pour voir tout de suite les images
     if (!layouts.layouts.length && server.cameras.length) {
       const ids = server.cameras.map((c) => c.id)
@@ -59,9 +67,19 @@ const fp = (f) => (f || '').replace(/^sha256\//, '')
       </div>
       <p class="mb-5 text-[13px] leading-relaxed text-ink-2">
         <template v-if="reconnecting">{{ server.authReason || 'Connectez-vous à' }} <b class="text-ink">{{ host }}</b></template>
-        <template v-else>Connectez-vous à votre serveur Frigate avec votre compte Frigate.</template>
+        <template v-else>Connectez-vous à votre serveur Frigate.</template>
       </p>
 
+      <div v-show="!reconnecting" class="mb-3.5">
+        <span class="label">Mode de connexion</span>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button v-for="[k, t, d] in [['secure', 'Avec compte Frigate', 'HTTPS · port 8971'], ['local', 'Sans compte', 'HTTP · port 5000']]" :key="k" type="button"
+            class="rounded-lg border px-3 py-2 text-left" :class="mode === k ? 'border-accent bg-accent/15' : 'border-line hover:border-line-2'" @click="setMode(k)">
+            <span class="flex items-center gap-1.5 text-[13px] font-semibold" :class="mode === k ? 'text-accent' : 'text-ink'">{{ t }}<span v-if="k === 'secure'" class="rounded bg-ok/15 px-1 text-[10px] font-bold text-ok">Recommandé</span></span>
+            <span class="block text-[11px] text-ink-3">{{ d }}</span>
+          </button>
+        </div>
+      </div>
       <div v-show="!reconnecting" class="grid grid-cols-[1fr_90px] gap-2.5">
         <div class="mb-2.5"><label class="label" for="host">Adresse du serveur</label><input id="host" ref="firstInput" v-model="host" class="input" placeholder="192.168.0.137 ou frigate.local" @input="state = 'idle'"></div>
         <div class="mb-2.5"><label class="label" for="port">Port</label><input id="port" v-model="port" class="input" @input="state = 'idle'"></div>
@@ -75,7 +93,7 @@ const fp = (f) => (f || '').replace(/^sha256\//, '')
         <label class="flex items-center gap-2 text-[13px] text-ink-2"><input v-model="remember" type="checkbox" class="accent-accent"> Rester connecté (mot de passe chiffré sur ce PC)</label>
       </template>
       <p v-else class="rounded-lg border border-warn/35 bg-warn/10 px-3 py-2 text-xs leading-relaxed text-ink-2">
-        <b class="text-warn">Port 5000 : accès interne sans compte.</b> Tout appareil du réseau peut voir les caméras. Préférez le port 8971 avec un compte Frigate.
+        <b class="text-warn">Sans compte :</b> tout appareil du réseau local peut voir les caméras par ce port. À réserver à un réseau de confiance ; sinon, utilisez le mode avec compte.
       </p>
 
       <div v-if="state === 'busy'" class="mt-3 flex items-center gap-2 text-[13px] text-ink-2"><span class="spin" />Connexion à {{ host }}:{{ port }}…</div>
@@ -93,9 +111,10 @@ const fp = (f) => (f || '').replace(/^sha256\//, '')
         <template v-else>
           <strong class="block text-[13px] text-bad">Serveur introuvable</strong>
           {{ host }}:{{ port }} ne répond pas ({{ error.message }}).<br>
-          · Vérifiez l'adresse de l'interface web Frigate (port 8971 par défaut)<br>
+          · Vérifiez l'adresse et le port de Frigate ({{ internal ? '5000 sans compte' : '8971 avec compte' }})<br>
+          <template v-if="!internal">· Le port 8971 doit être publié dans le docker-compose de Frigate<br></template>
           · Le PC et le serveur doivent être sur le même réseau, ou reliés par Tailscale<br>
-          · Le pare-feu du serveur doit autoriser les ports 8971 et 8555
+          · Le pare-feu du serveur doit autoriser les ports {{ internal ? '5000' : '8971' }} et 8555
         </template>
       </div>
 

@@ -2,7 +2,9 @@
 // Port 8971 : HTTPS + compte Frigate (jeton de session en cookie, partagé avec les <img>).
 // Port 5000 : accès interne sans compte, à n'utiliser que sur un réseau de confiance.
 
-export const isInternal = (s) => String(s.port) === '5000'
+// Mode « local » : sans compte, en HTTP. Choisi explicitement à la connexion
+// (anciennes configurations sans mode : déduit du port 5000).
+export const isInternal = (s) => (s.mode ? s.mode === 'local' : String(s.port) === '5000')
 export const baseUrl = (s) => `${isInternal(s) ? 'http' : 'https'}://${s.host}:${s.port}`
 
 export class FrigateError extends Error {
