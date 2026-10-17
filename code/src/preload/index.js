@@ -28,5 +28,13 @@ contextBridge.exposeInMainWorld('native', {
   onWallLayout: (cb) => on('wall:layout', cb),
   getMetrics: () => ipcRenderer.invoke('metrics:get'),
   setMenuState: (st) => ipcRenderer.invoke('menu:state', st),
-  onMenu: (cb) => on('menu:command', cb)
+  onMenu: (cb) => on('menu:command', cb),
+  chooseSave: (defaultName, kind) => ipcRenderer.invoke('file:chooseSave', { defaultName, kind }),
+  chooseDir: () => ipcRenderer.invoke('file:chooseDir'),
+  writeFile: (path, data) => ipcRenderer.invoke('file:write', { path, data }),
+  reveal: (path) => ipcRenderer.invoke('file:reveal', path),
+  download: (id, url, path) => ipcRenderer.invoke('file:download', { id, url, path }),
+  cancelDownload: (id) => ipcRenderer.invoke('file:cancel', id),
+  onDownloadProgress: (cb) => on('download:progress', cb),
+  pathJoin: (dir, name) => dir.replace(/[\\/]$/, '') + (dir.includes('\\') ? '\\' : '/') + name
 })

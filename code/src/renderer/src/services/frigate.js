@@ -30,7 +30,7 @@ async function request(server, path, opts = {}) {
   throw new FrigateError(r.error || t('errors.network'), { code: 'network' })
 }
 
-export const getJson = async (server, path) => JSON.parse(await request(server, path))
+export const getJson = async (server, path, opts) => JSON.parse(await request(server, path, opts))
 
 // Port 8971 : certificat auto-signé à approuver une fois (empreinte vérifiée ensuite)
 export async function checkCert(server) {
@@ -75,7 +75,7 @@ export async function getCameras(server) {
 }
 
 // En ligne = la caméra envoie des images (camera_fps > 0)
-export const getStats = (server) => getJson(server, '/api/stats')
+export const getStats = (server) => getJson(server, '/api/stats', { timeout: 12000 })
 export const onlineFromStats = (stats) => Object.fromEntries(Object.entries(stats.cameras || {}).map(([id, s]) => [id, (s.camera_fps ?? 0) > 0]))
 export async function getOnline(server) {
   const stats = await getJson(server, '/api/stats')
@@ -115,3 +115,21 @@ export const thumbUrl = (server, review) =>
 
 // Flux temps réel de Frigate (mêmes sujets que MQTT, authentifié par le cookie de session)
 export const wsUrl = (server) => `${isInternal(server) ? 'ws' : 'wss'}://${server.host}:${server.port}/ws`
+
+/* ---- Exports, captures, vignettes, PTZ ---- */
+
+// Passage enregistré en un seul fichier MP4 (assemblé par Frigate, sans réencodage)
+export const clipUrl = (server, cam, start, end) =>
+  `${baseUrl(server)}/api/${encodeURIComponent(cam)}/start/${Math.floor(start)}/end/${Math.ceil(end)}/clip.mp4`
+
+// Image pleine résolution de la caméra (dernière image reçue par Frigate)
+export const latestJpgUrl = (server, cam) => `${baseUrl(server)}/api/${encodeURIComponent(cam)}/latest.jpg?t=${Date.now()}`
+
+// Image extraite d'un enregistrement à un instant donné (404 s'il n'y a pas d'enregistrement)
+export const recordingFrameUrl = (server, cam, ts, height) =>
+  `${baseUrl(server)}/api/${encodeURIComponent(cam)}/recordings/${Math.floor(ts)}/snapshot.jpg${height ? `?height=${height}` : ''}`
+
+// Caméras motorisées (ONVIF) : { features: ['pt', 'zoom', …], presets: [] } — vide sinon
+export async function getPtzInfo(server, cam) {
+  try { return await getJson(server, `/api/${encodeURIComponent(cam)}/ptz/info`) } catch { return {} }
+}

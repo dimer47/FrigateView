@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore } from '@/stores/layouts'
 import { useUiStore } from '@/stores/ui'
@@ -17,6 +17,9 @@ import { useAppSettings } from '@/stores/appSettings'
 import SettingsDialog from '@/components/SettingsDialog.vue'
 import LayoutDialog from '@/components/LayoutDialog.vue'
 import HelpDialog from '@/components/HelpDialog.vue'
+import ExportDialog from '@/components/ExportDialog.vue'
+import DownloadsPanel from '@/components/DownloadsPanel.vue'
+import { useMediaStore } from '@/stores/media'
 import { bestGrid } from '@/stores/layouts'
 import { t, loc, setLocale } from '@/i18n'
 import { resolveLang } from '../../shared/langs'
@@ -30,6 +33,7 @@ const tl = useTimelineStore()
 const ev = useEventsStore()
 const appSettings = useAppSettings()
 const stats = useStatsStore()
+const media = useMediaStore()
 watch(() => ui.showStats, (on) => { on ? stats.start() : stats.stop(); server._fast = on; if (server.status === 'ok') server.startPolling(on) }, { immediate: true })
 
 // Fenêtre « mur vidéo » ouverte sur un autre écran : grille seule, layout imposé
@@ -39,12 +43,19 @@ if (wall) {
   ui.expand = true
   layouts.activeId = params.get('layout')
   layouts.persist = () => save('fv-layouts', layouts.layouts) // ne jamais changer le layout de la fenêtre principale
-  window.native.onWallLayout((id) => (layouts.activeId = id))
+  // Mode propre au mur (vidéo ou images 1/s), sinon celui de la fenêtre principale
+  const wallMode = ref(params.get('mode') || '')
+  if (wallMode.value) ui.liveMode = wallMode.value
+  window.native.onWallLayout(({ layout, mode }) => {
+    layouts.activeId = layout
+    wallMode.value = mode
+    ui.liveMode = mode || load('fv-ui', {}).liveMode || 'webrtc'
+  })
   // Layouts modifiés dans la fenêtre principale : rechargés ici (sans toucher au layout affiché)
   // Affichage changé dans la fenêtre principale (statistiques, mode vidéo/images) : repris ici
   addEventListener('storage', (e) => {
     if (e.key === 'fv-layouts') layouts.layouts = load('fv-layouts', [])
-    if (e.key === 'fv-ui') { const u = load('fv-ui', {}); Object.assign(ui, { showStats: !!u.showStats, liveMode: u.liveMode || ui.liveMode, ...(u.statFields && { statFields: u.statFields }) }) }
+    if (e.key === 'fv-ui') { const u = load('fv-ui', {}); Object.assign(ui, { showStats: !!u.showStats, liveMode: wallMode.value || u.liveMode || ui.liveMode, ...(u.statFields && { statFields: u.statFields }) }) }
   })
   // Mur ouvert avant la connexion de la fenêtre principale : nouvel essai toutes les 5 s
   // (la session est partagée, la connexion faite dans la fenêtre principale suffit)
@@ -108,7 +119,13 @@ const MENU = {
   'play:sync': () => tl.toggleSync(),
   'play:ago': (m) => tl.seek(Date.now() - m * 60e3, null, true),
   'events:seen': () => ev.markAllSeen(),
-  help: () => (ui.helpOpen = true)
+  help: () => (ui.helpOpen = true),
+  'media:capture': () => { const c = layouts.active?.cells[layouts.selected]; if (c) media.capture(c) },
+  'media:export': () => {
+    const end = tl.live ? Date.now() : Math.min(Date.now(), tl.time + 30e3), c = layouts.active?.cells[layouts.selected]
+    media.openExport({ cams: c ? [c] : [], start: end - 60e3, end })
+  },
+  'media:mute': () => { const c = layouts.active?.cells[layouts.selected]; if (c) media.toggleAudio(c) }
 }
 if (!wall) {
   window.native.onMenu(({ cmd, arg }) => MENU[cmd]?.(arg))
@@ -133,7 +150,7 @@ watch(() => [server.status, server.onlineCount, server.cameras.length], () => {
 watch(() => server.cameras, (cams) => { if (cams.length) layouts.prune(cams.map((c) => c.id)) })
 
 function onKey(e) {
-  if (wall || ev.detailId || appSettings.open || ui.helpOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
+  if (wall || ev.detailId || appSettings.open || ui.helpOpen || media.exportOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
   if (e.ctrlKey && e.key === ',') { e.preventDefault(); appSettings.show(); return }
   if (e.key === 'Escape') {
     if (layouts.focus !== null) layouts.focus = null
@@ -183,5 +200,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   <SettingsDialog v-if="appSettings.open && appSettings.s" />
   <LayoutDialog v-if="ui.layoutDialog !== undefined && !wall" :layout-id="ui.layoutDialog" @close="ui.layoutDialog = undefined" />
   <HelpDialog v-if="ui.helpOpen" />
+  <ExportDialog v-if="media.exportOpen && !wall" />
+  <DownloadsPanel v-if="!wall" />
   <AppToast />
 </template>

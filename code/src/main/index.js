@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage, Notification, Tray, Menu, screen, nativeImage, dialog } from 'electron'
-import { join } from 'node:path'
-import { readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { join, resolve, dirname } from 'node:path'
+import { readFileSync, writeFileSync, rmSync, createWriteStream } from 'node:fs'
 import tls from 'node:tls'
 import os from 'node:os'
 import { createHash } from 'node:crypto'
@@ -95,6 +95,61 @@ ipcMain.handle('http', (_e, { url, method = 'GET', headers = {}, body, timeout =
 )
 
 // Déconnexion : suppression du cookie de session Frigate
+/* ------------------------------------------------------------------
+   Fichiers : captures et clips enregistrés sur le disque.
+   Seuls les chemins choisis par l'utilisateur dans une boîte de dialogue
+   peuvent être écrits (la fenêtre ne peut pas viser un autre fichier).
+   ------------------------------------------------------------------ */
+const allowedPaths = new Set()
+const allow = (p) => { if (p) allowedPaths.add(p); return p }
+// Fichier choisi, ou fichier placé directement dans un dossier choisi
+const allowedIn = (p) => typeof p === 'string' && (allowedPaths.has(p) || allowedPaths.has(dirname(resolve(p))))
+const winOf = (e) => BrowserWindow.fromWebContents(e.sender)
+
+ipcMain.handle('file:chooseSave', async (e, { defaultName, kind }) => {
+  const filters = kind === 'image' ? [{ name: 'Image', extensions: ['jpg', 'png'] }] : [{ name: 'Vidéo MP4', extensions: ['mp4'] }]
+  const r = await dialog.showSaveDialog(winOf(e), { defaultPath: join(app.getPath(kind === 'image' ? 'pictures' : 'videos'), defaultName), filters })
+  return r.canceled ? null : allow(r.filePath)
+})
+ipcMain.handle('file:chooseDir', async (e) => {
+  const r = await dialog.showOpenDialog(winOf(e), { defaultPath: app.getPath('videos'), properties: ['openDirectory', 'createDirectory'] })
+  return r.canceled ? null : allow(r.filePaths[0])
+})
+ipcMain.handle('file:write', (_e, { path, data }) => {
+  if (!allowedIn(path)) return false
+  writeFileSync(path, Buffer.from(data))
+  return true
+})
+ipcMain.handle('file:reveal', (_e, path) => { if (allowedIn(path)) shell.showItemInFolder(path) })
+
+// Téléchargement en flux (clips de plusieurs centaines de Mo), progression envoyée à la fenêtre
+const downloads = new Map()
+ipcMain.handle('file:download', (e, { id, url, path }) =>
+  new Promise((resolve) => {
+    if (!allowedIn(path) || !/^https?:\/\//.test(url)) return resolve({ ok: false, error: 'refused' })
+    const req = net.request({ url, useSessionCookies: true })
+    downloads.set(id, req)
+    const done = (r) => { downloads.delete(id); resolve(r) }
+    req.on('response', (res) => {
+      if (res.statusCode !== 200) { res.resume?.(); return done({ ok: false, status: res.statusCode }) }
+      const total = Number(res.headers['content-length']) || 0
+      const out = createWriteStream(path)
+      let loaded = 0, last = 0
+      res.on('data', (c) => {
+        out.write(c)
+        loaded += c.length
+        if (Date.now() - last > 300) { last = Date.now(); if (!e.sender.isDestroyed()) e.sender.send('download:progress', { id, loaded, total }) }
+      })
+      res.on('end', () => out.end(() => done({ ok: true, size: loaded })))
+      res.on('error', (err) => { out.destroy(); rmSync(path, { force: true }); done({ ok: false, error: err.message }) })
+    })
+    req.on('error', (err) => { rmSync(path, { force: true }); done({ ok: false, error: err.message }) })
+    req.on('abort', () => { rmSync(path, { force: true }); done({ ok: false, error: 'aborted' }) })
+    req.end()
+  })
+)
+ipcMain.handle('file:cancel', (_e, id) => { downloads.get(id)?.abort() })
+
 ipcMain.handle('auth:logout', async (_e, { origin }) => {
   const cookies = await session.defaultSession.cookies.get({ url: origin })
   await Promise.all(cookies.map((c) => session.defaultSession.cookies.remove(origin, c.name)))
@@ -243,11 +298,12 @@ function syncWalls() {
       if (process.env.FV_DEBUG) w.webContents.on('console-message', (e) => console.log(`[mur ${id}]`, e.message))
       w.on('close', (e) => { if (!quitting) { e.preventDefault(); settings.screens[id] = { ...settings.screens[id], enabled: false }; saveSettings(); syncWalls(); applySettings() } })
       walls.set(id, w)
-      loadRenderer(w, { wall: '1', layout: conf.layout })
-    } else w.webContents.send('wall:layout', conf.layout)
+      loadRenderer(w, { wall: '1', layout: conf.layout, mode: conf.mode || '' })
+    } else w.webContents.send('wall:layout', { layout: conf.layout, mode: conf.mode || '' })
   }
 }
-ipcMain.handle('screens:apply', (_e, screensConf) => { settings = { ...settings, screens: screensConf }; saveSettings(); syncWalls(); return true })
+// applySettings : la fenêtre des réglages reçoit la nouvelle configuration (sinon elle rouvre l'ancienne)
+ipcMain.handle('screens:apply', (_e, screensConf) => { settings = { ...settings, screens: screensConf }; saveSettings(); syncWalls(); applySettings(); return true })
 function identifyScreens() {
   // Grand numéro affiché 2 s sur chaque écran
   screen.getAllDisplays().forEach((d, i) => {
@@ -353,6 +409,11 @@ function buildMenu() {
       label: tr('menu.playback'),
       submenu: [
         { label: uiState.live || uiState.playing ? tr('menu.pause') : tr('menu.play'), enabled: c, ...shown('Space'), click: () => send('play:toggle') },
+        { type: 'separator' },
+        { label: tr('menu.capture'), accelerator: 'CmdOrCtrl+Shift+S', enabled: c, click: () => send('media:capture') },
+        { label: tr('menu.exportClip'), accelerator: 'CmdOrCtrl+Shift+E', enabled: c, click: () => send('media:export') },
+        { label: tr('menu.sound'), accelerator: 'CmdOrCtrl+Shift+M', enabled: c, click: () => send('media:mute') },
+        { type: 'separator' },
         { label: tr('menu.backToLive'), enabled: c && !uiState.live, ...shown('L'), click: () => send('play:live') },
         { type: 'separator' },
         { label: tr('menu.back10'), enabled: c, ...shown('Left'), click: () => send('play:skip', -10) },

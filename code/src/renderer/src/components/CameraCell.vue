@@ -9,6 +9,7 @@ import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
 import { useStatsStore, fmtRate, serverCamera } from '@/stores/stats'
 import { t } from '@/i18n'
+import { useMediaStore } from '@/stores/media'
 
 const props = defineProps({ camId: { type: String, required: true } })
 const server = useServerStore()
@@ -17,6 +18,8 @@ const tl = useTimelineStore()
 const playback = computed(() => tl.isPlayback(props.camId))
 const stats = useStatsStore()
 const imgEl = ref(null)
+const media = useMediaStore()
+const muted = computed(() => media.audioCam !== props.camId)
 
 const root = ref(null)
 const video = ref(null)
@@ -74,7 +77,11 @@ function stopVideo() {
   if (video.value) video.value.srcObject = null
   rtc.value = 'off'
 }
-function onPlaying() { rtc.value = 'playing'; lastFrame.value = Date.now() }
+function onPlaying() {
+  rtc.value = 'playing'
+  lastFrame.value = Date.now()
+  media.hasAudio[props.camId] = !!video.value?.srcObject?.getAudioTracks().length
+}
 
 watch(wantVideo, (v) => (v ? startVideo() : stopVideo()))
 watch(() => props.camId, () => { imgSrc.value = ''; stopPlayback(); startSnapshots(); if (wantVideo.value) startVideo(); if (playback.value) syncPlayback() })
@@ -201,22 +208,27 @@ function startStats() { stopStats(); lastSample = performance.now(); statTimer =
 function stopStats() { clearInterval(statTimer); statTimer = null; stats.forget(props.camId) }
 watch(() => ui.showStats, (on) => (on ? startStats() : stopStats()), { immediate: true })
 
+// Image affichée, pour la capture
+let unregister = () => {}
+const frameGetter = () => ({ el: playback.value ? pbVideo.value : showVideo.value ? video.value : null, time: playback.value ? tl.time : Date.now() })
+watch(() => props.camId, (id) => { unregister(); unregister = media.registerFrame(id, frameGetter) }, { immediate: true })
+
 let clock = null
 onMounted(() => {
   startSnapshots()
   if (wantVideo.value) startVideo()
   clock = setInterval(() => (now.value = Date.now()), 1000)
 })
-onBeforeUnmount(() => { stopSnapshots(); stopVideo(); stopPlayback(); stopStats(); clearInterval(clock) })
+onBeforeUnmount(() => { unregister(); stopSnapshots(); stopVideo(); stopPlayback(); stopStats(); clearInterval(clock) })
 
 const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString(loc()))
 </script>
 
 <template>
   <div ref="root" class="absolute inset-0 bg-[linear-gradient(160deg,#1b2636,#0b121c)]">
-    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full object-contain" :class="{ 'brightness-50': pbState === 'norec' }" muted playsinline />
+    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full object-contain" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
     <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full object-contain" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
-    <video ref="video" class="absolute inset-0 size-full object-contain" :class="{ invisible: !showVideo }" autoplay muted playsinline @playing="onPlaying" />
+    <video ref="video" class="absolute inset-0 size-full object-contain" :class="{ invisible: !showVideo }" autoplay :muted="muted" playsinline @playing="onPlaying" />
 
     <div class="absolute left-1.5 top-1.5 z-[3] flex flex-wrap items-center gap-1">
       <span v-if="playback" class="badge text-warn"><i class="bg-warn" />{{ $t('cell.playback') }}{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>

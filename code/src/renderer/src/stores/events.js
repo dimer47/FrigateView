@@ -114,6 +114,12 @@ export const useEventsStore = defineStore('events', {
         this._retry = setTimeout(() => this.connect(), 5000)
       }
     },
+    // Commande envoyée à Frigate par le WebSocket (ex. PTZ : topic « cam/ptz », payload « MOVE_LEFT »)
+    send(topic, payload) {
+      if (this._ws?.readyState !== WebSocket.OPEN) return false
+      this._ws.send(JSON.stringify({ topic, payload, message: payload, retain: false }))
+      return true
+    },
     stop() {
       clearInterval(this._poll)
       clearTimeout(this._retry)

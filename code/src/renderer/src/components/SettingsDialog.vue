@@ -19,13 +19,15 @@ const screenConf = ref({})
 
 onMounted(async () => {
   screens.value = await window.native.listScreens()
-  screenConf.value = JSON.parse(JSON.stringify(app.s.screens || {}))
-  for (const d of screens.value) screenConf.value[d.id] ||= { enabled: false, layout: layouts.layouts[0]?.id || '' }
+  // Configuration relue dans le processus principal : la copie locale peut dater d'avant le dernier « Appliquer »
+  const fresh = await window.native.getSettings()
+  screenConf.value = JSON.parse(JSON.stringify(fresh.screens || {}))
+  for (const d of screens.value) screenConf.value[d.id] ||= { enabled: false, layout: layouts.layouts[0]?.id || '', mode: '' }
 })
 
 const setType = (k, v) => app.set({ notifyTypes: { ...app.s.notifyTypes, [k]: v } })
 async function applyScreens() {
-  await window.native.applyScreens(screenConf.value)
+  await window.native.applyScreens(JSON.parse(JSON.stringify(screenConf.value)))
   const n = Object.values(screenConf.value).filter((c) => c.enabled).length
   ui.notify(n ? t('settings.wallsOpened', { n }, n) : t('settings.wallsClosed'))
 }
@@ -96,6 +98,11 @@ const close = () => (app.open = false)
               <span v-if="!d.current" class="flex items-center gap-2">
                 <select v-model="screenConf[d.id].layout" class="input !w-44" :disabled="!screenConf[d.id].enabled">
                   <option v-for="l in layouts.layouts" :key="l.id" :value="l.id">{{ l.name }}</option>
+                </select>
+                <select v-model="screenConf[d.id].mode" class="input !w-36" :disabled="!screenConf[d.id].enabled" :title="$t('settings.wallModeHint')">
+                  <option value="">{{ $t('settings.wallModeSame') }}</option>
+                  <option value="webrtc">{{ $t('toolbar.video') }}</option>
+                  <option value="snapshot">{{ $t('toolbar.images') }}</option>
                 </select>
                 <label class="flex items-center gap-1.5 text-xs"><input v-model="screenConf[d.id].enabled" type="checkbox" class="size-4 accent-accent">{{ $t('settings.wall') }}</label>
               </span>

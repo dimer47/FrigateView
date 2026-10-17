@@ -97,10 +97,14 @@ export const useServerStore = defineStore('server', {
       if (!this.server || this.status === 'auth') return
       try {
         this.stats = await getStats(this.server)
+        this._fails = 0
         this.online = onlineFromStats(this.stats)
         if (this.status === 'lost') { this.cameras = await getCameras(this.server); this.status = 'ok' }
       } catch (e) {
         if (e.code === 'auth') { if (!(await this.relogin())) this.askLogin('connect.sessionExpired'); return }
+        // Coupure seulement après 3 échecs de suite : un lien saturé par la vidéo
+        // (plusieurs murs, flux 4K) ralentit les réponses sans que le serveur soit arrêté
+        if (this.status !== 'lost' && (this._fails = (this._fails || 0) + 1) < 3) return
         if (this.status !== 'lost') { this.status = 'lost'; this.lostAt = Date.now() }
       }
     },

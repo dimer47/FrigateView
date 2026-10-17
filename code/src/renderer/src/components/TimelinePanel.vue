@@ -4,6 +4,8 @@ import { useTimelineStore, MIN, HOUR, DAY } from '@/stores/timeline'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
 import { t, loc } from '@/i18n'
+import { recordingFrameUrl } from '@/services/frigate'
+import { useMediaStore } from '@/stores/media'
 
 const tl = useTimelineStore()
 const layouts = useLayoutStore()
@@ -14,6 +16,27 @@ const body = ref(null)
 const now = ref(Date.now())
 const rulerWidth = ref(800)
 const hover = ref(null) // { pct, t }
+const media = useMediaStore()
+const section = ref(null)
+
+/* ---------- Vignette au survol : image enregistrée à l'instant pointé ---------- */
+const thumb = ref(null) // { x, url, cam, t, ok }
+let thumbTimer = null
+function updateThumb(e, t) {
+  const cam = e.target.closest?.('[data-cam]')?.dataset.cam
+  clearTimeout(thumbTimer)
+  if (!cam || t > Date.now() || !tl.rangesFor(cam).rec.some((r) => t >= r.s && t < r.e)) { thumb.value = null; return }
+  const x = e.clientX - section.value.getBoundingClientRect().left
+  if (thumb.value?.cam === cam) thumb.value.x = x
+  // Instant arrondi à 2 s : les survols proches réutilisent la même image (cache)
+  const ts = Math.round(t / 2000) * 2
+  thumbTimer = setTimeout(() => { thumb.value = { x, cam, t, url: recordingFrameUrl(server.server, cam, ts, 135 * (window.devicePixelRatio || 1)), ok: false } }, 150)
+}
+function exportView() {
+  // Export : la minute autour du curseur, caméras du layout
+  const end = Math.min(Date.now(), (tl.live ? Date.now() : tl.time + 30e3))
+  media.openExport({ cams: selectedCam.value ? [selectedCam.value] : [...cams.value], start: end - 60e3, end })
+}
 const pop = ref(null) // filter | cal
 const calValue = ref('')
 
@@ -75,12 +98,14 @@ function onMove(e) {
       const dt = (dx / ruler.value.clientWidth) * (drag.end - drag.start)
       tl.view.start = drag.start - dt; tl.view.end = drag.end - dt
       hover.value = null
+      thumb.value = null
       return
     }
   }
-  if (!e.target.closest?.('[data-track]') || !ruler.value) { hover.value = null; return }
+  if (!e.target.closest?.('[data-track]') || !ruler.value) { hover.value = null; thumb.value = null; clearTimeout(thumbTimer); return }
   const t = timeAt(e.clientX)
   hover.value = { pct: pct(t), t }
+  updateThumb(e, t)
 }
 function onUp(e) {
   if (!drag) return
@@ -137,7 +162,12 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
 </script>
 
 <template>
-  <section class="relative flex shrink-0 select-none flex-col border-t border-[#1e2a3a] bg-[#0c1018]" :style="{ height: tl.height + 'px' }">
+  <section ref="section" class="relative flex shrink-0 select-none flex-col border-t border-[#1e2a3a] bg-[#0c1018]" :style="{ height: tl.height + 'px' }">
+    <!-- Vignette de l'instant survolé, au-dessus de la timeline -->
+    <div v-if="thumb" class="pointer-events-none absolute bottom-full z-20 mb-2 w-[240px] -translate-x-1/2 overflow-hidden rounded-md border border-line-2 bg-black shadow-xl" :class="{ invisible: !thumb.ok }" :style="{ left: Math.max(124, thumb.x) + 'px' }">
+      <img :src="thumb.url" class="block aspect-video w-full object-cover" alt="" @load="thumb && (thumb.ok = true)" @error="thumb = null">
+      <div class="flex justify-between bg-black/80 px-2 py-0.5 text-[11px]"><span class="truncate">{{ server.camById(thumb.cam)?.name }}</span><span class="font-mono">{{ hms(thumb.t) }}</span></div>
+    </div>
     <div class="absolute inset-x-0 -top-[3px] z-10 h-[6px] cursor-row-resize hover:bg-accent" :title="$t('common.resize')" @mousedown.prevent="startResize" />
 
     <!-- En-tête -->
@@ -172,6 +202,9 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
           <div class="mt-3 flex justify-end gap-2"><button class="btn" @click="pop = null">{{ $t('common.cancel') }}</button><button class="btn btn-primary" @click="applyCal">{{ $t('timeline.go') }}</button></div>
         </div>
       </div>
+      <button class="tbtn !size-[30px]" :title="$t('media.exportClip')" @click="exportView">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2" /><circle cx="4" cy="12" r="2" /><path d="M5.6 5.2L14 12M5.6 10.8L14 4" /></svg>
+      </button>
       <span v-if="!tl.live" class="mx-2.5 whitespace-nowrap text-xs text-ink-3"><b class="text-warn">{{ $t('timeline.playback') }}</b> · {{ tl.playbackCams ? tl.playbackCams.map((c) => server.camById(c)?.name).join(', ') : $t('timeline.allLayoutCams') }}</span>
       <span v-if="tl.loading" class="spin ml-1" :title="$t('timeline.loading')" />
       <span class="flex-1" />
@@ -182,7 +215,7 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
     <div class="flex min-h-0 flex-1">
       <!-- Pistes -->
       <!-- L'axe du temps va toujours de gauche à droite, même en arabe -->
-      <div ref="body" dir="ltr" class="relative flex min-w-0 flex-1 flex-col" @mousedown="onDown" @wheel="onWheel" @mouseleave="hover = null">
+      <div ref="body" dir="ltr" class="relative flex min-w-0 flex-1 flex-col" @mousedown="onDown" @wheel="onWheel" @mouseleave="hover = null; thumb = null">
         <div class="flex h-6 shrink-0 overflow-hidden border-b border-[#1e2a3a] [scrollbar-gutter:stable]">
           <div class="flex w-[120px] shrink-0 items-center border-r border-[#1e2a3a] px-2.5 text-[11px] text-ink-3">{{ $t('timeline.cameras', { n: cams.length }, cams.length) }}</div>
           <div ref="ruler" data-track class="relative flex-1 cursor-pointer overflow-hidden">

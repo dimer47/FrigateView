@@ -202,7 +202,8 @@
     "snapshotHint": "Vignette enregistrée par Frigate",
     "clipUnavailable": "Clip indisponible pour cette période",
     "info": "Informations",
-    "toTimeline": "Relire dans la timeline"
+    "toTimeline": "Relire dans la timeline",
+    "download": "Télécharger le clip"
   },
   "timeline": {
     "hours": "{n} h",
@@ -289,7 +290,9 @@
     "accountHint": "Les comptes se gèrent dans l'interface web de Frigate",
     "signOut": "Se déconnecter",
     "changeServer": "Changer de serveur ou de mode",
-    "noServer": "Aucun serveur configuré : renseignez-le sur l'écran de connexion."
+    "noServer": "Aucun serveur configuré : renseignez-le sur l'écran de connexion.",
+    "wallModeSame": "Comme la fenêtre principale",
+    "wallModeHint": "Images 1/s : bien moins de débit et de charge serveur, utile avec plusieurs murs"
   },
   "help": {
     "panels": "Layouts · Événements · Timeline",
@@ -304,7 +307,10 @@
     "eventStep": "Événement précédent / suivant (détail)",
     "esc": "Échap",
     "escAction": "Fermer · réduire · quitter le mur vidéo",
-    "title": "Raccourcis clavier"
+    "title": "Raccourcis clavier",
+    "capture": "Capture d'image de la caméra sélectionnée",
+    "exportClip": "Exporter un clip",
+    "sound": "Son de la caméra sélectionnée"
   },
   "app": {
     "serverUnreachable": "serveur injoignable",
@@ -385,7 +391,10 @@
     "paste": "Coller",
     "selectAll": "Tout sélectionner",
     "stats": "Statistiques (débit, processeur, mémoire)",
-    "checkUpdates": "Rechercher des mises à jour…"
+    "checkUpdates": "Rechercher des mises à jour…",
+    "capture": "Capture d'image",
+    "exportClip": "Exporter un clip…",
+    "sound": "Son de la caméra sélectionnée"
   },
   "main": {
     "aboutText": "Mur vidéo pour Frigate NVR.",
@@ -468,5 +477,44 @@
       "srvReconnects": "Reconnexions de la dernière heure",
       "srvCamCpu": "Processeur utilisé par la caméra sur le serveur"
     }
+  },
+  "media": {
+    "captured": "Image enregistrée",
+    "captureFailed": "Capture impossible",
+    "show": "Afficher",
+    "noRecording": "Aucun enregistrement sur cette période",
+    "mute": "Couper le son",
+    "unmute": "Activer le son",
+    "capture": "Capture d'image",
+    "exportClip": "Exporter un clip"
+  },
+  "ptz": {
+    "unavailable": "Commande impossible : connexion temps réel au serveur coupée",
+    "move": "Orienter la caméra (maintenir appuyé)",
+    "MOVE_UP": "Haut",
+    "MOVE_LEFT": "Gauche",
+    "MOVE_RIGHT": "Droite",
+    "MOVE_DOWN": "Bas",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "presets": "Positions…"
+  },
+  "export": {
+    "title": "Exporter un clip",
+    "cameras": "Caméras",
+    "start": "Début",
+    "duration": "Durée",
+    "badDate": "Date invalide",
+    "future": "La fin du clip est dans le futur",
+    "noCamera": "Choisissez au moins une caméra",
+    "summary": "Du {start} à {end}",
+    "folderHint": "{n} fichiers MP4, enregistrés dans le dossier choisi",
+    "fileHint": "Un fichier MP4, assemblé par Frigate sans perte de qualité",
+    "go": "Exporter",
+    "downloads": "Clips exportés",
+    "clear": "Effacer",
+    "preparing": "Préparation par Frigate…",
+    "done": "Terminé · {size}",
+    "canceled": "Annulé"
   }
 }

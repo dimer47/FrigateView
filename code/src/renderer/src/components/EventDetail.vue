@@ -7,11 +7,13 @@ import { useServerStore } from '@/stores/server'
 import { useLayoutStore } from '@/stores/layouts'
 import { useTimelineStore } from '@/stores/timeline'
 import { vodUrl } from '@/services/frigate'
+import { useMediaStore } from '@/stores/media'
 
 const ev = useEventsStore()
 const server = useServerStore()
 const layouts = useLayoutStore()
 const tl = useTimelineStore()
+const media = useMediaStore()
 
 const e = computed(() => ev.byId(ev.detailId))
 const view = ref('clip')
@@ -68,6 +70,8 @@ function onKey(k) {
   else if (k.key === 'ArrowUp') { k.preventDefault(); nav(-1) }
   else if (k.key === 'ArrowDown') { k.preventDefault(); nav(1) }
 }
+// Clip de l'événement, avec 3 s avant et après
+function download() { const x = e.value; media.exportClips([x.cam], x.s - 3000, Math.min(Date.now(), (x.e ?? Date.now()) + 3000)) }
 function toTimeline() {
   const x = e.value
   ev.detailId = null
@@ -125,7 +129,10 @@ function toTimeline() {
           <dl class="divide-y divide-line rounded-lg border border-line text-[13px]">
             <div v-for="[k, v] in info" :key="k" class="flex justify-between gap-3 px-3 py-2"><dt class="text-ink-3">{{ k }}</dt><dd class="truncate text-right">{{ v }}</dd></div>
           </dl>
-          <button class="btn btn-primary mt-auto flex items-center justify-center gap-2 py-2.5" @click="toTimeline">
+          <button class="btn mt-auto flex items-center justify-center gap-2 py-2" @click="download">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 1v8M3.5 5.5L7 9l3.5-3.5M1.5 12.5h11" /></svg>{{ $t('detail.download') }}
+          </button>
+          <button class="btn btn-primary mt-2 flex items-center justify-center gap-2 py-2.5" @click="toTimeline">
             <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M3 1.5v11l9.5-5.5z" /></svg>{{ $t('detail.toTimeline') }}
           </button>
         </div>
