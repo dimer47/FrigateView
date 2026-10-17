@@ -653,5 +653,24 @@
     "noKnown": "配置中没有已知车牌。",
     "notSeen": "最近 30 天未出现",
     "replay": "回放这次经过"
+  },
+  "watch": {
+    "title": "人员和车牌",
+    "hint": "勾选的人员或车牌一旦被识别即发送系统通知，与事件类型无关。每个跟踪对象只通知一次。",
+    "people": "人员",
+    "unknown": "任何未知人脸",
+    "unknownHint": "检测到人脸但 Frigate 未能识别",
+    "plates": "车牌和已知名称",
+    "noPeople": "没有已登记的人员",
+    "facesOff": "服务器已关闭人脸识别",
+    "noPlates": "没有已知或见过的车牌",
+    "platesOff": "服务器已关闭车牌识别",
+    "bellTip": "提示：人脸和车牌图库中的铃铛可添加或移除目标。",
+    "bellOn": "识别到时通知我",
+    "bellOff": "不再通知我",
+    "faceSeen": "已识别 {name}",
+    "unknownFace": "未知人脸",
+    "plateSeen": "检测到车牌 {name}",
+    "play": "回放"
   }
 }

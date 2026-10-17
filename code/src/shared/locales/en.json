@@ -653,5 +653,24 @@
     "noKnown": "No known plates in the configuration.",
     "notSeen": "Not seen in the last 30 days",
     "replay": "Play back this pass"
+  },
+  "watch": {
+    "title": "People and plates",
+    "hint": "System notification as soon as a checked person or plate is recognized, whatever the event type. One notification per tracked object.",
+    "people": "People",
+    "unknown": "Any unknown face",
+    "unknownHint": "Face detected but not recognized by Frigate",
+    "plates": "Plates and known names",
+    "noPeople": "No registered people",
+    "facesOff": "Face recognition disabled on the server",
+    "noPlates": "No known or seen plates",
+    "platesOff": "License plate recognition disabled on the server",
+    "bellTip": "Tip: the bell in the Faces and Plates galleries adds or removes a target.",
+    "bellOn": "Notify me when recognized",
+    "bellOff": "Stop notifying me",
+    "faceSeen": "{name} recognized",
+    "unknownFace": "Unknown face",
+    "plateSeen": "Plate {name} detected",
+    "play": "Replay"
   }
 }

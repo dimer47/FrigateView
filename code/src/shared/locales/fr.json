@@ -653,5 +653,24 @@
     "noKnown": "Aucune plaque connue dans la configuration.",
     "notSeen": "Pas vue ces 30 derniers jours",
     "replay": "Relire ce passage"
+  },
+  "watch": {
+    "title": "Personnes et plaques",
+    "hint": "Notification système dès qu'une personne ou une plaque cochée est reconnue, quel que soit le type d'événement. Une seule notification par objet suivi.",
+    "people": "Personnes",
+    "unknown": "Tout visage inconnu",
+    "unknownHint": "Visage détecté mais non reconnu par Frigate",
+    "plates": "Plaques et noms connus",
+    "noPeople": "Aucune personne enregistrée",
+    "facesOff": "Reconnaissance des visages désactivée sur le serveur",
+    "noPlates": "Aucune plaque connue ni vue",
+    "platesOff": "Lecture des plaques désactivée sur le serveur",
+    "bellTip": "Astuce : la cloche des galeries Visages et Plaques ajoute ou retire une cible.",
+    "bellOn": "Me notifier quand elle est reconnue",
+    "bellOff": "Ne plus me notifier",
+    "faceSeen": "{name} reconnu(e)",
+    "unknownFace": "Visage inconnu",
+    "plateSeen": "Plaque {name} détectée",
+    "play": "Revoir"
   }
 }

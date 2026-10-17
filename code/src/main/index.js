@@ -208,6 +208,9 @@ const DEFAULTS = {
   notify: true,
   notifyTypes: { person: true, car: false, animal: false, other: false },
   notifySound: true,
+  watchFaces: [], // personnes surveillées (noms /api/faces)
+  watchPlates: [], // plaques surveillées (noms known_plates ou plaques brutes)
+  watchUnknownFace: false,
   dnd: false,
   startAtLogin: false,
   startHidden: false,

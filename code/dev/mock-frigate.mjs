@@ -252,5 +252,20 @@ setInterval(() => {
   const msg = (type, after) => JSON.stringify({ topic: 'reviews', payload: JSON.stringify({ type, before: after, after }) })
   for (const ws of wss.clients) ws.send(msg('new', withViewed(rv)))
   setTimeout(() => { rv.end_time = Date.now() / 1000; for (const ws of wss.clients) ws.send(msg('end', withViewed(rv))) }, 25000)
+  // Visage ou plaque reconnu (Frigate : topic « tracked_object_update », répété à chaque image analysée → 3 envois)
+  const id = `${Math.floor(now)}-${c}-ev`
+  let upd
+  if (FACES_ON && (!LPR_ON || Math.random() < 0.5)) {
+    const names = [...Object.keys(faces).filter((n) => n !== 'train'), 'unknown']
+    upd = { type: 'face', id, camera: c, name: names[Math.floor(Math.random() * names.length)], score: 0.9, timestamp: now }
+  } else if (LPR_ON) {
+    const plate = PLATES[Math.floor(Math.random() * PLATES.length)]
+    const name = Object.entries(KNOWN_PLATES).find(([, l]) => l.some((x) => new RegExp(`^${x}$`).test(plate)))?.[0] || null
+    upd = { type: 'lpr', id, camera: c, name, plate, score: 0.95, timestamp: now, plate_box: [0, 0, 10, 10] }
+  }
+  if (upd) {
+    console.log('tracked_object_update', upd.type, upd.name || '', upd.plate || '', c)
+    for (let k = 0; k < 3; k++) setTimeout(() => { for (const ws of wss.clients) ws.send(JSON.stringify({ topic: 'tracked_object_update', payload: JSON.stringify(upd) })) }, 1500 + k * 1000)
+  }
 }, 30000)
 tlsServer.listen(PORT_TLS, () => console.log(`Faux Frigate avec compte : https://127.0.0.1:${PORT_TLS} (admin/admin ou viewer/viewer)`))

@@ -8,6 +8,7 @@ import { getJson, eventThumbUrl } from '@/services/frigate'
 import { lprEnabled, knownPlates, aggregatePlates, filterPlates, getPlateEvents } from '@/services/plates'
 import { fromEvent } from '@/stores/eventFilters'
 import { playEvent } from '@/stores/playEvent'
+import WatchBell from './WatchBell.vue'
 import { t, loc } from '@/i18n'
 
 const server = useServerStore()
@@ -103,7 +104,9 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
           <div class="flex min-h-[52px] shrink-0 flex-wrap items-center gap-2 border-b border-line px-4 py-2 text-[13px]">
             <template v-if="plate">
               <b class="rounded border border-line-2 bg-bg px-2 py-0.5 font-mono text-[15px] tracking-wider">{{ plate.plate }}</b>
+              <WatchBell kind="plate" :value="plate.plate" />
               <span v-if="plate.name" class="rounded bg-ok/15 px-1.5 py-0.5 text-xs text-ok">{{ plate.name }}</span>
+              <WatchBell v-if="plate.name" kind="plate" :value="plate.name" />
               <span class="text-xs text-ink-3">{{ $t('plates.passages', { n: plate.count }, plate.count) }} · {{ plate.cams.map(camName).join(', ') }}</span>
             </template>
             <template v-else>
@@ -125,7 +128,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
               <p v-if="!known.length" class="py-16 text-center text-[13px] text-ink-3">{{ $t('plates.noKnown') }}</p>
               <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
                 <div v-for="k in known" :key="k.name" class="rounded-lg border border-line bg-panel p-3">
-                  <b class="block truncate text-[13px]">{{ k.name }}</b>
+                  <div class="flex items-center gap-1"><b class="block min-w-0 flex-1 truncate text-[13px]">{{ k.name }}</b><WatchBell kind="plate" :value="k.name" /></div>
                   <div class="mt-2 flex flex-wrap gap-1.5">
                     <code v-for="p in k.plates" :key="p" class="rounded border border-line-2 bg-bg px-1.5 py-0.5 font-mono text-xs">{{ p }}</code>
                   </div>

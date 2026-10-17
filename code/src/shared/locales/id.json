@@ -653,5 +653,24 @@
     "noKnown": "Tidak ada pelat yang dikenal di konfigurasi.",
     "notSeen": "Tidak terlihat 30 hari terakhir",
     "replay": "Putar ulang lintasan ini"
+  },
+  "watch": {
+    "title": "Orang dan pelat nomor",
+    "hint": "Notifikasi sistem segera setelah orang atau pelat yang dicentang dikenali, apa pun jenis peristiwanya. Satu notifikasi per objek yang dilacak.",
+    "people": "Orang",
+    "unknown": "Semua wajah tak dikenal",
+    "unknownHint": "Wajah terdeteksi tetapi tidak dikenali oleh Frigate",
+    "plates": "Pelat dan nama yang dikenal",
+    "noPeople": "Belum ada orang terdaftar",
+    "facesOff": "Pengenalan wajah dinonaktifkan di server",
+    "noPlates": "Tidak ada pelat yang dikenal atau terlihat",
+    "platesOff": "Pembacaan pelat nomor dinonaktifkan di server",
+    "bellTip": "Tips: lonceng di galeri Wajah dan Pelat menambah atau menghapus target.",
+    "bellOn": "Beri tahu saya saat dikenali",
+    "bellOff": "Berhenti memberi tahu saya",
+    "faceSeen": "{name} dikenali",
+    "unknownFace": "Wajah tak dikenal",
+    "plateSeen": "Pelat {name} terdeteksi",
+    "play": "Putar ulang"
   }
 }

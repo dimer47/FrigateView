@@ -653,5 +653,24 @@
     "noKnown": "Nenhuma matrícula conhecida na configuração.",
     "notSeen": "Não vista nos últimos 30 dias",
     "replay": "Reproduzir esta passagem"
+  },
+  "watch": {
+    "title": "Pessoas e matrículas",
+    "hint": "Notificação do sistema assim que uma pessoa ou matrícula marcada é reconhecida, seja qual for o tipo de evento. Uma única notificação por objeto seguido.",
+    "people": "Pessoas",
+    "unknown": "Qualquer rosto desconhecido",
+    "unknownHint": "Rosto detetado mas não reconhecido pelo Frigate",
+    "plates": "Matrículas e nomes conhecidos",
+    "noPeople": "Nenhuma pessoa registada",
+    "facesOff": "Reconhecimento facial desativado no servidor",
+    "noPlates": "Nenhuma matrícula conhecida nem vista",
+    "platesOff": "Leitura de matrículas desativada no servidor",
+    "bellTip": "Dica: o sino das galerias Rostos e Matrículas adiciona ou remove um alvo.",
+    "bellOn": "Notificar-me quando for reconhecido",
+    "bellOff": "Deixar de me notificar",
+    "faceSeen": "{name} reconhecido/a",
+    "unknownFace": "Rosto desconhecido",
+    "plateSeen": "Matrícula {name} detetada",
+    "play": "Rever"
   }
 }

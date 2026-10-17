@@ -27,6 +27,8 @@ import { t, loc, setLocale } from '@/i18n'
 import { resolveLang } from '../../shared/langs'
 import { load, save } from '@/stores/storage'
 import { useStatsStore } from '@/stores/stats'
+import { parseTrackUpdate, matchWatch, watchConf, createGate, UNKNOWN } from '@/services/watch'
+import { playEvent } from '@/stores/playEvent'
 
 const server = useServerStore()
 const layouts = useLayoutStore()
@@ -76,7 +78,12 @@ onMounted(async () => {
   await appSettings.init()
   setLocale(resolveLang(appSettings.s.lang, appSettings.s.systemLocale))
   server.resume()
-  if (!wall) window.native.onNotificationClick((id) => { if (id) ev.detailId = id })
+  if (!wall) window.native.onNotificationClick((id) => {
+    if (!id) return
+    const tr = tracked.get(id)
+    if (tr) playEvent(tr)
+    else ev.detailId = id
+  })
 })
 
 // Nouvel événement : notification Windows si la fenêtre n'est pas au premier plan, sinon message dans l'application
@@ -89,10 +96,40 @@ async function onNewEvent(e) {
   else if (wanted) window.native.notify({ title, body, id: e.id })
 }
 
+// Visage ou plaque surveillé (Réglages › Notifications, cloche des galeries) : une notification par objet suivi
+const gate = createGate()
+const tracked = new Map() // clé de notification → événement à relire au clic
+const pendingUnknown = new Map() // id → minuterie (« inconnu » attendu quelques secondes : le visage peut encore être reconnu)
+const UNKNOWN_WAIT = 5000
+async function onTrack(payload) {
+  const s = appSettings.s
+  const u = parseTrackUpdate(payload)
+  if (!u || !s || s.dnd || gate.seen(u.id)) return
+  if (u.kind === 'face' && u.name && u.name !== UNKNOWN) { clearTimeout(pendingUnknown.get(u.id)); pendingUnknown.delete(u.id) }
+  const m = matchWatch(u, watchConf(s))
+  if (!m) return
+  if (m.unknown) {
+    if (!pendingUnknown.has(u.id)) pendingUnknown.set(u.id, setTimeout(() => { pendingUnknown.delete(u.id); fireTrack(u, m) }, UNKNOWN_WAIT))
+    return
+  }
+  fireTrack(u, m)
+}
+async function fireTrack(u, m) {
+  if (!gate.allow(u.id, m.key)) return
+  const cam = server.camById(u.cam)?.name || u.cam
+  const title = u.kind === 'face' ? (m.unknown ? t('watch.unknownFace') : t('watch.faceSeen', { name: m.label })) : t('watch.plateSeen', { name: m.label })
+  const body = [new Date(u.s).toLocaleTimeString(loc()), cam, u.kind === 'plate' && u.plate !== m.label ? u.plate : null].filter(Boolean).join(' · ')
+  const key = 'track:' + u.id
+  tracked.set(key, { id: u.id, cam: u.cam, s: u.s })
+  if (tracked.size > 200) tracked.delete(tracked.keys().next().value)
+  if (await window.native.isFocused()) ui.notify(`${title} — ${cam}`, { label: t('watch.play'), run: () => playEvent(tracked.get(key)) })
+  else window.native.notify({ title, body, id: key })
+}
+
 // Événements : démarrés à la connexion, arrêtés à la déconnexion (fenêtre principale seulement)
 watch(() => server.status === 'ok' && server.server, (on, was) => {
   if (wall) return
-  if (on && !was) ev.start(server.server, onNewEvent)
+  if (on && !was) ev.start(server.server, onNewEvent, onTrack)
   if (!on && server.status !== 'lost') ev.stop()
 })
 

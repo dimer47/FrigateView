@@ -133,10 +133,11 @@ export const useEventsStore = defineStore('events', {
     },
 
     // Démarrage : liste des 2 derniers jours + flux temps réel
-    async start(server, onNew) {
+    async start(server, onNew, onTrack) {
       this.stop()
       this._server = server
       this._onNew = onNew
+      this._onTrack = onTrack // visages / plaques reconnus (tracked_object_update)
       await this.refresh(server)
       this.loadKnown(server)
       this.connect()
@@ -152,6 +153,7 @@ export const useEventsStore = defineStore('events', {
       ws.onmessage = (m) => {
         let msg
         try { msg = JSON.parse(m.data) } catch { return }
+        if (msg.topic === 'tracked_object_update') return this._onTrack?.(msg.payload)
         if (msg.topic !== 'reviews') return
         let p = msg.payload
         if (typeof p === 'string') { try { p = JSON.parse(p) } catch { return } }

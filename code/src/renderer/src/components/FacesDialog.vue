@@ -9,6 +9,7 @@ import { TRAIN, getFaces, faceImageUrl, faceRecognitionEnabled, validName, folde
   createFace, classifyFace, deleteFaceImages, renameFace, registerFace } from '@/services/faces'
 import { fromEvent } from '@/stores/eventFilters'
 import { playEvent } from '@/stores/playEvent'
+import WatchBell from './WatchBell.vue'
 import { t, loc } from '@/i18n'
 
 const server = useServerStore()
@@ -232,6 +233,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
                 <button type="button" class="btn px-2.5 py-1" @click="renaming = false">{{ $t('common.cancel') }}</button>
               </form>
               <b v-else class="text-[14px]">{{ label(person.name) }}</b>
+              <WatchBell v-if="!renaming" kind="face" :value="person.name" />
               <span class="text-xs text-ink-3">{{ $t('faces.images', { n: person.images.length }, person.images.length) }}</span>
               <template v-if="admin && !renaming">
                 <button class="btn ml-2 px-2.5 py-1" @click="startRename">{{ $t('faces.rename') }}</button>
