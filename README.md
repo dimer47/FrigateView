@@ -12,10 +12,10 @@ Vos caméras en direct, la relecture synchronisée, les événements et les murs
 ## 🎉 Fonctionnalités
 
 - 📡 **Direct WebRTC** (go2rtc), repli automatique sur les images 1/s
-- 🧩 **Layouts** : grilles de caméras par glisser-déposer, caméra agrandie, plein écran
+- 🧩 **Gabarits** : grilles de caméras par glisser-déposer, caméra agrandie, plein écran
 - 🕰️ **Timeline** : enregistrements, mouvement, alertes ; relecture synchronisée de toutes les caméras, vitesse réglable, vignette au survol
 - 🔔 **Événements** en temps réel : recherche (plaque, visage, zone), vus / non vus, détail avec clip
-- 🖥️ **Murs vidéo** : un layout par écran, en vidéo ou en images, sans limite d'écrans
+- 🖥️ **Murs vidéo** : un gabarit par écran, en vidéo ou en images, sans limite d'écrans
 - ✂️ **Export de clips MP4** : plage début → fin, plusieurs caméras d'un coup, clic droit sur un événement de la timeline
 - 📸 **Capture d'image** à la résolution d'origine
 - 🔊 **Son** des caméras, 🕹️ **PTZ** (caméras motorisées ONVIF)
