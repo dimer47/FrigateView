@@ -535,5 +535,13 @@
     "next": "Click: next mode",
     "setting": "Image display",
     "settingHint": "Whole image with bars, filled by cropping edges, or stretched to the tile"
+  },
+  "zoom": {
+    "in": "Zoom in",
+    "out": "Zoom out",
+    "reset": "1×",
+    "resetHint": "Back to the whole image (double-click)",
+    "miniHint": "Click or drag to move the visible area",
+    "wheelHint": "Wheel: zoom"
   }
 }

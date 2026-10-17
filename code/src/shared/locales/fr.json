@@ -535,5 +535,13 @@
     "next": "Clic : mode suivant",
     "setting": "Affichage des images",
     "settingHint": "Image entière avec bandes, remplie en rognant les bords, ou étirée à la taille de la case"
+  },
+  "zoom": {
+    "in": "Zoom avant",
+    "out": "Zoom arrière",
+    "reset": "1×",
+    "resetHint": "Revenir à l’image entière (double-clic)",
+    "miniHint": "Cliquer ou glisser pour déplacer la zone affichée",
+    "wheelHint": "Molette : zoom"
   }
 }

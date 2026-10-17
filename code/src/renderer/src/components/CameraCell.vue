@@ -11,7 +11,7 @@ import { useStatsStore, fmtRate, serverCamera } from '@/stores/stats'
 import { t } from '@/i18n'
 import { useMediaStore } from '@/stores/media'
 
-const props = defineProps({ camId: { type: String, required: true } })
+const props = defineProps({ camId: { type: String, required: true }, zoomable: { type: Boolean, default: false } })
 const server = useServerStore()
 const ui = useUiStore()
 const tl = useTimelineStore()
@@ -246,13 +246,104 @@ onBeforeUnmount(() => { unregister(); stopSnapshots(); stopVideo(); stopPlayback
 const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString(loc()))
 // Image entière, rognée ou étirée (réglage commun) ; en relecture aussi
 const fitStyle = computed(() => ({ objectFit: ui.fit }))
+
+/* ---- Zoom numérique (caméra agrandie) : molette = zoom sous la souris, glisser = se déplacer ---- */
+const MAX_ZOOM = 8
+const zoom = ref({ z: 1, x: 0, y: 0 }) // transform : translate(x, y) scale(z), origine en haut à gauche
+const zoomed = computed(() => zoom.value.z > 1.001)
+const zoomStyle = computed(() => ({ transform: `translate(${zoom.value.x}px, ${zoom.value.y}px) scale(${zoom.value.z})`, transformOrigin: '0 0' }))
+const size = () => ({ w: root.value?.clientWidth || 1, h: root.value?.clientHeight || 1 })
+function setZoom(z, cx, cy) {
+  const { w, h } = size(), o = zoom.value
+  z = Math.min(Math.max(z, 1), MAX_ZOOM)
+  cx ??= w / 2; cy ??= h / 2
+  // Le point sous (cx, cy) reste fixe
+  let x = cx - ((cx - o.x) / o.z) * z, y = cy - ((cy - o.y) / o.z) * z
+  x = Math.min(0, Math.max(w - w * z, x)); y = Math.min(0, Math.max(h - h * z, y))
+  zoom.value = { z, x, y }
+}
+const resetZoom = () => (zoom.value = { z: 1, x: 0, y: 0 })
+function onWheel(e) {
+  if (!props.zoomable) return
+  e.preventDefault()
+  const r = root.value.getBoundingClientRect()
+  setZoom(zoom.value.z * Math.exp(-e.deltaY * 0.0025), e.clientX - r.left, e.clientY - r.top)
+}
+let pan = null
+const panning = ref(false)
+function onPanDown(e) {
+  if (!props.zoomable || !zoomed.value || e.button !== 0) return
+  e.stopPropagation()
+  pan = { px: e.clientX, py: e.clientY, x: zoom.value.x, y: zoom.value.y }
+  panning.value = true
+  e.currentTarget.setPointerCapture(e.pointerId)
+}
+function onPanMove(e) {
+  if (!pan) return
+  const { w, h } = size(), z = zoom.value.z
+  zoom.value = { z, x: Math.min(0, Math.max(w - w * z, pan.x + e.clientX - pan.px)), y: Math.min(0, Math.max(h - h * z, pan.y + e.clientY - pan.py)) }
+}
+const onPanUp = () => { pan = null; panning.value = false }
+watch(() => [props.zoomable, props.camId], resetZoom)
+
+// Mini-carte : image en cours réduite + cadre de la zone affichée ; clic ou glisser = déplacer la zone
+const mini = ref(null)
+let miniTimer = null
+function drawMini() {
+  const c = mini.value, src = playback.value ? pbVideo.value : showVideo.value ? video.value : imgEl.value
+  if (!c || !src) return
+  const sw = src.videoWidth || src.naturalWidth, sh = src.videoHeight || src.naturalHeight
+  if (!sw || !sh) return
+  const ctx = c.getContext('2d'), W = c.width, H = c.height
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H)
+  // Même cadrage que la case
+  let dw = W, dh = H
+  if (ui.fit !== 'fill') { const k = ui.fit === 'cover' ? Math.max(W / sw, H / sh) : Math.min(W / sw, H / sh); dw = sw * k; dh = sh * k }
+  try { ctx.drawImage(src, (W - dw) / 2, (H - dh) / 2, dw, dh) } catch { /* image pas encore prête */ }
+}
+watch(zoomed, (on) => {
+  clearInterval(miniTimer)
+  if (on) { miniTimer = setInterval(drawMini, 400); requestAnimationFrame(drawMini) }
+})
+const miniRect = computed(() => {
+  const { w, h } = size(), { z, x, y } = zoom.value
+  return { left: (-x / (w * z)) * 100 + '%', top: (-y / (h * z)) * 100 + '%', width: 100 / z + '%', height: 100 / z + '%' }
+})
+let miniDrag = false
+function miniMove(e) {
+  const r = mini.value.getBoundingClientRect(), { w, h } = size(), z = zoom.value.z
+  // Centre la zone sur le point visé de la mini-carte
+  const cx = ((e.clientX - r.left) / r.width) * w, cy = ((e.clientY - r.top) / r.height) * h
+  zoom.value = { z, x: Math.min(0, Math.max(w - w * z, w / 2 - cx * z)), y: Math.min(0, Math.max(h - h * z, h / 2 - cy * z)) }
+}
+function miniDown(e) { e.stopPropagation(); miniDrag = true; e.currentTarget.setPointerCapture(e.pointerId); miniMove(e) }
+function miniMoveDrag(e) { if (miniDrag) miniMove(e) }
+const miniUp = () => (miniDrag = false)
+onBeforeUnmount(() => clearInterval(miniTimer))
 </script>
 
 <template>
-  <div ref="root" class="absolute inset-0 bg-[linear-gradient(160deg,#1b2636,#0b121c)]">
+  <div ref="root" class="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#1b2636,#0b121c)]" @wheel="onWheel">
+   <div class="absolute inset-0" :class="{ 'cursor-grab': zoomed && !panning, 'cursor-grabbing': panning }" :style="zoomStyle" @pointerdown="onPanDown" @pointermove="onPanMove" @pointerup="onPanUp" @pointercancel="onPanUp" @dblclick="zoomed && ($event.stopPropagation(), resetZoom())">
     <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
     <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
     <video ref="video" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo }" autoplay :muted="muted" playsinline @playing="onPlaying" />
+   </div>
+
+    <!-- Zoom : niveau, réinitialisation et mini-carte -->
+    <div v-if="zoomable && zoomed" class="absolute bottom-9 left-2 z-[5] flex flex-col gap-1.5" @dblclick.stop @click.stop>
+      <div class="relative w-44 cursor-crosshair overflow-hidden rounded border border-white/30 bg-black/70 shadow-lg" :style="{ aspectRatio: size().w + ' / ' + size().h }"
+        @pointerdown="miniDown" @pointermove="miniMoveDrag" @pointerup="miniUp" @pointercancel="miniUp" :title="$t('zoom.miniHint')">
+        <canvas ref="mini" width="176" :height="Math.round(176 * size().h / size().w)" class="size-full" />
+        <div class="pointer-events-none absolute border-2 border-accent bg-accent/15" :style="miniRect" />
+      </div>
+      <div class="flex items-center gap-1">
+        <button class="flex size-[26px] items-center justify-center rounded-[5px] bg-black/65 text-white hover:bg-accent" :title="$t('zoom.out')" @click="setZoom(zoom.z / 1.5)">−</button>
+        <span class="min-w-11 rounded bg-black/65 px-1.5 py-0.5 text-center font-mono text-[11px]">{{ zoom.z.toFixed(1) }}×</span>
+        <button class="flex size-[26px] items-center justify-center rounded-[5px] bg-black/65 text-white hover:bg-accent" :title="$t('zoom.in')" @click="setZoom(zoom.z * 1.5)">+</button>
+        <button class="rounded-[5px] bg-black/65 px-2 py-1 text-[11px] text-white hover:bg-accent" :title="$t('zoom.resetHint')" @click="resetZoom">{{ $t('zoom.reset') }}</button>
+      </div>
+    </div>
 
     <div class="absolute left-1.5 top-1.5 z-[3] flex flex-wrap items-center gap-1">
       <span v-if="playback" class="badge text-warn"><i class="bg-warn" />{{ $t('cell.playback') }}{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>

@@ -535,5 +535,13 @@
     "next": "Clique: modo seguinte",
     "setting": "Exibição das imagens",
     "settingHint": "Imagem inteira com faixas, preenchida cortando as bordas ou esticada à célula"
+  },
+  "zoom": {
+    "in": "Aproximar",
+    "out": "Afastar",
+    "reset": "1×",
+    "resetHint": "Voltar à imagem inteira (duplo clique)",
+    "miniHint": "Clique ou arraste para mover a área visível",
+    "wheelHint": "Roda: zoom"
   }
 }

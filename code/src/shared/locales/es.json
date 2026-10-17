@@ -535,5 +535,13 @@
     "next": "Clic: modo siguiente",
     "setting": "Visualización de imágenes",
     "settingHint": "Imagen completa con bandas, rellenada recortando bordes o estirada a la celda"
+  },
+  "zoom": {
+    "in": "Acercar",
+    "out": "Alejar",
+    "reset": "1×",
+    "resetHint": "Volver a la imagen completa (doble clic)",
+    "miniHint": "Clic o arrastrar para mover la zona visible",
+    "wheelHint": "Rueda: zoom"
   }
 }

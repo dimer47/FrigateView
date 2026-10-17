@@ -535,5 +535,13 @@
     "next": "Klik: mode berikutnya",
     "setting": "Tampilan gambar",
     "settingHint": "Gambar utuh dengan pita, dipenuhi dengan memotong tepi, atau diregangkan ke kotak"
+  },
+  "zoom": {
+    "in": "Perbesar",
+    "out": "Perkecil",
+    "reset": "1×",
+    "resetHint": "Kembali ke gambar utuh (klik ganda)",
+    "miniHint": "Klik atau seret untuk memindahkan area yang terlihat",
+    "wheelHint": "Roda gulir: zoom"
   }
 }

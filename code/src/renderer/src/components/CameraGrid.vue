@@ -65,13 +65,13 @@ function autoLayout() {
         :class="[ui.expand ? 'rounded-none border-transparent' : 'rounded-[5px] border-line hover:border-accent/50',
           { '!border-accent shadow-[inset_0_0_0_2px_var(--color-accent)]': i === store.selected && !ui.expand, '!border-dashed !border-accent bg-accent/10': dropTarget === i }]"
         :style="focused ? null : cellStyle(layout.grid, i)"
-        :draggable="!!layout.cells[i]"
+        :draggable="!!layout.cells[i] && !focused"
         @click="store.selected = i"
         @dblclick="layout.cells[i] && toggleFocus(i)"
         @dragstart="(e) => { e.dataTransfer.setData('application/x-fv-cell', String(i)); e.dataTransfer.effectAllowed = 'move' }"
         @dragover="onDragOver($event, i)" @dragleave="dropTarget = null" @drop.prevent="onDrop($event, i)">
         <template v-if="layout.cells[i]">
-          <CameraCell :cam-id="layout.cells[i]" />
+          <CameraCell :cam-id="layout.cells[i]" :zoomable="!!focused" />
           <div class="absolute right-1.5 top-1.5 z-[4] flex gap-1 opacity-0 transition-opacity group-hover:opacity-100" :class="{ '!opacity-100': media.audioCam === layout.cells[i] }">
             <button v-if="media.hasAudio[layout.cells[i]] || !tl.live" class="flex size-[26px] items-center justify-center rounded-[5px] bg-black/65 text-white hover:bg-accent" :class="{ '!bg-accent': media.audioCam === layout.cells[i] }"
               :title="media.audioCam === layout.cells[i] ? $t('media.mute') : $t('media.unmute')" @click.stop="media.toggleAudio(layout.cells[i])">
@@ -101,6 +101,7 @@ function autoLayout() {
     <PtzPad v-if="focused" :key="layout.cells[store.focus]" :cam-id="layout.cells[store.focus]" />
     <div v-if="focused" class="absolute left-1/2 top-2.5 z-[6] flex -translate-x-1/2 items-center gap-2.5 rounded-md border border-line-2 bg-black/70 py-1 pl-3 pr-2 text-xs">
       {{ $t('grid.focused', { cam: server.camById(layout.cells[store.focus])?.name, layout: layout.name }) }}
+      <span class="whitespace-nowrap text-ink-3">· {{ $t('zoom.wheelHint') }}</span>
       <button class="rounded border border-line-2 bg-raised px-2 py-0.5 hover:border-accent hover:bg-accent" @click="store.focus = null">{{ $t('grid.backToLayout') }}</button>
     </div>
   </main>
