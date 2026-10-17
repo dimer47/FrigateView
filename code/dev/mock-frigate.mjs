@@ -26,13 +26,76 @@ if (!existsSync(mediaDir + 'route.ts')) {
     execSync(`ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=640x360:rate=15 -vf hue=h=${Math.floor(rnd(c) * 360)} -t 10 -c:v libx264 -pix_fmt yuv420p -g 15 -f mpegts "${mediaDir}${c}.ts"`)
 }
 const ZONES = { route: ['chaussee', 'trottoir'], devant: ['portail', 'allee'], devant_local: ['parking'], bureau_arriere: ['cour'], bureau_devant: ['entree'] }
+// Lecture des plaques (LPR, 0.16+) : plaques fictives tirées d'un petit lot pour qu'elles reviennent.
+// MOCK_NO_LPR=1 : lpr.enabled false et aucune plaque dans les événements
+const LPR_ON = !process.env.MOCK_NO_LPR
+const PLATES = ['AB-123-CD', 'AB-456-CD', 'ZZ-001-ZZ', 'XY-777-QA', 'FV-042-MK', 'QQ-314-PI', 'MO-999-CK', 'TE-500-ST']
+const KNOWN_PLATES = { 'Voiture Alex': ['AB-123-CD'], 'Livreur': ['AB-4\\d\\d-CD', 'XY-777-QA'], 'Voisin': ['ZZ-999-ZZ'] }
+const knownName = (plate) => Object.entries(KNOWN_PLATES).find(([, l]) => l.some((x) => new RegExp(`^${x}$`).test(plate)))?.[0] || null
+// Recherche sémantique (0.14+) : filtre naïf par mots sur la description. MOCK_NO_SEMANTIC=1 : désactivée
+const SEMANTIC_ON = !process.env.MOCK_NO_SEMANTIC
 const viewed = new Set()
 const live = [] // revues créées pendant que le serveur tourne
 function review(c, s0, obj, end) {
   const id = `${s0}-${c}`
-  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [['Alex', 0.88]] : []
+  const sub = obj === 'car' && LPR_ON && rnd(id) < 0.6 ? [[PLATES[Math.floor(rnd(id + 'p') ** 2 * PLATES.length)], 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [[rnd(id + 'f') < 0.6 ? 'Alex' : 'Marie', 0.88]] : []
   return { id, camera: c, start_time: s0, end_time: end, severity: obj === 'person' ? 'alert' : 'detection', thumb_path: `/media/frigate/clips/review/thumb-${c}-${id}.webp`,
-    data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id] } }
+    data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id + '-ev'] } }
+}
+// Toutes les revues d'une plage (30 jours de rétention), de la plus récente à la plus ancienne
+const RETAIN = 30 * 86400
+function allReviews(after, before, list) {
+  after = Math.max(after, Date.now() / 1000 - RETAIN)
+  const out = live.filter((x) => list.includes(x.camera) && x.start_time >= after && x.start_time < before).map(withViewed)
+  for (const c of list) for (let t = Math.floor(after / 600) * 600; t < before; t += 600) {
+    const x = rnd(c + t)
+    if (x > 0.45 || isGap(c, t)) continue
+    const s0 = t + Math.floor(rnd(c + t + 'o') * 500), obj = x < 0.25 ? 'person' : x < 0.42 ? 'car' : 'dog'
+    if (s0 > Date.now() / 1000 || s0 < after || s0 >= before) continue
+    out.push(withViewed(review(c, s0, obj, s0 + 20 + Math.floor(rnd(c + s0) * 90))))
+  }
+  return out.sort((a, b) => b.start_time - a.start_time)
+}
+// Cadres (Frigate : [x, y, largeur, hauteur] en fractions de l'image de détection) : objet, région, attributs visage / plaque
+const r4 = (a) => a.map((v) => Math.round(v * 1e4) / 1e4)
+function boxesFor(id, label, plate, face) {
+  const x = 0.08 + rnd(id + 'bx') * 0.6, score = 0.7 + rnd(id + 'sc') * 0.28
+  const box = label === 'person' ? [x, 0.3, 0.11, 0.55] : label === 'car' ? [x, 0.48, 0.28, 0.3] : [x, 0.62, 0.14, 0.18]
+  const region = [Math.max(0, box[0] - 0.05), Math.max(0, box[1] - 0.08), Math.min(1, box[2] + 0.1), Math.min(1, box[3] + 0.12)]
+  const attributes = []
+  if (label === 'person') attributes.push({ label: 'face', score: face ? 0.88 : 0.64, box: [box[0] + box[2] * 0.3, box[1] + 0.02, box[2] * 0.4, 0.09] })
+  if (label === 'car' && plate) attributes.push({ label: 'license_plate', score: 0.91, box: [box[0] + box[2] * 0.36, box[1] + box[3] * 0.72, box[2] * 0.28, 0.045] })
+  return { box: r4(box), region: r4(region), score: Math.round(score * 100) / 100, attributes: attributes.map((a) => ({ ...a, box: r4(a.box) })) }
+}
+const toEvent = (r) => {
+  const sub = r.data.sub_labels[0], plate = sub && /\d/.test(sub) ? sub : null, label = r.data.objects[0]
+  const b = boxesFor(r.id, label, plate, !plate && sub)
+  return { id: r.id + '-ev', camera: r.camera, label, sub_label: plate ? knownName(plate) : sub || null, zones: r.data.zones, start_time: r.start_time, end_time: r.end_time,
+    has_clip: true, has_snapshot: true, top_score: b.score, false_positive: null, thumb_path: r.thumb_path,
+    data: { type: 'object', score: b.score, top_score: b.score, box: b.box, region: b.region, attributes: b.attributes, recognized_license_plate: plate, description: describe(r, label, sub) } }
+}
+// Description textuelle (Frigate : IA générative, data.description) pour la recherche sémantique fictive
+const COLORS = ['rouge', 'bleue', 'blanche', 'noire', 'grise']
+function describe(r, label, sub) {
+  const col = COLORS[Math.floor(rnd(r.id + 'col') * COLORS.length)]
+  return label === 'person' ? `Une personne${sub ? ' (' + sub + ')' : ''} en veste ${col} marche près de ${r.data.zones[0]}` : label === 'car' ? `Une voiture ${col} passe sur ${r.data.zones[0]}` : `Un chien traverse ${r.data.zones[0]}`
+}
+// Meilleure image entière : la forme dessinée occupe le cadre, pour vérifier l'alignement des cadres de l'app
+function snapshotSvg(ev) {
+  const W = 1280, H = 720, [x, y, w, h] = ev.data.box.map((v, i) => v * (i % 2 ? H : W))
+  const body = ev.label === 'person'
+    ? `<rect x="${x}" y="${y + h * 0.18}" width="${w}" height="${h * 0.82}" rx="${w * 0.3}" fill="#6b7280"/><circle cx="${x + w / 2}" cy="${y + h * 0.1}" r="${h * 0.09}" fill="#e5c3a0"/>`
+    : ev.label === 'car' ? `<rect x="${x}" y="${y + h * 0.3}" width="${w}" height="${h * 0.55}" rx="12" fill="#9ca3af"/><rect x="${x + w * 0.15}" y="${y}" width="${w * 0.7}" height="${h * 0.4}" rx="10" fill="#9ca3af"/><circle cx="${x + w * 0.22}" cy="${y + h * 0.88}" r="${h * 0.12}" fill="#111"/><circle cx="${x + w * 0.78}" cy="${y + h * 0.88}" r="${h * 0.12}" fill="#111"/>`
+    : `<ellipse cx="${x + w / 2}" cy="${y + h / 2}" rx="${w / 2}" ry="${h / 2.4}" fill="#a16207"/>`
+  const plate = (ev.data.attributes || []).find((a) => a.label === 'license_plate')
+  const pl = plate ? `<rect x="${plate.box[0] * W}" y="${plate.box[1] * H}" width="${plate.box[2] * W}" height="${plate.box[3] * H}" fill="#f8fafc"/><text x="${(plate.box[0] + plate.box[2] / 2) * W}" y="${(plate.box[1] + plate.box[3] * 0.75) * H}" font-family="monospace" font-size="${plate.box[3] * H * 0.7}" text-anchor="middle">${ev.data.recognized_license_plate}</text>` : ''
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="hsl(${hue(ev.camera)},25%,18%)"/><rect y="${H * 0.62}" width="100%" height="${H * 0.38}" fill="hsl(${hue(ev.camera)},15%,12%)"/>${body}${pl}</svg>`
+}
+const eventById = (id) => {
+  const m = /^(\d+)-([a-z_]+)-ev$/.exec(id)
+  if (!m || !cams.includes(m[2])) return null
+  const t = +m[1], r = live.find((x) => x.id === `${t}-${m[2]}`) || allReviews(t - 1, t + 1, [m[2]]).find((x) => x.id === `${t}-${m[2]}`)
+  return r ? toEvent(r) : null
 }
 const withViewed = (r) => ({ ...r, has_been_reviewed: viewed.has(r.id) || r.start_time < Date.now() / 1000 - 3600 })
 const hue = (id) => (cams.indexOf(id) * 67) % 360
@@ -48,8 +111,66 @@ function frame(id, h) {
 </svg>`
 }
 
+// Bibliothèque de visages (reconnaissance faciale, 0.16+) : dossiers en mémoire, images SVG générées.
+// MOCK_NO_FACES=1 : reconnaissance désactivée (face_recognition.enabled false, modifications refusées en 400)
+const FACES_ON = !process.env.MOCK_NO_FACES
+const now0 = Math.floor(Date.now() / 1000)
+const faces = { Alex: [], Marie: [], train: [] }
+for (let i = 0; i < 4; i++) faces.Alex.push(`Alex-${now0 - 86400 * (i + 1)}.${i}.webp`)
+for (let i = 0; i < 3; i++) faces.Marie.push(`Marie-${now0 - 86400 * (i + 2)}.${i}.webp`)
+for (let i = 0; i < 9; i++) {
+  const ts = now0 - 1800 * (i + 1) - Math.floor(rnd('f' + i) * 900), guess = rnd('g' + i) < 0.4 ? (rnd('h' + i) < 0.5 ? 'Alex' : 'Marie') : 'unknown'
+  faces.train.push(`${ts}.${String(i).padStart(6, '0')}-ab${i}cd-${ts}.5-${guess}-${(0.35 + rnd('s' + i) * 0.6).toFixed(2)}.webp`)
+}
+function faceSvg(seed) {
+  const h = Math.floor(rnd(seed) * 360), skin = 25 + Math.floor(rnd(seed + 's') * 25)
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><rect width="160" height="160" fill="hsl(${h},30%,22%)"/>
+  <ellipse cx="80" cy="84" rx="44" ry="54" fill="hsl(30,45%,${skin + 30}%)"/><path d="M36 70q44-60 88 0q-10-34-44-36q-34 2-44 36z" fill="hsl(${h},35%,18%)"/>
+  <circle cx="63" cy="80" r="5" fill="#222"/><circle cx="97" cy="80" r="5" fill="#222"/><path d="M62 112q18 ${8 + Math.floor(rnd(seed + 'm') * 10)} 36 0" stroke="#7a3b2e" stroke-width="4" fill="none"/></svg>`
+}
+const readBody = (req) => new Promise((resolve) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => resolve(Buffer.concat(c))) })
+async function facesApi(req, url, send) {
+  const json = (code, o) => send(code, 'application/json', JSON.stringify(o))
+  const p = url.pathname
+  if (p === '/api/faces' && req.method === 'GET') return json(200, faces), true
+  let m = p.match(/^\/clips\/faces\/([^/]+)\/([^/]+)$/)
+  if (m) { const n = decodeURIComponent(m[1]), f = decodeURIComponent(m[2]); return faces[n]?.includes(f) ? send(200, 'image/svg+xml', faceSvg(f)) : send(404, 'text/plain', 'not found'), true }
+  m = p.match(/^\/api\/faces\/(.+)$/)
+  if (!m || req.method === 'GET') return false
+  if (!FACES_ON) return json(400, { success: false, message: 'Face recognition is not enabled.' }), true
+  const raw = await readBody(req)
+  let b = {}; try { b = JSON.parse(raw.toString()) } catch { /* multipart ou vide */ }
+  const parts = m[1].split('/').map(decodeURIComponent)
+  console.log('VISAGES', req.method, parts.join('/'), raw.length > 300 ? `(${raw.length} octets)` : raw.toString())
+  const stamp = () => `${Date.now() / 1000}`
+  if (parts[0] === 'train' && parts[2] === 'classify') {
+    const i = faces.train.indexOf(b.training_file)
+    if (i < 0) return json(404, { success: false, message: `Invalid filename or no file exists: ${b.training_file}` }), true
+    faces.train.splice(i, 1); (faces[parts[1]] ||= []).push(`${parts[1]}-${stamp()}.webp`)
+    return json(200, { success: true, message: 'ok' }), true
+  }
+  const [name, action] = parts
+  if (action === 'create') { faces[name.replace(/ /g, '_')] ||= []; return json(200, { success: false, message: 'Successfully created face folder.' }), true }
+  if (action === 'register') {
+    if (!/multipart\/form-data/.test(req.headers['content-type'] || '') || !raw.includes('name="file"')) return json(400, { success: false, message: 'no file' }), true
+    ;(faces[name] ||= []).push(`${name}-${stamp()}.webp`); return json(200, { success: true, message: 'Successfully registered face.' }), true
+  }
+  if (action === 'delete') {
+    if (!faces[name]) return json(404, { success: false }), true
+    faces[name] = faces[name].filter((f) => !(b.ids || []).includes(f))
+    if (name !== 'train' && !faces[name].length) delete faces[name]
+    return json(200, { success: true, message: 'Successfully deleted faces.' }), true
+  }
+  if (action === 'rename' && req.method === 'PUT') {
+    if (!faces[name] || !/^[\p{L}\p{N}\s'_-]{1,50}$/u.test(b.new_name || '') || faces[b.new_name]) return json(400, { success: false, message: 'Error renaming face. Check Frigate logs.' }), true
+    faces[b.new_name] = faces[name].map((f) => f.replace(name + '-', b.new_name + '-')); delete faces[name]
+    return json(200, { success: true }), true
+  }
+  return json(404, { success: false }), true
+}
+
 function handler(secure) {
-  return (req, res) => {
+  return async (req, res) => {
   const url = new URL(req.url, 'http://x')
   const send = (code, type, body, extra = {}) => { res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store', ...extra }); res.end(body) }
   if (secure) {
@@ -69,11 +190,14 @@ function handler(secure) {
     if (!sessions.has(token)) return send(401, 'application/json', '{"message":"Unauthorized"}')
     if (url.pathname === '/api/profile') { const name = sessions.get(token); return send(200, 'application/json', JSON.stringify({ username: name, role: USERS[name].role })) }
   }
+  // Rôle admin exigé pour modifier les visages
+  if (secure && url.pathname.startsWith('/api/faces/') && req.method !== 'GET') { const tk = /frigate_token=([a-f0-9]+)/.exec(req.headers.cookie || '')?.[1]; if (USERS[sessions.get(tk)]?.role !== 'admin') return send(403, 'application/json', '{"message":"Forbidden"}') }
+  if (await facesApi(req, url, send)) return
   // Caméra « devant » motorisée (commandes reçues par le WebSocket, affichées dans la console)
   const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
   if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
-  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true }])) }))
+  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, semantic_search: { enabled: SEMANTIC_ON, model: 'jinav1' }, lpr: { enabled: LPR_ON, known_plates: LPR_ON ? KNOWN_PLATES : {} }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)
@@ -96,19 +220,57 @@ function handler(secure) {
   }
   r = url.pathname.match(/^\/clips\/review\/thumb-([a-z_]+)-.+\.webp$/)
   if (r && cams.includes(r[1])) return send(200, 'image/svg+xml', frame(r[1], 180))
+  // Revues sur 30 jours de rétention. Paramètres de Frigate : cameras, labels, zones, reviewed, severity, after, before, limit
   if (url.pathname === '/api/review') {
-    const after = +url.searchParams.get('after') || 0, before = +url.searchParams.get('before') || Date.now() / 1000
-    const list = (url.searchParams.get('cameras') || cams.join(',')).split(',')
-    const out = live.filter((x) => list.includes(x.camera) && x.start_time >= after && x.start_time < before).map(withViewed)
-    for (const c of list) for (let t = Math.floor(after / 600) * 600; t < before; t += 600) {
-      const x = rnd(c + t)
-      if (x > 0.45 || isGap(c, t)) continue
-      const s0 = t + Math.floor(rnd(c + t + 'o') * 500), obj = x < 0.25 ? 'person' : x < 0.42 ? 'car' : 'dog'
-      if (s0 > Date.now() / 1000) continue
-      out.push(withViewed(review(c, s0, obj, s0 + 20 + Math.floor(rnd(c + s0) * 90))))
-    }
-    return send(200, 'application/json', JSON.stringify(out.sort((a, b) => b.start_time - a.start_time)))
+    const p = url.searchParams, set = (k) => (p.get(k) && p.get(k) !== 'all' ? p.get(k).split(',') : null)
+    const labels = set('labels'), zones = set('zones'), sev = p.get('severity'), rv = p.get('reviewed')
+    let out = allReviews(+p.get('after') || 0, +p.get('before') || Date.now() / 1000, set('cameras') || cams)
+      .filter((x) => (!labels || x.data.objects.some((o) => labels.includes(o))) && (!zones || x.data.zones.some((z) => zones.includes(z))) && (!sev || x.severity === sev) && (rv == null || +x.has_been_reviewed === +rv))
+    if (p.get('limit')) out = out.slice(0, +p.get('limit'))
+    return send(200, 'application/json', JSON.stringify(out))
   }
+  // Événements (un par revue) : sub_label = visage (chaîne), plaque dans data.recognized_license_plate (0.16+)
+  if (url.pathname === '/api/events') {
+    const p = url.searchParams, set = (k) => (p.get(k) && p.get(k) !== 'all' ? p.get(k).split(',').map((x) => x.toLowerCase()) : null)
+    const labels = set('labels') || set('label'), zones = set('zones') || set('zone'), subs = set('sub_labels') || set('sub_label'), plateQ = p.get('recognized_license_plate') && p.get('recognized_license_plate') !== 'all' ? p.get('recognized_license_plate').split(',') : null
+    const out = allReviews(+p.get('after') || 0, +p.get('before') || Date.now() / 1000, set('cameras') || cams).map(toEvent)
+      .filter((e) => (!labels || labels.includes(e.label)) && (!zones || e.zones.some((z) => zones.includes(z))) &&
+        (!subs || (e.sub_label && subs.includes(e.sub_label.toLowerCase()))) && (!plateQ || (e.data.recognized_license_plate && plateQ.some((q) => (/^\^|[.[\]?+*]/.test(q) ? new RegExp(q).test(e.data.recognized_license_plate) : q === e.data.recognized_license_plate)))))
+    return send(200, 'application/json', JSON.stringify(out.slice(+p.get('offset') || 0).slice(0, +p.get('limit') || 100)))
+  }
+  if (url.pathname === '/api/sub_labels') return send(200, 'application/json', JSON.stringify(['Alex', 'Marie']))
+  if (url.pathname === '/api/recognized_license_plates') return send(200, 'application/json', JSON.stringify(LPR_ON ? [...PLATES].sort() : []))
+  if (url.pathname === '/api/labels') return send(200, 'application/json', JSON.stringify(['car', 'dog', 'person']))
+  r = url.pathname.match(/^\/api\/events\/(\d+)-([a-z_]+)-ev\/thumbnail\.webp$/)
+  if (r && cams.includes(r[2])) return send(200, 'image/svg+xml', frame(r[2], 180))
+  if (url.pathname === '/api/events/search') {
+    const p = url.searchParams, json = (c, o) => send(c, 'application/json', JSON.stringify(o))
+    const q = (p.get('query') || '').trim(), evId = p.get('event_id'), type = p.get('search_type') || 'thumbnail'
+    if (!q && !evId) return json(400, { success: false, message: 'A search query must be supplied' })
+    if (!SEMANTIC_ON) return json(400, { success: false, message: 'Semantic search is not enabled' })
+    const camList = p.get('cameras') && p.get('cameras') !== 'all' ? p.get('cameras').split(',') : cams
+    const pool = allReviews(Date.now() / 1000 - 7 * 86400, Date.now() / 1000, camList).map(toEvent)
+    let out
+    if (type === 'similarity') {
+      const src = eventById(evId)
+      if (!src) return json(404, { success: false, message: 'Event not found' })
+      out = pool.filter((e) => e.label === src.label).map((e) => ({ ...e, search_distance: e.id === src.id ? 0 : Math.round(((e.camera === src.camera ? 0.12 : 0.35) + rnd(e.id + src.id) * 0.3) * 1000) / 1000, search_source: 'thumbnail' }))
+    } else {
+      const words = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/).filter((w) => w.length > 2)
+      const LBL = { person: 'personne person homme femme', car: 'voiture vehicule car auto', dog: 'chien dog animal' }
+      out = pool.map((e) => {
+        const text = `${e.data.description} ${LBL[e.label] || e.label} ${e.sub_label || ''} ${e.data.recognized_license_plate || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        const n = words.filter((w) => text.includes(w)).length
+        return n ? { ...e, search_distance: Math.round((0.6 - n * 1.1 - rnd(e.id + q) * 0.8) * 1000) / 1000, search_source: type.includes('description') ? 'description' : 'thumbnail' } : null
+      }).filter(Boolean)
+    }
+    out.sort((a, b) => a.search_distance - b.search_distance)
+    return json(200, out.slice(0, +p.get('limit') || 50))
+  }
+  r = url.pathname.match(/^\/api\/events\/([^/]+)\/snapshot\.jpg$/)
+  if (r) { const e = eventById(decodeURIComponent(r[1])); return e ? send(200, 'image/svg+xml', snapshotSvg(e)) : send(404, 'application/json', '{"success":false,"message":"Event not found"}') }
+  r = url.pathname.match(/^\/api\/events\/([^/]+)$/)
+  if (r && r[1] !== 'search') { const e = eventById(decodeURIComponent(r[1])); return e ? send(200, 'application/json', JSON.stringify(e)) : send(404, 'application/json', '{"success":false,"message":"Event not found"}') }
   // Relecture HLS : même clip de 10 s répété, une entrée par segment enregistré
   r = url.pathname.match(/^\/vod\/([^/]+)\/start\/([\d.]+)\/end\/([\d.]+)\/index\.m3u8$/)
   if (r && cams.includes(r[1])) {
@@ -156,5 +318,20 @@ setInterval(() => {
   const msg = (type, after) => JSON.stringify({ topic: 'reviews', payload: JSON.stringify({ type, before: after, after }) })
   for (const ws of wss.clients) ws.send(msg('new', withViewed(rv)))
   setTimeout(() => { rv.end_time = Date.now() / 1000; for (const ws of wss.clients) ws.send(msg('end', withViewed(rv))) }, 25000)
+  // Visage ou plaque reconnu (Frigate : topic « tracked_object_update », répété à chaque image analysée → 3 envois)
+  const id = `${Math.floor(now)}-${c}-ev`
+  let upd
+  if (FACES_ON && (!LPR_ON || Math.random() < 0.5)) {
+    const names = [...Object.keys(faces).filter((n) => n !== 'train'), 'unknown']
+    upd = { type: 'face', id, camera: c, name: names[Math.floor(Math.random() * names.length)], score: 0.9, timestamp: now }
+  } else if (LPR_ON) {
+    const plate = PLATES[Math.floor(Math.random() * PLATES.length)]
+    const name = Object.entries(KNOWN_PLATES).find(([, l]) => l.some((x) => new RegExp(`^${x}$`).test(plate)))?.[0] || null
+    upd = { type: 'lpr', id, camera: c, name, plate, score: 0.95, timestamp: now, plate_box: [0, 0, 10, 10] }
+  }
+  if (upd) {
+    console.log('tracked_object_update', upd.type, upd.name || '', upd.plate || '', c)
+    for (let k = 0; k < 3; k++) setTimeout(() => { for (const ws of wss.clients) ws.send(JSON.stringify({ topic: 'tracked_object_update', payload: JSON.stringify(upd) })) }, 1500 + k * 1000)
+  }
 }, 30000)
 tlsServer.listen(PORT_TLS, () => console.log(`Faux Frigate avec compte : https://127.0.0.1:${PORT_TLS} (admin/admin ou viewer/viewer)`))

@@ -5,10 +5,10 @@ import { Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import tls from 'node:tls'
 import os from 'node:os'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { resolveLang, translate } from '../shared/langs'
 import { initUpdater } from './updater'
-import { isAllowedHttpUrl, isExternalUrlSafe, allowedIn as allowedInSet, isAppUrl } from './guards'
+import { isAllowedHttpUrl, isExternalUrlSafe, allowedIn as allowedInSet, isAppUrl, buildMultipart } from './guards'
 
 // Liens externes : http(s) seulement
 const openExternal = (url) => { if (isExternalUrlSafe(url)) shell.openExternal(url) }
@@ -87,9 +87,13 @@ function checkServerUrl(url) {
   return isAllowedHttpUrl(currentServer, url)
 }
 
-ipcMain.handle('http', (_e, { url, method = 'GET', headers = {}, body, timeout = 5000 }) =>
+ipcMain.handle('http', (_e, { url, method = 'GET', headers = {}, body, upload, timeout = 5000 }) =>
   new Promise((resolve) => {
     if (!checkServerUrl(url)) return resolve({ ok: false, status: 0, error: `refused: ${String(url).slice(0, 200)} n'est pas sur le serveur Frigate courant (${currentServer ? currentServer.host + ':' + currentServer.port : 'aucun'})` })
+    // Image envoyée (ex. /api/faces/{nom}/register) : multipart construit ici, POST uniquement
+    if (upload) {
+      try { const m = buildMultipart(upload, 'fv' + randomBytes(12).toString('hex')); body = m.body; headers = { ...headers, 'Content-Type': m.contentType }; method = 'POST' } catch (err) { return resolve({ ok: false, status: 0, error: err.message }) }
+    }
     const host = new URL(url).hostname
     let settled = false
     const finish = (r) => { if (!settled) { settled = true; clearTimeout(timer); resolve(r) } }
@@ -204,6 +208,9 @@ const DEFAULTS = {
   notify: true,
   notifyTypes: { person: true, car: false, animal: false, other: false },
   notifySound: true,
+  watchFaces: [], // personnes surveillées (noms /api/faces)
+  watchPlates: [], // plaques surveillées (noms known_plates ou plaques brutes)
+  watchUnknownFace: false,
   dnd: false,
   startAtLogin: false,
   startHidden: false,
@@ -465,6 +472,9 @@ function buildMenu() {
     {
       label: tr('menu.events'),
       submenu: [
+        { label: tr('menu.faces'), accelerator: 'CmdOrCtrl+Shift+F', enabled: c, click: () => send('faces:open') },
+        { label: tr('menu.plates'), accelerator: 'CmdOrCtrl+Shift+P', enabled: c, click: () => send('plates:open') },
+        { type: 'separator' },
         { label: tr('menu.markAllSeen') + (uiState.unseen ? ` (${uiState.unseen})` : ''), enabled: c && uiState.unseen > 0, click: () => send('events:seen') },
         { type: 'separator' },
         { label: tr('menu.notifications'), type: 'checkbox', checked: settings.notify, click: (i) => { settings.notify = i.checked; saveSettings(); applySettings() } },

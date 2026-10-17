@@ -14,7 +14,9 @@
     "settings": "Ajustes",
     "serverTitle": "Frigate {version} — conexión, cuenta, cambiar de servidor",
     "showUser": "clic para mostrar el nombre",
-    "hideUser": "clic para ocultar el nombre"
+    "hideUser": "clic para ocultar el nombre",
+    "faces": "Galería de rostros",
+    "plates": "Galería de matrículas"
   },
   "roles": {
     "admin": "administrador",
@@ -178,7 +180,35 @@
     "itemHint": "Clic: reproducir · Doble clic: detalles",
     "unseenDot": "No visto",
     "ongoing": "EN CURSO",
-    "details": "Detalles"
+    "details": "Detalles",
+    "filter": {
+      "object": "Objeto",
+      "face": "Rostro",
+      "plate": "Matrícula",
+      "zone": "Zona",
+      "cam": "Cámara",
+      "noValues": "Ningún valor conocido",
+      "remove": "Quitar este filtro",
+      "clear": "Borrar todo"
+    },
+    "range": {
+      "any": "Cualquier fecha",
+      "today": "Hoy",
+      "7d": "7 días",
+      "30d": "30 días",
+      "from": "Desde",
+      "to": "Hasta",
+      "title": "Periodo buscado en el servidor"
+    },
+    "history": {
+      "label": "Historial del servidor",
+      "title": "Resultados buscados en el servidor, más allá de los últimos 2 días",
+      "loading": "Buscando…",
+      "error": "Búsqueda imposible: servidor inaccesible o versión incompatible.",
+      "none": "Ningún evento coincide con estos filtros.",
+      "end": "Fin de los resultados",
+      "more": "Cargar más"
+    }
   },
   "detail": {
     "camera": "Cámara",
@@ -203,7 +233,9 @@
     "clipUnavailable": "Clip no disponible para este periodo",
     "info": "Información",
     "toTimeline": "Reproducir en la línea de tiempo",
-    "download": "Descargar el clip"
+    "download": "Descargar el clip",
+    "boxes": "Recuadros",
+    "boxesTitle": "Mostrar u ocultar los recuadros de detección (objeto, rostro, matrícula)"
   },
   "timeline": {
     "hours": "{n} h",
@@ -310,7 +342,9 @@
     "title": "Atajos de teclado",
     "capture": "Captura de la cámara seleccionada",
     "exportClip": "Exportar un clip",
-    "sound": "Sonido de la cámara seleccionada"
+    "sound": "Sonido de la cámara seleccionada",
+    "faces": "Galería de rostros",
+    "plates": "Galería de matrículas"
   },
   "app": {
     "serverUnreachable": "servidor inaccesible",
@@ -394,7 +428,9 @@
     "checkUpdates": "Buscar actualizaciones…",
     "capture": "Captura de imagen",
     "exportClip": "Exportar un clip…",
-    "sound": "Sonido de la cámara seleccionada"
+    "sound": "Sonido de la cámara seleccionada",
+    "faces": "Rostros…",
+    "plates": "Matrículas…"
   },
   "main": {
     "aboutText": "Videowall para Frigate NVR.",
@@ -543,5 +579,134 @@
     "resetHint": "Volver a la imagen completa (doble clic)",
     "miniHint": "Clic o arrastrar para mover la zona visible",
     "wheelHint": "Rueda: zoom"
+  },
+  "labels": {
+    "person": "persona",
+    "car": "coche",
+    "dog": "perro",
+    "cat": "gato",
+    "bird": "pájaro",
+    "horse": "caballo",
+    "bicycle": "bicicleta",
+    "motorcycle": "moto",
+    "truck": "camión",
+    "bus": "autobús",
+    "package": "paquete",
+    "face": "rostro",
+    "license_plate": "matrícula"
+  },
+  "faces": {
+    "title": "Rostros",
+    "readOnly": "Solo lectura",
+    "reload": "Actualizar",
+    "loading": "Cargando…",
+    "disabledTitle": "Reconocimiento facial desactivado",
+    "disabledText": "Este servidor Frigate no tiene activado el reconocimiento facial (se requiere Frigate 0.16 o posterior). Actívelo en la configuración de Frigate y reinícielo.",
+    "errorTitle": "No se pudieron cargar los rostros",
+    "retry": "Reintentar",
+    "recent": "Rostros recientes no reconocidos",
+    "recentHint": "Asígnelos a una persona para mejorar el reconocimiento.",
+    "people": "Personas",
+    "noPeople": "No hay personas registradas.",
+    "images": "{n} imagen | {n} imágenes",
+    "newPerson": "Nueva persona",
+    "namePlaceholder": "Nombre de la persona",
+    "rename": "Renombrar",
+    "addImages": "Añadir imágenes…",
+    "deletePerson": "Eliminar persona",
+    "confirmDeletePerson": "¿Confirmar la eliminación?",
+    "selectAll": "Seleccionar todo",
+    "selectHint": "Clic para seleccionar, Mayús+clic para un rango",
+    "selected": "{n} seleccionada | {n} seleccionadas",
+    "assignTo": "Asignar a…",
+    "newPersonOption": "Nueva persona…",
+    "assign": "Asignar",
+    "deleteSelected": "Eliminar",
+    "confirmDelete": "¿Eliminar {n} imagen? | ¿Eliminar {n} imágenes?",
+    "emptyRecent": "No hay rostros recientes que asignar.",
+    "emptyPerson": "No hay imágenes de entrenamiento para esta persona.",
+    "unknown": "Desconocido",
+    "appearances": "Últimas apariciones",
+    "noAppearances": "Sin apariciones recientes.",
+    "replay": "Volver a ver este evento",
+    "badName": "Nombre no válido: letras, cifras, espacios, ' _ - (50 caracteres como máximo).",
+    "failed": "Error: {msg}",
+    "assigned": "{n} rostro asignado a {name} | {n} rostros asignados a {name}",
+    "deleted": "{n} imagen eliminada | {n} imágenes eliminadas",
+    "uploaded": "{n} imagen añadida | {n} imágenes añadidas",
+    "personDeleted": "{name} eliminado/a"
+  },
+  "plates": {
+    "title": "Matrículas",
+    "reload": "Actualizar",
+    "loading": "Cargando…",
+    "disabledTitle": "Lectura de matrículas desactivada",
+    "disabledText": "Este servidor Frigate no tiene activado el reconocimiento de matrículas (se requiere Frigate 0.16 o posterior). Actívelo en la configuración de Frigate y reinícielo.",
+    "errorTitle": "No se pueden cargar las matrículas",
+    "retry": "Reintentar",
+    "filter": "Filtrar: matrícula, nombre, cámara",
+    "known": "Matrículas conocidas",
+    "names": "{n} nombre | {n} nombres",
+    "recent": "Vistas en los últimos 30 días",
+    "noPlates": "Ninguna matrícula leída en los últimos 30 días.",
+    "noMatch": "Ninguna matrícula coincide.",
+    "passages": "{n} paso | {n} pasos",
+    "readOnlyHint": "Solo lectura: las matrículas conocidas se editan en la configuración de Frigate (lpr.known_plates).",
+    "noKnown": "No hay matrículas conocidas en la configuración.",
+    "notSeen": "No vista en los últimos 30 días",
+    "replay": "Reproducir este paso"
+  },
+  "watch": {
+    "title": "Personas y matrículas",
+    "hint": "Notificación del sistema en cuanto se reconoce una persona o matrícula marcada, sea cual sea el tipo de evento. Una sola notificación por objeto seguido.",
+    "people": "Personas",
+    "unknown": "Cualquier rostro desconocido",
+    "unknownHint": "Rostro detectado pero no reconocido por Frigate",
+    "plates": "Matrículas y nombres conocidos",
+    "noPeople": "Ninguna persona registrada",
+    "facesOff": "Reconocimiento facial desactivado en el servidor",
+    "noPlates": "Ninguna matrícula conocida ni vista",
+    "platesOff": "Lectura de matrículas desactivada en el servidor",
+    "bellTip": "Consejo: la campana de las galerías Rostros y Matrículas añade o quita un objetivo.",
+    "bellOn": "Notificarme cuando se reconozca",
+    "bellOff": "Dejar de notificarme",
+    "faceSeen": "{name} reconocido/a",
+    "unknownFace": "Rostro desconocido",
+    "plateSeen": "Matrícula {name} detectada",
+    "play": "Volver a ver"
+  },
+  "search": {
+    "title": "Búsqueda por descripción",
+    "open": "Describir…",
+    "openTitle": "Buscar eventos describiendo la escena (búsqueda semántica de Frigate)",
+    "loading": "Cargando…",
+    "disabledTitle": "Búsqueda semántica desactivada",
+    "disabledText": "Este servidor Frigate no tiene activada la búsqueda semántica (Frigate 0.14 o posterior). Permite encontrar un evento describiéndolo («coche rojo», «repartidor con un paquete») o buscar eventos similares.",
+    "disabledHardware": "Requiere un servidor bastante potente (procesador reciente o tarjeta gráfica): en un servidor pequeño es normal que siga desactivada.",
+    "errorTitle": "Búsqueda imposible",
+    "retry": "Reintentar",
+    "placeholder": "Describa la escena: coche rojo, persona con un paquete…",
+    "typeTitle": "Con qué se compara el texto",
+    "type": {
+      "thumbnail_description": "Imagen y descripción",
+      "thumbnail": "Imagen",
+      "description": "Descripción (IA)"
+    },
+    "go": "Buscar",
+    "searching": "Buscando…",
+    "intro": "Frigate compara su descripción con las imágenes de los objetos detectados (y con su descripción, si la IA generativa está configurada).",
+    "examples": "Ejemplos: «coche blanco», «persona con chaqueta roja», «perro en el patio».",
+    "none": "Ningún evento coincide.",
+    "replay": "Reproducir este evento",
+    "scoreTitle": "Confianza (según: {source})",
+    "source": {
+      "thumbnail": "imagen",
+      "description": "descripción"
+    },
+    "similar": "Similares",
+    "similarFind": "Buscar similares",
+    "similarTitle": "Eventos cuyo objeto se parece a este (búsqueda semántica de Frigate)",
+    "similarTo": "Similares a:",
+    "backToText": "Búsqueda por texto"
   }
 }

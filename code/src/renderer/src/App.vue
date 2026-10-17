@@ -18,6 +18,9 @@ import SettingsDialog from '@/components/SettingsDialog.vue'
 import LayoutDialog from '@/components/LayoutDialog.vue'
 import HelpDialog from '@/components/HelpDialog.vue'
 import ExportDialog from '@/components/ExportDialog.vue'
+import FacesDialog from '@/components/FacesDialog.vue'
+import PlatesDialog from '@/components/PlatesDialog.vue'
+import SearchDialog from '@/components/SearchDialog.vue'
 import DownloadsPanel from '@/components/DownloadsPanel.vue'
 import { useMediaStore } from '@/stores/media'
 import { bestGrid } from '@/stores/layouts'
@@ -25,6 +28,8 @@ import { t, loc, setLocale } from '@/i18n'
 import { resolveLang } from '../../shared/langs'
 import { load, save } from '@/stores/storage'
 import { useStatsStore } from '@/stores/stats'
+import { parseTrackUpdate, matchWatch, watchConf, createGate, UNKNOWN } from '@/services/watch'
+import { playEvent } from '@/stores/playEvent'
 
 const server = useServerStore()
 const layouts = useLayoutStore()
@@ -74,7 +79,12 @@ onMounted(async () => {
   await appSettings.init()
   setLocale(resolveLang(appSettings.s.lang, appSettings.s.systemLocale))
   server.resume()
-  if (!wall) window.native.onNotificationClick((id) => { if (id) ev.detailId = id })
+  if (!wall) window.native.onNotificationClick((id) => {
+    if (!id) return
+    const tr = tracked.get(id)
+    if (tr) playEvent(tr)
+    else ev.detailId = id
+  })
 })
 
 // Nouvel événement : notification Windows si la fenêtre n'est pas au premier plan, sinon message dans l'application
@@ -87,10 +97,40 @@ async function onNewEvent(e) {
   else if (wanted) window.native.notify({ title, body, id: e.id })
 }
 
+// Visage ou plaque surveillé (Réglages › Notifications, cloche des galeries) : une notification par objet suivi
+const gate = createGate()
+const tracked = new Map() // clé de notification → événement à relire au clic
+const pendingUnknown = new Map() // id → minuterie (« inconnu » attendu quelques secondes : le visage peut encore être reconnu)
+const UNKNOWN_WAIT = 5000
+async function onTrack(payload) {
+  const s = appSettings.s
+  const u = parseTrackUpdate(payload)
+  if (!u || !s || s.dnd || gate.seen(u.id)) return
+  if (u.kind === 'face' && u.name && u.name !== UNKNOWN) { clearTimeout(pendingUnknown.get(u.id)); pendingUnknown.delete(u.id) }
+  const m = matchWatch(u, watchConf(s))
+  if (!m) return
+  if (m.unknown) {
+    if (!pendingUnknown.has(u.id)) pendingUnknown.set(u.id, setTimeout(() => { pendingUnknown.delete(u.id); fireTrack(u, m) }, UNKNOWN_WAIT))
+    return
+  }
+  fireTrack(u, m)
+}
+async function fireTrack(u, m) {
+  if (!gate.allow(u.id, m.key)) return
+  const cam = server.camById(u.cam)?.name || u.cam
+  const title = u.kind === 'face' ? (m.unknown ? t('watch.unknownFace') : t('watch.faceSeen', { name: m.label })) : t('watch.plateSeen', { name: m.label })
+  const body = [new Date(u.s).toLocaleTimeString(loc()), cam, u.kind === 'plate' && u.plate !== m.label ? u.plate : null].filter(Boolean).join(' · ')
+  const key = 'track:' + u.id
+  tracked.set(key, { id: u.id, cam: u.cam, s: u.s })
+  if (tracked.size > 200) tracked.delete(tracked.keys().next().value)
+  if (await window.native.isFocused()) ui.notify(`${title} — ${cam}`, { label: t('watch.play'), run: () => playEvent(tracked.get(key)) })
+  else window.native.notify({ title, body, id: key })
+}
+
 // Événements : démarrés à la connexion, arrêtés à la déconnexion (fenêtre principale seulement)
 watch(() => server.status === 'ok' && server.server, (on, was) => {
   if (wall) return
-  if (on && !was) ev.start(server.server, onNewEvent)
+  if (on && !was) ev.start(server.server, onNewEvent, onTrack)
   if (!on && server.status !== 'lost') ev.stop()
 })
 
@@ -119,6 +159,8 @@ const MENU = {
   'play:sync': () => tl.toggleSync(),
   'play:ago': (m) => tl.seek(Date.now() - m * 60e3, null, true),
   'events:seen': () => ev.markAllSeen(),
+  'faces:open': () => (ui.facesOpen = true),
+  'plates:open': () => (ui.platesOpen = true),
   help: () => (ui.helpOpen = true),
   'media:capture': () => { const c = layouts.active?.cells[layouts.selected]; if (c) media.capture(c) },
   'media:export': () => {
@@ -150,7 +192,7 @@ watch(() => [server.status, server.onlineCount, server.cameras.length], () => {
 watch(() => server.cameras, (cams) => { if (cams.length) layouts.prune(cams.map((c) => c.id)) })
 
 function onKey(e) {
-  if (wall || ev.detailId || appSettings.open || ui.helpOpen || media.exportOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
+  if (wall || ev.detailId || appSettings.open || ui.helpOpen || ui.facesOpen || ui.platesOpen || ui.searchOpen || media.exportOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
   if (e.ctrlKey && e.key === ',') { e.preventDefault(); appSettings.show(); return }
   if (e.key === 'Escape') {
     if (layouts.focus !== null) layouts.focus = null
@@ -201,6 +243,9 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   <LayoutDialog v-if="ui.layoutDialog !== undefined && !wall" :layout-id="ui.layoutDialog" @close="ui.layoutDialog = undefined" />
   <HelpDialog v-if="ui.helpOpen" />
   <ExportDialog v-if="media.exportOpen && !wall" />
+  <FacesDialog v-if="ui.facesOpen && !wall && server.status === 'ok'" />
+  <PlatesDialog v-if="ui.platesOpen && !wall && server.status === 'ok'" />
+  <SearchDialog v-if="ui.searchOpen && !wall && server.status === 'ok'" />
   <DownloadsPanel v-if="!wall" />
   <AppToast />
 </template>

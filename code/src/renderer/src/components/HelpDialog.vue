@@ -7,7 +7,7 @@ const KEYS = computed(() => [
   ['Ctrl+1 / 2 / 3', t('help.panels')], ['Ctrl+E', t('toolbar.wall')], ['F11', t('toolbar.fullscreen')], ['Ctrl+,', t('toolbar.settings')],
   ['Ctrl+N', t('layoutDialog.newTitle')], ['Ctrl+Alt+1…9', t('help.layoutN')], ['Ctrl+Alt+← / →', t('help.layoutStep')],
   [t('help.space'), t('help.playPause')], ['← / →', t('help.skip')], ['L', t('help.live')],
-  ['Ctrl+Shift+S', t('help.capture')], ['Ctrl+Shift+E', t('help.exportClip')], ['Ctrl+Shift+M', t('help.sound')],
+  ['Ctrl+Shift+S', t('help.capture')], ['Ctrl+Shift+E', t('help.exportClip')], ['Ctrl+Shift+M', t('help.sound')], ['Ctrl+Shift+F', t('help.faces')], ['Ctrl+Shift+P', t('help.plates')],
   [t('help.dblclick'), t('help.dblclickAction')], ['↑ / ↓', t('help.eventStep')], [t('help.esc'), t('help.escAction')]
 ])
 </script>

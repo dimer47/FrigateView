@@ -1,12 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useAppSettings } from '@/stores/appSettings'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
 import { useUiStore, STAT_FIELDS, FITS } from '@/stores/ui'
 import { TYPE_KEYS, typeLabel } from '@/stores/events'
 import { t, loc, LANGS } from '@/i18n'
-import { isInternal } from '@/services/frigate'
+import { isInternal, getJson } from '@/services/frigate'
+import { getFaces, faceRecognitionEnabled } from '@/services/faces'
+import { lprEnabled, knownPlates } from '@/services/plates'
+import { useEventsStore } from '@/stores/events'
+import { toggleIn, normPlate } from '@/services/watch'
 
 const app = useAppSettings()
 const layouts = useLayoutStore()
@@ -24,6 +28,27 @@ onMounted(async () => {
   screenConf.value = JSON.parse(JSON.stringify(fresh.screens || {}))
   for (const d of screens.value) screenConf.value[d.id] ||= { enabled: false, layout: layouts.layouts[0]?.id || '', mode: '' }
 })
+
+// Visages et plaques surveillés : personnes de /api/faces, noms known_plates, plaques vues (+ celles déjà cochées)
+const ev = useEventsStore()
+const watchLists = ref({ faces: [], plates: [], loaded: false, faceOn: false, lprOn: false })
+async function loadWatch() {
+  const srv = server.server
+  const out = { faces: [], plates: [], loaded: true, faceOn: false, lprOn: false }
+  try {
+    const config = await getJson(srv, '/api/config')
+    out.faceOn = faceRecognitionEnabled(config)
+    out.lprOn = lprEnabled(config)
+    if (out.faceOn) out.faces = (await getFaces(srv)).people.map((p) => p.name)
+    if (out.lprOn) out.plates = knownPlates(config).map((k) => k.name)
+  } catch { /* serveur injoignable : listes réduites aux cibles déjà cochées */ }
+  const seen = new Set(out.plates.map(normPlate))
+  for (const p of [...(app.s.watchPlates || []), ...ev.known.plates]) if (!seen.has(normPlate(p))) { seen.add(normPlate(p)); out.plates.push(p) }
+  for (const f of app.s.watchFaces || []) if (!out.faces.includes(f)) out.faces.push(f)
+  watchLists.value = out
+}
+watch(() => app.tab, (tb) => tb === 'notif' && !watchLists.value.loaded && loadWatch(), { immediate: true })
+const watchToggle = (k, v) => app.set({ [k]: toggleIn([...(app.s[k] || [])], v) })
 
 const setType = (k, v) => app.set({ notifyTypes: { ...app.s.notifyTypes, [k]: v } })
 async function applyScreens() {
@@ -80,6 +105,21 @@ const close = () => (app.open = false)
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.sound') }}</span><input type="checkbox" class="size-4 accent-accent" :checked="app.s.notifySound" @change="app.set({ notifySound: $event.target.checked })"></label>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.dnd') }}<small class="block text-xs text-ink-3">{{ $t('settings.dndHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="app.s.dnd" @change="app.set({ dnd: $event.target.checked })"></label>
             <button class="btn mt-4" @click="testNotif">{{ $t('settings.testNotif') }}</button>
+
+            <h3 class="mb-1 mt-6 font-semibold">{{ $t('watch.title') }}</h3>
+            <p class="mb-2 text-xs text-ink-3">{{ $t('watch.hint') }}</p>
+            <div class="mb-1 mt-3 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('watch.people') }}</div>
+            <label class="flex items-center justify-between gap-3 border-b border-line py-2"><span>{{ $t('watch.unknown') }}<small class="block text-xs text-ink-3">{{ $t('watch.unknownHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="app.s.watchUnknownFace" @change="app.set({ watchUnknownFace: $event.target.checked })"></label>
+            <div class="flex flex-wrap gap-x-5 gap-y-1 py-2">
+              <label v-for="f in watchLists.faces" :key="f" class="flex items-center gap-2 py-0.5"><input type="checkbox" class="size-4 accent-accent" :checked="(app.s.watchFaces || []).includes(f)" @change="watchToggle('watchFaces', f)">{{ f.replace(/_/g, ' ') }}</label>
+              <span v-if="watchLists.loaded && !watchLists.faces.length" class="text-xs text-ink-3">{{ watchLists.faceOn ? $t('watch.noPeople') : $t('watch.facesOff') }}</span>
+            </div>
+            <div class="mb-1 mt-3 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('watch.plates') }}</div>
+            <div class="flex flex-wrap gap-x-5 gap-y-1 py-2">
+              <label v-for="p in watchLists.plates" :key="p" class="flex items-center gap-2 py-0.5"><input type="checkbox" class="size-4 accent-accent" :checked="(app.s.watchPlates || []).includes(p)" @change="watchToggle('watchPlates', p)"><span :class="{ 'font-mono': /\d/.test(p) }">{{ p }}</span></label>
+              <span v-if="watchLists.loaded && !watchLists.plates.length" class="text-xs text-ink-3">{{ watchLists.lprOn ? $t('watch.noPlates') : $t('watch.platesOff') }}</span>
+            </div>
+            <p class="mt-1 text-xs text-ink-3">{{ $t('watch.bellTip') }}</p>
           </template>
 
           <!-- Écrans -->

@@ -14,7 +14,9 @@
     "settings": "Settings",
     "serverTitle": "Frigate {version} — connection, account, change server",
     "showUser": "click to show the name",
-    "hideUser": "click to hide the name"
+    "hideUser": "click to hide the name",
+    "faces": "Face gallery",
+    "plates": "License plate gallery"
   },
   "roles": {
     "admin": "administrator",
@@ -178,7 +180,35 @@
     "itemHint": "Click: play back · Double-click: details",
     "unseenDot": "Unseen",
     "ongoing": "ONGOING",
-    "details": "Details"
+    "details": "Details",
+    "filter": {
+      "object": "Object",
+      "face": "Face",
+      "plate": "Plate",
+      "zone": "Zone",
+      "cam": "Camera",
+      "noValues": "No known values",
+      "remove": "Remove this filter",
+      "clear": "Clear all"
+    },
+    "range": {
+      "any": "Any date",
+      "today": "Today",
+      "7d": "7 days",
+      "30d": "30 days",
+      "from": "From",
+      "to": "To",
+      "title": "Period searched on the server"
+    },
+    "history": {
+      "label": "Server history",
+      "title": "Results searched on the server, beyond the last 2 days",
+      "loading": "Searching…",
+      "error": "Search failed: server unreachable or incompatible version.",
+      "none": "No events match these filters.",
+      "end": "End of results",
+      "more": "Load more"
+    }
   },
   "detail": {
     "camera": "Camera",
@@ -203,7 +233,9 @@
     "clipUnavailable": "Clip unavailable for this period",
     "info": "Information",
     "toTimeline": "Play back in timeline",
-    "download": "Download clip"
+    "download": "Download clip",
+    "boxes": "Boxes",
+    "boxesTitle": "Show or hide detection boxes (object, face, plate)"
   },
   "timeline": {
     "hours": "{n} h",
@@ -310,7 +342,9 @@
     "title": "Keyboard shortcuts",
     "capture": "Snapshot of the selected camera",
     "exportClip": "Export a clip",
-    "sound": "Sound of the selected camera"
+    "sound": "Sound of the selected camera",
+    "faces": "Face gallery",
+    "plates": "License plate gallery"
   },
   "app": {
     "serverUnreachable": "server unreachable",
@@ -394,7 +428,9 @@
     "checkUpdates": "Check for updates…",
     "capture": "Snapshot",
     "exportClip": "Export a clip…",
-    "sound": "Sound of the selected camera"
+    "sound": "Sound of the selected camera",
+    "faces": "Faces…",
+    "plates": "Plates…"
   },
   "main": {
     "aboutText": "Video wall for Frigate NVR.",
@@ -543,5 +579,134 @@
     "resetHint": "Back to the whole image (double-click)",
     "miniHint": "Click or drag to move the visible area",
     "wheelHint": "Wheel: zoom"
+  },
+  "labels": {
+    "person": "person",
+    "car": "car",
+    "dog": "dog",
+    "cat": "cat",
+    "bird": "bird",
+    "horse": "horse",
+    "bicycle": "bicycle",
+    "motorcycle": "motorcycle",
+    "truck": "truck",
+    "bus": "bus",
+    "package": "package",
+    "face": "face",
+    "license_plate": "license plate"
+  },
+  "faces": {
+    "title": "Faces",
+    "readOnly": "Read only",
+    "reload": "Refresh",
+    "loading": "Loading…",
+    "disabledTitle": "Face recognition is disabled",
+    "disabledText": "This Frigate server does not have face recognition enabled (Frigate 0.16 or later required). Enable it in the Frigate configuration, then restart Frigate.",
+    "errorTitle": "Could not load faces",
+    "retry": "Try again",
+    "recent": "Recent unrecognized faces",
+    "recentHint": "Assign them to a person to improve recognition.",
+    "people": "People",
+    "noPeople": "No people registered.",
+    "images": "{n} image | {n} images",
+    "newPerson": "New person",
+    "namePlaceholder": "Person's name",
+    "rename": "Rename",
+    "addImages": "Add images…",
+    "deletePerson": "Delete person",
+    "confirmDeletePerson": "Confirm deletion?",
+    "selectAll": "Select all",
+    "selectHint": "Click to select, Shift+click for a range",
+    "selected": "{n} selected | {n} selected",
+    "assignTo": "Assign to…",
+    "newPersonOption": "New person…",
+    "assign": "Assign",
+    "deleteSelected": "Delete",
+    "confirmDelete": "Delete {n} image? | Delete {n} images?",
+    "emptyRecent": "No recent faces to assign.",
+    "emptyPerson": "No training images for this person.",
+    "unknown": "Unknown",
+    "appearances": "Recent appearances",
+    "noAppearances": "No recent appearances.",
+    "replay": "Replay this event",
+    "badName": "Invalid name: letters, digits, spaces, ' _ - (50 characters max).",
+    "failed": "Failed: {msg}",
+    "assigned": "{n} face assigned to {name} | {n} faces assigned to {name}",
+    "deleted": "{n} image deleted | {n} images deleted",
+    "uploaded": "{n} image added | {n} images added",
+    "personDeleted": "{name} deleted"
+  },
+  "plates": {
+    "title": "Plates",
+    "reload": "Refresh",
+    "loading": "Loading…",
+    "disabledTitle": "License plate recognition disabled",
+    "disabledText": "This Frigate server does not have license plate recognition enabled (Frigate 0.16 or later required). Enable it in the Frigate configuration, then restart it.",
+    "errorTitle": "Unable to load plates",
+    "retry": "Retry",
+    "filter": "Filter: plate, name, camera",
+    "known": "Known plates",
+    "names": "{n} name | {n} names",
+    "recent": "Seen in the last 30 days",
+    "noPlates": "No plate read in the last 30 days.",
+    "noMatch": "No plate matches.",
+    "passages": "{n} pass | {n} passes",
+    "readOnlyHint": "Read only: known plates are edited in the Frigate configuration (lpr.known_plates).",
+    "noKnown": "No known plates in the configuration.",
+    "notSeen": "Not seen in the last 30 days",
+    "replay": "Play back this pass"
+  },
+  "watch": {
+    "title": "People and plates",
+    "hint": "System notification as soon as a checked person or plate is recognized, whatever the event type. One notification per tracked object.",
+    "people": "People",
+    "unknown": "Any unknown face",
+    "unknownHint": "Face detected but not recognized by Frigate",
+    "plates": "Plates and known names",
+    "noPeople": "No registered people",
+    "facesOff": "Face recognition disabled on the server",
+    "noPlates": "No known or seen plates",
+    "platesOff": "License plate recognition disabled on the server",
+    "bellTip": "Tip: the bell in the Faces and Plates galleries adds or removes a target.",
+    "bellOn": "Notify me when recognized",
+    "bellOff": "Stop notifying me",
+    "faceSeen": "{name} recognized",
+    "unknownFace": "Unknown face",
+    "plateSeen": "Plate {name} detected",
+    "play": "Replay"
+  },
+  "search": {
+    "title": "Search by description",
+    "open": "Describe…",
+    "openTitle": "Search events by describing the scene (Frigate semantic search)",
+    "loading": "Loading…",
+    "disabledTitle": "Semantic search disabled",
+    "disabledText": "Semantic search is not enabled on this Frigate server (Frigate 0.14 or newer). It finds events from a description (“red car”, “courier with a parcel”) or looks for similar events.",
+    "disabledHardware": "It needs a fairly powerful server (recent CPU or a GPU): on a small server it is normal for it to stay disabled.",
+    "errorTitle": "Search unavailable",
+    "retry": "Retry",
+    "placeholder": "Describe the scene: red car, person with a parcel…",
+    "typeTitle": "What the text is compared with",
+    "type": {
+      "thumbnail_description": "Image and description",
+      "thumbnail": "Image",
+      "description": "Description (AI)"
+    },
+    "go": "Search",
+    "searching": "Searching…",
+    "intro": "Frigate compares your description with the images of detected objects (and their description, if generative AI is set up).",
+    "examples": "Examples: “white car”, “person in a red jacket”, “dog in the yard”.",
+    "none": "No matching event.",
+    "replay": "Replay this event",
+    "scoreTitle": "Confidence (based on: {source})",
+    "source": {
+      "thumbnail": "image",
+      "description": "description"
+    },
+    "similar": "Similar",
+    "similarFind": "Find similar",
+    "similarTitle": "Events whose object looks like this one (Frigate semantic search)",
+    "similarTo": "Similar to:",
+    "backToText": "Text search"
   }
 }

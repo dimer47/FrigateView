@@ -14,7 +14,9 @@
     "settings": "Pengaturan",
     "serverTitle": "Frigate {version} — koneksi, akun, ganti server",
     "showUser": "klik untuk menampilkan nama",
-    "hideUser": "klik untuk menyembunyikan nama"
+    "hideUser": "klik untuk menyembunyikan nama",
+    "faces": "Galeri wajah",
+    "plates": "Galeri pelat nomor"
   },
   "roles": {
     "admin": "administrator",
@@ -178,7 +180,35 @@
     "itemHint": "Klik: putar ulang · Klik dua kali: detail",
     "unseenDot": "Belum dilihat",
     "ongoing": "BERLANGSUNG",
-    "details": "Detail"
+    "details": "Detail",
+    "filter": {
+      "object": "Objek",
+      "face": "Wajah",
+      "plate": "Pelat",
+      "zone": "Zona",
+      "cam": "Kamera",
+      "noValues": "Tidak ada nilai yang dikenal",
+      "remove": "Hapus filter ini",
+      "clear": "Hapus semua"
+    },
+    "range": {
+      "any": "Tanggal apa pun",
+      "today": "Hari ini",
+      "7d": "7 hari",
+      "30d": "30 hari",
+      "from": "Dari",
+      "to": "Sampai",
+      "title": "Periode yang dicari di server"
+    },
+    "history": {
+      "label": "Riwayat server",
+      "title": "Hasil dicari di server, melampaui 2 hari terakhir",
+      "loading": "Mencari…",
+      "error": "Pencarian gagal: server tidak terjangkau atau versi tidak kompatibel.",
+      "none": "Tidak ada peristiwa yang cocok dengan filter ini.",
+      "end": "Akhir hasil",
+      "more": "Muat lagi"
+    }
   },
   "detail": {
     "camera": "Kamera",
@@ -203,7 +233,9 @@
     "clipUnavailable": "Klip tidak tersedia untuk periode ini",
     "info": "Informasi",
     "toTimeline": "Putar ulang di linimasa",
-    "download": "Unduh klip"
+    "download": "Unduh klip",
+    "boxes": "Kotak",
+    "boxesTitle": "Tampilkan atau sembunyikan kotak deteksi (objek, wajah, pelat)"
   },
   "timeline": {
     "hours": "{n} j",
@@ -310,7 +342,9 @@
     "title": "Pintasan keyboard",
     "capture": "Tangkapan kamera yang dipilih",
     "exportClip": "Ekspor klip",
-    "sound": "Suara kamera yang dipilih"
+    "sound": "Suara kamera yang dipilih",
+    "faces": "Galeri wajah",
+    "plates": "Galeri pelat nomor"
   },
   "app": {
     "serverUnreachable": "server tidak terjangkau",
@@ -394,7 +428,9 @@
     "checkUpdates": "Periksa pembaruan…",
     "capture": "Tangkapan gambar",
     "exportClip": "Ekspor klip…",
-    "sound": "Suara kamera yang dipilih"
+    "sound": "Suara kamera yang dipilih",
+    "faces": "Wajah…",
+    "plates": "Pelat…"
   },
   "main": {
     "aboutText": "Dinding video untuk Frigate NVR.",
@@ -543,5 +579,134 @@
     "resetHint": "Kembali ke gambar utuh (klik ganda)",
     "miniHint": "Klik atau seret untuk memindahkan area yang terlihat",
     "wheelHint": "Roda gulir: zoom"
+  },
+  "labels": {
+    "person": "orang",
+    "car": "mobil",
+    "dog": "anjing",
+    "cat": "kucing",
+    "bird": "burung",
+    "horse": "kuda",
+    "bicycle": "sepeda",
+    "motorcycle": "motor",
+    "truck": "truk",
+    "bus": "bus",
+    "package": "paket",
+    "face": "wajah",
+    "license_plate": "pelat"
+  },
+  "faces": {
+    "title": "Wajah",
+    "readOnly": "Hanya baca",
+    "reload": "Muat ulang",
+    "loading": "Memuat…",
+    "disabledTitle": "Pengenalan wajah dinonaktifkan",
+    "disabledText": "Pengenalan wajah tidak aktif di server Frigate ini (perlu Frigate 0.16 atau lebih baru). Aktifkan di konfigurasi Frigate, lalu mulai ulang Frigate.",
+    "errorTitle": "Gagal memuat wajah",
+    "retry": "Coba lagi",
+    "recent": "Wajah terbaru yang tidak dikenali",
+    "recentHint": "Tetapkan ke seseorang untuk meningkatkan pengenalan.",
+    "people": "Orang",
+    "noPeople": "Belum ada orang terdaftar.",
+    "images": "{n} gambar | {n} gambar",
+    "newPerson": "Orang baru",
+    "namePlaceholder": "Nama orang",
+    "rename": "Ganti nama",
+    "addImages": "Tambah gambar…",
+    "deletePerson": "Hapus orang",
+    "confirmDeletePerson": "Konfirmasi penghapusan?",
+    "selectAll": "Pilih semua",
+    "selectHint": "Klik untuk memilih, Shift+klik untuk rentang",
+    "selected": "{n} dipilih | {n} dipilih",
+    "assignTo": "Tetapkan ke…",
+    "newPersonOption": "Orang baru…",
+    "assign": "Tetapkan",
+    "deleteSelected": "Hapus",
+    "confirmDelete": "Hapus {n} gambar? | Hapus {n} gambar?",
+    "emptyRecent": "Tidak ada wajah terbaru untuk ditetapkan.",
+    "emptyPerson": "Tidak ada gambar pelatihan untuk orang ini.",
+    "unknown": "Tidak dikenal",
+    "appearances": "Kemunculan terakhir",
+    "noAppearances": "Tidak ada kemunculan terbaru.",
+    "replay": "Putar ulang peristiwa ini",
+    "badName": "Nama tidak valid: huruf, angka, spasi, ' _ - (maks. 50 karakter).",
+    "failed": "Gagal: {msg}",
+    "assigned": "{n} wajah ditetapkan ke {name} | {n} wajah ditetapkan ke {name}",
+    "deleted": "{n} gambar dihapus | {n} gambar dihapus",
+    "uploaded": "{n} gambar ditambahkan | {n} gambar ditambahkan",
+    "personDeleted": "{name} dihapus"
+  },
+  "plates": {
+    "title": "Pelat",
+    "reload": "Muat ulang",
+    "loading": "Memuat…",
+    "disabledTitle": "Pengenalan pelat nomor dinonaktifkan",
+    "disabledText": "Server Frigate ini tidak mengaktifkan pengenalan pelat nomor (perlu Frigate 0.16 atau lebih baru). Aktifkan di konfigurasi Frigate, lalu mulai ulang.",
+    "errorTitle": "Tidak dapat memuat pelat",
+    "retry": "Coba lagi",
+    "filter": "Saring: pelat, nama, kamera",
+    "known": "Pelat yang dikenal",
+    "names": "{n} nama | {n} nama",
+    "recent": "Terlihat 30 hari terakhir",
+    "noPlates": "Tidak ada pelat terbaca dalam 30 hari terakhir.",
+    "noMatch": "Tidak ada pelat yang cocok.",
+    "passages": "{n} kali lewat | {n} kali lewat",
+    "readOnlyHint": "Hanya baca: pelat yang dikenal diubah di konfigurasi Frigate (lpr.known_plates).",
+    "noKnown": "Tidak ada pelat yang dikenal di konfigurasi.",
+    "notSeen": "Tidak terlihat 30 hari terakhir",
+    "replay": "Putar ulang lintasan ini"
+  },
+  "watch": {
+    "title": "Orang dan pelat nomor",
+    "hint": "Notifikasi sistem segera setelah orang atau pelat yang dicentang dikenali, apa pun jenis peristiwanya. Satu notifikasi per objek yang dilacak.",
+    "people": "Orang",
+    "unknown": "Semua wajah tak dikenal",
+    "unknownHint": "Wajah terdeteksi tetapi tidak dikenali oleh Frigate",
+    "plates": "Pelat dan nama yang dikenal",
+    "noPeople": "Belum ada orang terdaftar",
+    "facesOff": "Pengenalan wajah dinonaktifkan di server",
+    "noPlates": "Tidak ada pelat yang dikenal atau terlihat",
+    "platesOff": "Pembacaan pelat nomor dinonaktifkan di server",
+    "bellTip": "Tips: lonceng di galeri Wajah dan Pelat menambah atau menghapus target.",
+    "bellOn": "Beri tahu saya saat dikenali",
+    "bellOff": "Berhenti memberi tahu saya",
+    "faceSeen": "{name} dikenali",
+    "unknownFace": "Wajah tak dikenal",
+    "plateSeen": "Pelat {name} terdeteksi",
+    "play": "Putar ulang"
+  },
+  "search": {
+    "title": "Cari berdasarkan deskripsi",
+    "open": "Deskripsi…",
+    "openTitle": "Cari peristiwa dengan mendeskripsikan adegan (pencarian semantik Frigate)",
+    "loading": "Memuat…",
+    "disabledTitle": "Pencarian semantik nonaktif",
+    "disabledText": "Pencarian semantik belum aktif di server Frigate ini (Frigate 0.14 atau lebih baru). Fitur ini menemukan peristiwa dari deskripsi (“mobil merah”, “kurir membawa paket”) atau mencari peristiwa serupa.",
+    "disabledHardware": "Fitur ini butuh server yang cukup kuat (prosesor baru atau kartu grafis): di server kecil wajar jika tetap nonaktif.",
+    "errorTitle": "Pencarian gagal",
+    "retry": "Coba lagi",
+    "placeholder": "Deskripsikan adegan: mobil merah, orang membawa paket…",
+    "typeTitle": "Apa yang dibandingkan dengan teks",
+    "type": {
+      "thumbnail_description": "Gambar dan deskripsi",
+      "thumbnail": "Gambar",
+      "description": "Deskripsi (AI)"
+    },
+    "go": "Cari",
+    "searching": "Mencari…",
+    "intro": "Frigate membandingkan deskripsi Anda dengan gambar objek yang terdeteksi (dan deskripsinya, jika AI generatif diatur).",
+    "examples": "Contoh: “mobil putih”, “orang berjaket merah”, “anjing di halaman”.",
+    "none": "Tidak ada peristiwa yang cocok.",
+    "replay": "Putar ulang peristiwa ini",
+    "scoreTitle": "Keyakinan (berdasarkan: {source})",
+    "source": {
+      "thumbnail": "gambar",
+      "description": "deskripsi"
+    },
+    "similar": "Serupa",
+    "similarFind": "Cari yang serupa",
+    "similarTitle": "Peristiwa dengan objek mirip ini (pencarian semantik Frigate)",
+    "similarTo": "Serupa dengan:",
+    "backToText": "Pencarian teks"
   }
 }

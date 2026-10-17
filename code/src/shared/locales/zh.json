@@ -14,7 +14,9 @@
     "settings": "设置",
     "serverTitle": "Frigate {version} — 连接、账户、更换服务器",
     "showUser": "点击显示名称",
-    "hideUser": "点击隐藏名称"
+    "hideUser": "点击隐藏名称",
+    "faces": "人脸库",
+    "plates": "车牌库"
   },
   "roles": {
     "admin": "管理员",
@@ -178,7 +180,35 @@
     "itemHint": "单击：回放 · 双击：详情",
     "unseenDot": "未查看",
     "ongoing": "进行中",
-    "details": "详情"
+    "details": "详情",
+    "filter": {
+      "object": "对象",
+      "face": "人脸",
+      "plate": "车牌",
+      "zone": "区域",
+      "cam": "摄像头",
+      "noValues": "没有已知值",
+      "remove": "移除此筛选",
+      "clear": "全部清除"
+    },
+    "range": {
+      "any": "任意日期",
+      "today": "今天",
+      "7d": "7 天",
+      "30d": "30 天",
+      "from": "从",
+      "to": "到",
+      "title": "在服务器上搜索的时间段"
+    },
+    "history": {
+      "label": "服务器历史",
+      "title": "在服务器上搜索的结果，超出最近 2 天",
+      "loading": "正在搜索…",
+      "error": "无法搜索：服务器无法访问或版本不兼容。",
+      "none": "没有符合这些筛选条件的事件。",
+      "end": "没有更多结果",
+      "more": "加载更多"
+    }
   },
   "detail": {
     "camera": "摄像头",
@@ -203,7 +233,9 @@
     "clipUnavailable": "此时段无视频片段",
     "info": "信息",
     "toTimeline": "在时间轴中回放",
-    "download": "下载片段"
+    "download": "下载片段",
+    "boxes": "框选",
+    "boxesTitle": "显示或隐藏检测框（物体、人脸、车牌）"
   },
   "timeline": {
     "hours": "{n} 小时",
@@ -310,7 +342,9 @@
     "title": "键盘快捷键",
     "capture": "所选摄像头的截图",
     "exportClip": "导出片段",
-    "sound": "所选摄像头的声音"
+    "sound": "所选摄像头的声音",
+    "faces": "人脸库",
+    "plates": "车牌库"
   },
   "app": {
     "serverUnreachable": "服务器无法连接",
@@ -394,7 +428,9 @@
     "checkUpdates": "检查更新…",
     "capture": "截图",
     "exportClip": "导出片段…",
-    "sound": "所选摄像头的声音"
+    "sound": "所选摄像头的声音",
+    "faces": "人脸…",
+    "plates": "车牌…"
   },
   "main": {
     "aboutText": "适用于 Frigate NVR 的视频墙。",
@@ -543,5 +579,134 @@
     "resetHint": "恢复完整画面（双击）",
     "miniHint": "点击或拖动以移动显示区域",
     "wheelHint": "滚轮：缩放"
+  },
+  "labels": {
+    "person": "人",
+    "car": "汽车",
+    "dog": "狗",
+    "cat": "猫",
+    "bird": "鸟",
+    "horse": "马",
+    "bicycle": "自行车",
+    "motorcycle": "摩托车",
+    "truck": "卡车",
+    "bus": "公交车",
+    "package": "包裹",
+    "face": "人脸",
+    "license_plate": "车牌"
+  },
+  "faces": {
+    "title": "人脸",
+    "readOnly": "只读",
+    "reload": "刷新",
+    "loading": "加载中…",
+    "disabledTitle": "人脸识别未启用",
+    "disabledText": "此 Frigate 服务器未启用人脸识别（需要 Frigate 0.16 或更高版本）。请在 Frigate 配置中启用它，然后重启 Frigate。",
+    "errorTitle": "无法加载人脸",
+    "retry": "重试",
+    "recent": "最近未识别的人脸",
+    "recentHint": "将其分配给某人以提高识别准确度。",
+    "people": "人员",
+    "noPeople": "尚无已登记的人员。",
+    "images": "{n} 张图片 | {n} 张图片",
+    "newPerson": "新建人员",
+    "namePlaceholder": "人员姓名",
+    "rename": "重命名",
+    "addImages": "添加图片…",
+    "deletePerson": "删除人员",
+    "confirmDeletePerson": "确认删除？",
+    "selectAll": "全选",
+    "selectHint": "单击选择，Shift+单击选择范围",
+    "selected": "已选 {n} 张 | 已选 {n} 张",
+    "assignTo": "分配给…",
+    "newPersonOption": "新建人员…",
+    "assign": "分配",
+    "deleteSelected": "删除",
+    "confirmDelete": "删除 {n} 张图片？ | 删除 {n} 张图片？",
+    "emptyRecent": "没有待分配的最近人脸。",
+    "emptyPerson": "此人没有训练图片。",
+    "unknown": "未知",
+    "appearances": "最近出现",
+    "noAppearances": "最近没有出现。",
+    "replay": "回放此事件",
+    "badName": "名称无效：仅限字母、数字、空格及 ' _ -（最多 50 个字符）。",
+    "failed": "失败：{msg}",
+    "assigned": "已将 {n} 张人脸分配给 {name} | 已将 {n} 张人脸分配给 {name}",
+    "deleted": "已删除 {n} 张图片 | 已删除 {n} 张图片",
+    "uploaded": "已添加 {n} 张图片 | 已添加 {n} 张图片",
+    "personDeleted": "已删除 {name}"
+  },
+  "plates": {
+    "title": "车牌",
+    "reload": "刷新",
+    "loading": "加载中…",
+    "disabledTitle": "车牌识别已关闭",
+    "disabledText": "此 Frigate 服务器未启用车牌识别（需要 Frigate 0.16 或更高版本）。请在 Frigate 配置中启用，然后重启。",
+    "errorTitle": "无法加载车牌",
+    "retry": "重试",
+    "filter": "筛选：车牌、名称、摄像头",
+    "known": "已知车牌",
+    "names": "{n} 个名称 | {n} 个名称",
+    "recent": "最近 30 天出现",
+    "noPlates": "最近 30 天没有识别到车牌。",
+    "noMatch": "没有匹配的车牌。",
+    "passages": "{n} 次经过 | {n} 次经过",
+    "readOnlyHint": "只读：已知车牌需在 Frigate 配置中修改（lpr.known_plates）。",
+    "noKnown": "配置中没有已知车牌。",
+    "notSeen": "最近 30 天未出现",
+    "replay": "回放这次经过"
+  },
+  "watch": {
+    "title": "人员和车牌",
+    "hint": "勾选的人员或车牌一旦被识别即发送系统通知，与事件类型无关。每个跟踪对象只通知一次。",
+    "people": "人员",
+    "unknown": "任何未知人脸",
+    "unknownHint": "检测到人脸但 Frigate 未能识别",
+    "plates": "车牌和已知名称",
+    "noPeople": "没有已登记的人员",
+    "facesOff": "服务器已关闭人脸识别",
+    "noPlates": "没有已知或见过的车牌",
+    "platesOff": "服务器已关闭车牌识别",
+    "bellTip": "提示：人脸和车牌图库中的铃铛可添加或移除目标。",
+    "bellOn": "识别到时通知我",
+    "bellOff": "不再通知我",
+    "faceSeen": "已识别 {name}",
+    "unknownFace": "未知人脸",
+    "plateSeen": "检测到车牌 {name}",
+    "play": "回放"
+  },
+  "search": {
+    "title": "按描述搜索",
+    "open": "描述…",
+    "openTitle": "通过描述场景搜索事件（Frigate 语义搜索）",
+    "loading": "加载中…",
+    "disabledTitle": "语义搜索已禁用",
+    "disabledText": "此 Frigate 服务器未启用语义搜索（需 Frigate 0.14 或更高版本）。它可以通过描述查找事件（“红色汽车”、“拿包裹的快递员”）或查找相似事件。",
+    "disabledHardware": "它需要性能较强的服务器（较新的处理器或显卡）：在小型服务器上保持禁用是正常的。",
+    "errorTitle": "无法搜索",
+    "retry": "重试",
+    "placeholder": "描述场景：红色汽车、拿包裹的人…",
+    "typeTitle": "文本与什么进行比较",
+    "type": {
+      "thumbnail_description": "图像和描述",
+      "thumbnail": "图像",
+      "description": "描述（AI）"
+    },
+    "go": "搜索",
+    "searching": "正在搜索…",
+    "intro": "Frigate 会将您的描述与检测到的物体图像（以及配置了生成式 AI 时的描述）进行比较。",
+    "examples": "示例：“白色汽车”、“穿红色夹克的人”、“院子里的狗”。",
+    "none": "没有匹配的事件。",
+    "replay": "回放此事件",
+    "scoreTitle": "置信度（依据：{source}）",
+    "source": {
+      "thumbnail": "图像",
+      "description": "描述"
+    },
+    "similar": "相似",
+    "similarFind": "查找相似",
+    "similarTitle": "物体与此相似的事件（Frigate 语义搜索）",
+    "similarTo": "相似于：",
+    "backToText": "文本搜索"
   }
 }

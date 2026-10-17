@@ -106,6 +106,16 @@ export const vodUrl = (server, cam, start, end) =>
 export const getRecentReviews = (server, after, limit = 500) =>
   getJson(server, `/api/review?after=${Math.floor(after)}&limit=${limit}`)
 
+// Recherche dans l'historique (chemin construit par historyQuery) et listes de valeurs connues
+export const getPath = (server, path) => getJson(server, path, { timeout: 15000 })
+export async function getList(server, path) {
+  try { const v = await getJson(server, path); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [] } catch { return [] }
+}
+// Meilleure image entière, sans cadre ni horodatage incrusté (cadres dessinés par l'app)
+export const eventSnapshotUrl = (server, id) => `${baseUrl(server)}/api/events/${encodeURIComponent(id)}/snapshot.jpg?bbox=0&crop=0&timestamp=0`
+export const getEvent = (server, id) => getJson(server, `/api/events/${encodeURIComponent(id)}`)
+export const eventThumbUrl = (server, id) => `${baseUrl(server)}/api/events/${encodeURIComponent(id)}/thumbnail.webp`
+
 export const markReviewed = (server, ids) =>
   request(server, '/api/reviews/viewed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 
@@ -132,4 +142,17 @@ export const recordingFrameUrl = (server, cam, ts, height) =>
 // Caméras motorisées (ONVIF) : { features: ['pt', 'zoom', …], presets: [] } — vide sinon
 export async function getPtzInfo(server, cam) {
   try { return await getJson(server, `/api/${encodeURIComponent(cam)}/ptz/info`) } catch { return {} }
+}
+
+/* ---- Requêtes qui modifient (admin) ---- */
+
+// Corps JSON ; la réponse est relue en JSON si possible (Frigate renvoie { success, message })
+export async function sendJson(server, path, method = 'POST', json) {
+  const text = await request(server, path, { method, timeout: 15000, headers: { 'Content-Type': 'application/json' }, body: json === undefined ? undefined : JSON.stringify(json) })
+  try { return JSON.parse(text) } catch { return {} }
+}
+// Image envoyée en multipart/form-data (champ « file »), construit par le processus principal
+export async function uploadImage(server, path, { filename, type, base64 }) {
+  const text = await request(server, path, { method: 'POST', timeout: 30000, upload: { field: 'file', filename, type, base64 } })
+  try { return JSON.parse(text) } catch { return {} }
 }
