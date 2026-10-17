@@ -71,6 +71,9 @@ function startResize(e) {
     <div class="flex flex-col gap-2 border-b border-line px-3 py-2.5">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-semibold">{{ $t('events.title') }}</h3>
+        <button class="ml-2 mr-auto flex items-center gap-1 rounded border border-line px-1.5 py-0.5 text-[11px] text-ink-2 hover:border-accent hover:text-ink" :title="$t('search.openTitle')" @click="ui.searchSimilar = null; ui.searchOpen = true">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="7" r="5" /><line x1="11" y1="11" x2="15" y2="15" /></svg>{{ $t('search.open') }}
+        </button>
         <span class="flex items-center gap-1.5 text-[11px]" :class="ev.realtime === 'on' ? 'text-ok' : 'text-ink-3'" :title="ev.realtime === 'on' ? $t('events.realtimeOnTitle') : $t('events.realtimeOffTitle')">
           <i class="size-1.5 rounded-full bg-current" />{{ ev.realtime === 'on' ? $t('events.realtimeOn') : $t('events.realtimeOff') }}
         </span>

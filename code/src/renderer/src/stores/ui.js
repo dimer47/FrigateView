@@ -28,6 +28,8 @@ export const useUiStore = defineStore('ui', {
     helpOpen: false,
     facesOpen: false,
     platesOpen: false,
+    searchOpen: false,
+    searchSimilar: null, // identifiant d'objet suivi : « Trouver des similaires »
     toast: null
   }),
   actions: {

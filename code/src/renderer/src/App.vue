@@ -20,6 +20,7 @@ import HelpDialog from '@/components/HelpDialog.vue'
 import ExportDialog from '@/components/ExportDialog.vue'
 import FacesDialog from '@/components/FacesDialog.vue'
 import PlatesDialog from '@/components/PlatesDialog.vue'
+import SearchDialog from '@/components/SearchDialog.vue'
 import DownloadsPanel from '@/components/DownloadsPanel.vue'
 import { useMediaStore } from '@/stores/media'
 import { bestGrid } from '@/stores/layouts'
@@ -191,7 +192,7 @@ watch(() => [server.status, server.onlineCount, server.cameras.length], () => {
 watch(() => server.cameras, (cams) => { if (cams.length) layouts.prune(cams.map((c) => c.id)) })
 
 function onKey(e) {
-  if (wall || ev.detailId || appSettings.open || ui.helpOpen || ui.facesOpen || ui.platesOpen || media.exportOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
+  if (wall || ev.detailId || appSettings.open || ui.helpOpen || ui.facesOpen || ui.platesOpen || ui.searchOpen || media.exportOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
   if (e.ctrlKey && e.key === ',') { e.preventDefault(); appSettings.show(); return }
   if (e.key === 'Escape') {
     if (layouts.focus !== null) layouts.focus = null
@@ -244,6 +245,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   <ExportDialog v-if="media.exportOpen && !wall" />
   <FacesDialog v-if="ui.facesOpen && !wall && server.status === 'ok'" />
   <PlatesDialog v-if="ui.platesOpen && !wall && server.status === 'ok'" />
+  <SearchDialog v-if="ui.searchOpen && !wall && server.status === 'ok'" />
   <DownloadsPanel v-if="!wall" />
   <AppToast />
 </template>

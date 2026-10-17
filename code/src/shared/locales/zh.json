@@ -674,5 +674,39 @@
     "unknownFace": "未知人脸",
     "plateSeen": "检测到车牌 {name}",
     "play": "回放"
+  },
+  "search": {
+    "title": "按描述搜索",
+    "open": "描述…",
+    "openTitle": "通过描述场景搜索事件（Frigate 语义搜索）",
+    "loading": "加载中…",
+    "disabledTitle": "语义搜索已禁用",
+    "disabledText": "此 Frigate 服务器未启用语义搜索（需 Frigate 0.14 或更高版本）。它可以通过描述查找事件（“红色汽车”、“拿包裹的快递员”）或查找相似事件。",
+    "disabledHardware": "它需要性能较强的服务器（较新的处理器或显卡）：在小型服务器上保持禁用是正常的。",
+    "errorTitle": "无法搜索",
+    "retry": "重试",
+    "placeholder": "描述场景：红色汽车、拿包裹的人…",
+    "typeTitle": "文本与什么进行比较",
+    "type": {
+      "thumbnail_description": "图像和描述",
+      "thumbnail": "图像",
+      "description": "描述（AI）"
+    },
+    "go": "搜索",
+    "searching": "正在搜索…",
+    "intro": "Frigate 会将您的描述与检测到的物体图像（以及配置了生成式 AI 时的描述）进行比较。",
+    "examples": "示例：“白色汽车”、“穿红色夹克的人”、“院子里的狗”。",
+    "none": "没有匹配的事件。",
+    "replay": "回放此事件",
+    "scoreTitle": "置信度（依据：{source}）",
+    "source": {
+      "thumbnail": "图像",
+      "description": "描述"
+    },
+    "similar": "相似",
+    "similarFind": "查找相似",
+    "similarTitle": "物体与此相似的事件（Frigate 语义搜索）",
+    "similarTo": "相似于：",
+    "backToText": "文本搜索"
   }
 }

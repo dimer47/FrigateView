@@ -100,6 +100,8 @@ function onKey(k) {
 }
 // Clip de l'événement, avec 3 s avant et après
 function download() { const x = e.value; media.exportClips([x.cam], x.s - 3000, Math.min(Date.now(), (x.e ?? Date.now()) + 3000)) }
+// Recherche sémantique : objet affiché sur la meilleure image, sinon le premier de la revue
+function similar() { ui.searchSimilar = snapId.value || e.value.detections[0]; ev.detailId = null; ui.searchOpen = true }
 function toTimeline() {
   const x = e.value
   ev.detailId = null
@@ -179,7 +181,10 @@ function toTimeline() {
           <dl class="divide-y divide-line rounded-lg border border-line text-[13px]">
             <div v-for="[k, v] in info" :key="k" class="flex justify-between gap-3 px-3 py-2"><dt class="text-ink-3">{{ k }}</dt><dd class="truncate text-right">{{ v }}</dd></div>
           </dl>
-          <button class="btn mt-auto flex items-center justify-center gap-2 py-2" @click="download">
+          <button v-if="e.detections?.length" class="btn mt-auto flex items-center justify-center gap-2 py-2" :title="$t('search.similarTitle')" @click="similar">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3" width="8" height="8" rx="1.5" /><rect x="7" y="5" width="8" height="8" rx="1.5" /></svg>{{ $t('search.similarFind') }}
+          </button>
+          <button class="btn flex items-center justify-center gap-2 py-2" :class="e.detections?.length ? 'mt-2' : 'mt-auto'" @click="download">
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 1v8M3.5 5.5L7 9l3.5-3.5M1.5 12.5h11" /></svg>{{ $t('detail.download') }}
           </button>
           <button class="btn btn-primary mt-2 flex items-center justify-center gap-2 py-2.5" @click="toTimeline">

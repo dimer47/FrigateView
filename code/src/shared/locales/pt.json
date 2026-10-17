@@ -674,5 +674,39 @@
     "unknownFace": "Rosto desconhecido",
     "plateSeen": "Matrícula {name} detetada",
     "play": "Rever"
+  },
+  "search": {
+    "title": "Pesquisa por descrição",
+    "open": "Descrever…",
+    "openTitle": "Pesquisar eventos descrevendo a cena (pesquisa semântica do Frigate)",
+    "loading": "Carregando…",
+    "disabledTitle": "Pesquisa semântica desativada",
+    "disabledText": "Este servidor Frigate não tem a pesquisa semântica ativada (Frigate 0.14 ou mais recente). Ela encontra eventos a partir de uma descrição (“carro vermelho”, “entregador com pacote”) ou procura eventos semelhantes.",
+    "disabledHardware": "Exige um servidor razoavelmente potente (processador recente ou placa de vídeo): num servidor pequeno é normal que fique desativada.",
+    "errorTitle": "Pesquisa indisponível",
+    "retry": "Tentar novamente",
+    "placeholder": "Descreva a cena: carro vermelho, pessoa com um pacote…",
+    "typeTitle": "Com o que o texto é comparado",
+    "type": {
+      "thumbnail_description": "Imagem e descrição",
+      "thumbnail": "Imagem",
+      "description": "Descrição (IA)"
+    },
+    "go": "Pesquisar",
+    "searching": "Pesquisando…",
+    "intro": "O Frigate compara sua descrição com as imagens dos objetos detectados (e com a descrição deles, se a IA generativa estiver configurada).",
+    "examples": "Exemplos: “carro branco”, “pessoa de jaqueta vermelha”, “cachorro no quintal”.",
+    "none": "Nenhum evento corresponde.",
+    "replay": "Reproduzir este evento",
+    "scoreTitle": "Confiança (com base em: {source})",
+    "source": {
+      "thumbnail": "imagem",
+      "description": "descrição"
+    },
+    "similar": "Semelhantes",
+    "similarFind": "Encontrar semelhantes",
+    "similarTitle": "Eventos cujo objeto se parece com este (pesquisa semântica do Frigate)",
+    "similarTo": "Semelhantes a:",
+    "backToText": "Pesquisa por texto"
   }
 }

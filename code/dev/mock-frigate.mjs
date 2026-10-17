@@ -32,6 +32,8 @@ const LPR_ON = !process.env.MOCK_NO_LPR
 const PLATES = ['AB-123-CD', 'AB-456-CD', 'ZZ-001-ZZ', 'XY-777-QA', 'FV-042-MK', 'QQ-314-PI', 'MO-999-CK', 'TE-500-ST']
 const KNOWN_PLATES = { 'Voiture Alex': ['AB-123-CD'], 'Livreur': ['AB-4\\d\\d-CD', 'XY-777-QA'], 'Voisin': ['ZZ-999-ZZ'] }
 const knownName = (plate) => Object.entries(KNOWN_PLATES).find(([, l]) => l.some((x) => new RegExp(`^${x}$`).test(plate)))?.[0] || null
+// Recherche sémantique (0.14+) : filtre naïf par mots sur la description. MOCK_NO_SEMANTIC=1 : désactivée
+const SEMANTIC_ON = !process.env.MOCK_NO_SEMANTIC
 const viewed = new Set()
 const live = [] // revues créées pendant que le serveur tourne
 function review(c, s0, obj, end) {
@@ -195,7 +197,7 @@ function handler(secure) {
   const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
   if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
-  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, lpr: { enabled: LPR_ON, known_plates: LPR_ON ? KNOWN_PLATES : {} }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
+  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, semantic_search: { enabled: SEMANTIC_ON, model: 'jinav1' }, lpr: { enabled: LPR_ON, known_plates: LPR_ON ? KNOWN_PLATES : {} }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)
@@ -241,6 +243,30 @@ function handler(secure) {
   if (url.pathname === '/api/labels') return send(200, 'application/json', JSON.stringify(['car', 'dog', 'person']))
   r = url.pathname.match(/^\/api\/events\/(\d+)-([a-z_]+)-ev\/thumbnail\.webp$/)
   if (r && cams.includes(r[2])) return send(200, 'image/svg+xml', frame(r[2], 180))
+  if (url.pathname === '/api/events/search') {
+    const p = url.searchParams, json = (c, o) => send(c, 'application/json', JSON.stringify(o))
+    const q = (p.get('query') || '').trim(), evId = p.get('event_id'), type = p.get('search_type') || 'thumbnail'
+    if (!q && !evId) return json(400, { success: false, message: 'A search query must be supplied' })
+    if (!SEMANTIC_ON) return json(400, { success: false, message: 'Semantic search is not enabled' })
+    const camList = p.get('cameras') && p.get('cameras') !== 'all' ? p.get('cameras').split(',') : cams
+    const pool = allReviews(Date.now() / 1000 - 7 * 86400, Date.now() / 1000, camList).map(toEvent)
+    let out
+    if (type === 'similarity') {
+      const src = eventById(evId)
+      if (!src) return json(404, { success: false, message: 'Event not found' })
+      out = pool.filter((e) => e.label === src.label).map((e) => ({ ...e, search_distance: e.id === src.id ? 0 : Math.round(((e.camera === src.camera ? 0.12 : 0.35) + rnd(e.id + src.id) * 0.3) * 1000) / 1000, search_source: 'thumbnail' }))
+    } else {
+      const words = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/).filter((w) => w.length > 2)
+      const LBL = { person: 'personne person homme femme', car: 'voiture vehicule car auto', dog: 'chien dog animal' }
+      out = pool.map((e) => {
+        const text = `${e.data.description} ${LBL[e.label] || e.label} ${e.sub_label || ''} ${e.data.recognized_license_plate || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        const n = words.filter((w) => text.includes(w)).length
+        return n ? { ...e, search_distance: Math.round((0.6 - n * 1.1 - rnd(e.id + q) * 0.8) * 1000) / 1000, search_source: type.includes('description') ? 'description' : 'thumbnail' } : null
+      }).filter(Boolean)
+    }
+    out.sort((a, b) => a.search_distance - b.search_distance)
+    return json(200, out.slice(0, +p.get('limit') || 50))
+  }
   r = url.pathname.match(/^\/api\/events\/([^/]+)\/snapshot\.jpg$/)
   if (r) { const e = eventById(decodeURIComponent(r[1])); return e ? send(200, 'image/svg+xml', snapshotSvg(e)) : send(404, 'application/json', '{"success":false,"message":"Event not found"}') }
   r = url.pathname.match(/^\/api\/events\/([^/]+)$/)

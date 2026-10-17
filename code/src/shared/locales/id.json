@@ -674,5 +674,39 @@
     "unknownFace": "Wajah tak dikenal",
     "plateSeen": "Pelat {name} terdeteksi",
     "play": "Putar ulang"
+  },
+  "search": {
+    "title": "Cari berdasarkan deskripsi",
+    "open": "Deskripsi…",
+    "openTitle": "Cari peristiwa dengan mendeskripsikan adegan (pencarian semantik Frigate)",
+    "loading": "Memuat…",
+    "disabledTitle": "Pencarian semantik nonaktif",
+    "disabledText": "Pencarian semantik belum aktif di server Frigate ini (Frigate 0.14 atau lebih baru). Fitur ini menemukan peristiwa dari deskripsi (“mobil merah”, “kurir membawa paket”) atau mencari peristiwa serupa.",
+    "disabledHardware": "Fitur ini butuh server yang cukup kuat (prosesor baru atau kartu grafis): di server kecil wajar jika tetap nonaktif.",
+    "errorTitle": "Pencarian gagal",
+    "retry": "Coba lagi",
+    "placeholder": "Deskripsikan adegan: mobil merah, orang membawa paket…",
+    "typeTitle": "Apa yang dibandingkan dengan teks",
+    "type": {
+      "thumbnail_description": "Gambar dan deskripsi",
+      "thumbnail": "Gambar",
+      "description": "Deskripsi (AI)"
+    },
+    "go": "Cari",
+    "searching": "Mencari…",
+    "intro": "Frigate membandingkan deskripsi Anda dengan gambar objek yang terdeteksi (dan deskripsinya, jika AI generatif diatur).",
+    "examples": "Contoh: “mobil putih”, “orang berjaket merah”, “anjing di halaman”.",
+    "none": "Tidak ada peristiwa yang cocok.",
+    "replay": "Putar ulang peristiwa ini",
+    "scoreTitle": "Keyakinan (berdasarkan: {source})",
+    "source": {
+      "thumbnail": "gambar",
+      "description": "deskripsi"
+    },
+    "similar": "Serupa",
+    "similarFind": "Cari yang serupa",
+    "similarTitle": "Peristiwa dengan objek mirip ini (pencarian semantik Frigate)",
+    "similarTo": "Serupa dengan:",
+    "backToText": "Pencarian teks"
   }
 }

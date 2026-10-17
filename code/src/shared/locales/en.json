@@ -674,5 +674,39 @@
     "unknownFace": "Unknown face",
     "plateSeen": "Plate {name} detected",
     "play": "Replay"
+  },
+  "search": {
+    "title": "Search by description",
+    "open": "Describe…",
+    "openTitle": "Search events by describing the scene (Frigate semantic search)",
+    "loading": "Loading…",
+    "disabledTitle": "Semantic search disabled",
+    "disabledText": "Semantic search is not enabled on this Frigate server (Frigate 0.14 or newer). It finds events from a description (“red car”, “courier with a parcel”) or looks for similar events.",
+    "disabledHardware": "It needs a fairly powerful server (recent CPU or a GPU): on a small server it is normal for it to stay disabled.",
+    "errorTitle": "Search unavailable",
+    "retry": "Retry",
+    "placeholder": "Describe the scene: red car, person with a parcel…",
+    "typeTitle": "What the text is compared with",
+    "type": {
+      "thumbnail_description": "Image and description",
+      "thumbnail": "Image",
+      "description": "Description (AI)"
+    },
+    "go": "Search",
+    "searching": "Searching…",
+    "intro": "Frigate compares your description with the images of detected objects (and their description, if generative AI is set up).",
+    "examples": "Examples: “white car”, “person in a red jacket”, “dog in the yard”.",
+    "none": "No matching event.",
+    "replay": "Replay this event",
+    "scoreTitle": "Confidence (based on: {source})",
+    "source": {
+      "thumbnail": "image",
+      "description": "description"
+    },
+    "similar": "Similar",
+    "similarFind": "Find similar",
+    "similarTitle": "Events whose object looks like this one (Frigate semantic search)",
+    "similarTo": "Similar to:",
+    "backToText": "Text search"
   }
 }
