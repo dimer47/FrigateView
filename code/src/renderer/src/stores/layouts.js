@@ -1,16 +1,44 @@
 import { defineStore } from 'pinia'
 import { load, save } from './storage'
 
+// Grilles : colonnes × lignes, plus des cases agrandies [colonne, ligne, largeur, hauteur]
+// (numérotées à partir de 1). Les autres cases se placent automatiquement dans l'ordre.
+const G = (label, cols, rows, big = [], group = '') => {
+  const n = cols * rows - big.reduce((a, [, , w, h]) => a + w * h - 1, 0)
+  return { label, cols, rows, big, n, group }
+}
 export const GRIDS = {
-  '1x1': { n: 1, label: '1×1' },
-  '2x2': { n: 4, label: '2×2' },
-  '3x3': { n: 9, label: '3×3' },
-  '4x4': { n: 16, label: '4×4' },
-  '1p5': { n: 6, label: '1+5' },
-  '1p7': { n: 8, label: '1+7' }
+  '1x1': G('1', 1, 1, [], '1 à 4 caméras'),
+  '1x2': G('2×1', 2, 1, [], '1 à 4 caméras'),
+  '2x1': G('1×2', 1, 2, [], '1 à 4 caméras'),
+  '1p2': G('1+2', 3, 2, [[1, 1, 2, 2]], '1 à 4 caméras'),
+  '1p3': G('1+3', 3, 3, [[1, 1, 3, 2]], '1 à 4 caméras'),
+  '2x2': G('2×2', 2, 2, [], '1 à 4 caméras'),
+  '3x2': G('3×2', 3, 2, [], '5 à 9 caméras'),
+  '1p5': G('1+5', 3, 3, [[1, 1, 2, 2]], '5 à 9 caméras'),
+  '2p4': G('2+4', 4, 3, [[1, 1, 2, 2], [3, 1, 2, 2]], '5 à 9 caméras'),
+  '1p7': G('1+7', 4, 4, [[1, 1, 3, 3]], '5 à 9 caméras'),
+
+  '3x3': G('3×3', 3, 3, [], '5 à 9 caméras'),
+  '2p8': G('2+8', 4, 4, [[1, 1, 2, 2], [3, 1, 2, 2]], '10 caméras et plus'),
+  '1p12': G('1+12', 4, 4, [[2, 2, 2, 2]], '10 caméras et plus'),
+  '4x3': G('4×3', 4, 3, [], '10 caméras et plus'),
+  '4x4': G('4×4', 4, 4, [], '10 caméras et plus'),
+  '5x4': G('5×4', 5, 4, [], '10 caméras et plus'),
+  '5x5': G('5×5', 5, 5, [], '10 caméras et plus'),
+  '6x6': G('6×6', 6, 6, [], '10 caméras et plus')
+}
+// Style CSS de la grille et de la n-ième case
+export function gridStyle(key) {
+  const g = GRIDS[key] || GRIDS['2x2']
+  return { gridTemplateColumns: `repeat(${g.cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${g.rows}, minmax(0, 1fr))` }
+}
+export function cellStyle(key, i) {
+  const b = (GRIDS[key] || GRIDS['2x2']).big[i]
+  return b ? { gridColumn: `${b[0]} / span ${b[2]}`, gridRow: `${b[1]} / span ${b[3]}` } : null
 }
 
-export const bestGrid = (n) => (n <= 1 ? '1x1' : n <= 4 ? '2x2' : n <= 6 ? '1p5' : n <= 9 ? '3x3' : '4x4')
+export const bestGrid = (n) => (n <= 1 ? '1x1' : n <= 2 ? '1x2' : n <= 4 ? '2x2' : n <= 6 ? '1p5' : n <= 9 ? '3x3' : n <= 12 ? '4x3' : n <= 16 ? '4x4' : n <= 20 ? '5x4' : n <= 25 ? '5x5' : '6x6')
 
 export const useLayoutStore = defineStore('layouts', {
   state: () => ({

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useLayoutStore, bestGrid } from '@/stores/layouts'
+import { useLayoutStore, bestGrid, gridStyle, cellStyle } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
 import CameraCell from './CameraCell.vue'
@@ -48,11 +48,12 @@ function autoLayout() {
       <LayoutDialog v-if="creating" @close="creating = false" />
     </div>
 
-    <div v-else class="grid size-full overflow-hidden" :class="['g-' + (focused ? '1x1' : layout.grid), ui.expand ? 'gap-px p-0' : 'gap-[3px] p-1']">
+    <div v-else class="grid size-full overflow-hidden" :style="gridStyle(focused ? '1x1' : layout.grid)" :class="[ui.expand ? 'gap-px p-0' : 'gap-[3px] p-1']">
       <div v-for="i in indices" :key="i + ':' + (layout.cells[i] || '')"
         class="group relative min-h-0 min-w-0 cursor-pointer overflow-hidden border bg-card"
         :class="[ui.expand ? 'rounded-none border-transparent' : 'rounded-[5px] border-line hover:border-accent/50',
           { '!border-accent shadow-[inset_0_0_0_2px_var(--color-accent)]': i === store.selected && !ui.expand, '!border-dashed !border-accent bg-accent/10': dropTarget === i }]"
+        :style="focused ? null : cellStyle(layout.grid, i)"
         :draggable="!!layout.cells[i]"
         @click="store.selected = i"
         @dblclick="layout.cells[i] && toggleFocus(i)"
