@@ -110,8 +110,9 @@ async function loadChunk(t) {
     destroyHls()
     if (!Hls.isSupported()) { pbState.value = 'error'; return }
     hls = new Hls({ maxBufferLength: 30, backBufferLength: 30 })
-    hls.on(Hls.Events.ERROR, (_e, d) => { if (d.fatal) pbState.value = 'error' })
-    hls.on(Hls.Events.MANIFEST_PARSED, () => syncPlayback(true))
+    const dbg = localStorage.getItem('fv-debug') === '1'
+    hls.on(Hls.Events.ERROR, (_e, d) => { if (dbg) console.log('[hls]', props.camId, d.type, d.details, d.fatal, d.response?.code || ''); if (d.fatal) pbState.value = 'error' })
+    hls.on(Hls.Events.MANIFEST_PARSED, () => { if (dbg) console.log('[hls]', props.camId, 'manifest ok'); syncPlayback(true) })
     hls.loadSource(vodUrl(server.server, props.camId, segs[0].s / 1000, chunk.end / 1000))
     hls.attachMedia(pbVideo.value)
   } catch {
@@ -123,6 +124,7 @@ async function loadChunk(t) {
 }
 
 function syncPlayback(force = false) {
+  if (localStorage.getItem('fv-debug') === '1' && force) console.log('[pb]', props.camId, 'sync', chunk && chunk.segs.length, toOffset(tl.time))
   if (!playback.value || chunkLoading) return
   const t = tl.time, v = pbVideo.value
   if (!chunk || t < chunk.start || t >= chunk.end) { loadChunk(t); return }
