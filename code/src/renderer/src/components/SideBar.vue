@@ -4,10 +4,11 @@ import { useServerStore } from '@/stores/server'
 import { useLayoutStore, GRIDS } from '@/stores/layouts'
 import GridIcon from './GridIcon.vue'
 import LayoutDialog from './LayoutDialog.vue'
+import { useUiStore } from '@/stores/ui'
 
 const server = useServerStore()
 const store = useLayoutStore()
-const dialog = ref(undefined) // undefined = fermé, null = création, id = édition
+const ui = useUiStore()
 const dragLayout = ref(null)
 
 function onCamDragStart(e, id) { e.dataTransfer.setData('application/x-fv-cam', id); e.dataTransfer.effectAllowed = 'copy' }
@@ -29,7 +30,7 @@ function onLayoutDrop(targetId) { if (dragLayout.value && dragLayout.value !== t
     <div class="flex min-h-0 flex-1 flex-col">
       <div class="flex items-center justify-between px-3 pb-1.5 pt-2.5">
         <span class="text-[11px] font-bold uppercase tracking-wider text-ink-3">Layouts <span class="ml-1 rounded-lg bg-raised px-1.5 font-normal">{{ store.layouts.length }}</span></span>
-        <button class="tbtn !size-6" title="Créer un layout" @click="dialog = null">
+        <button class="tbtn !size-6" title="Créer un layout" @click="ui.layoutDialog = null">
           <svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" /></svg>
         </button>
       </div>
@@ -45,7 +46,7 @@ function onLayoutDrop(targetId) { if (dragLayout.value && dragLayout.value !== t
           <GridIcon :grid="l.grid" />
           <span class="flex-1 truncate">{{ l.name }}</span>
           <span class="text-[11px] text-ink-3" title="Caméras placées">{{ l.cells.filter(Boolean).length }}/{{ GRIDS[l.grid].n }}</span>
-          <button class="tbtn !size-6 opacity-0 group-hover:opacity-100" :class="{ '!opacity-100': l.id === store.activeId }" title="Modifier" @click.stop="dialog = l.id">
+          <button class="tbtn !size-6 opacity-0 group-hover:opacity-100" :class="{ '!opacity-100': l.id === store.activeId }" title="Modifier" @click.stop="ui.layoutDialog = l.id">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8.5 1.5l2 2L4 10H2V8z" /></svg>
           </button>
         </div>
@@ -68,6 +69,6 @@ function onLayoutDrop(targetId) { if (dragLayout.value && dragLayout.value !== t
       </div>
       <p class="px-3 pb-2.5 pt-1.5 text-[11px] leading-snug text-ink-3">Glisser vers une case, ou double-clic pour placer dans la case sélectionnée.</p>
     </div>
-    <LayoutDialog v-if="dialog !== undefined" :layout-id="dialog" @close="dialog = undefined" />
+    
   </aside>
 </template>

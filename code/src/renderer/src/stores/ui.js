@@ -6,6 +6,8 @@ export const useUiStore = defineStore('ui', {
     sidebar: load('fv-ui', {}).sidebar ?? true,
     liveMode: load('fv-ui', {}).liveMode ?? 'webrtc', // webrtc | snapshot
     expand: false,
+    layoutDialog: undefined, // undefined = fermé, null = création, id = édition
+    helpOpen: false,
     toast: null
   }),
   actions: {

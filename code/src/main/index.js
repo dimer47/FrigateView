@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage, Notification, Tray, Menu, screen, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, session, net, safeStorage, Notification, Tray, Menu, screen, nativeImage, dialog } from 'electron'
 import { join } from 'node:path'
 import { readFileSync, writeFileSync, rmSync } from 'node:fs'
 import tls from 'node:tls'
@@ -136,6 +136,7 @@ function applySettings() {
   // Démarrage avec Windows (sans effet en développement)
   if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: settings.startAtLogin, args: settings.startHidden ? ['--hidden'] : [] })
   refreshTray()
+  buildMenu()
   for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', settings)
 }
 
@@ -164,7 +165,6 @@ function baseOptions() {
     backgroundColor: '#111827',
     title: 'FrigateView',
     icon: appIcon(),
-    autoHideMenuBar: true,
     webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: false, contextIsolation: true }
   }
 }
@@ -226,6 +226,7 @@ function syncWalls() {
     let w = walls.get(id)
     if (!w || w.isDestroyed()) {
       w = new BrowserWindow({ ...baseOptions(), x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height, fullscreen: true, frame: false })
+      w.setMenu(null)
       w.on('close', (e) => { if (!quitting) { e.preventDefault(); settings.screens[id] = { ...settings.screens[id], enabled: false }; saveSettings(); syncWalls(); applySettings() } })
       walls.set(id, w)
       loadRenderer(w, { wall: '1', layout: conf.layout })
@@ -233,15 +234,15 @@ function syncWalls() {
   }
 }
 ipcMain.handle('screens:apply', (_e, screensConf) => { settings = { ...settings, screens: screensConf }; saveSettings(); syncWalls(); return true })
-ipcMain.handle('screens:identify', () => {
+function identifyScreens() {
   // Grand numéro affiché 2 s sur chaque écran
   screen.getAllDisplays().forEach((d, i) => {
     const w = new BrowserWindow({ x: d.bounds.x + d.bounds.width / 2 - 160, y: d.bounds.y + d.bounds.height / 2 - 120, width: 320, height: 240, frame: false, transparent: true, alwaysOnTop: true, focusable: false, skipTaskbar: true })
     w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`<body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font:800 160px system-ui;color:#fff;background:rgba(59,130,246,.92);border-radius:28px">${i + 1}</body>`))
     setTimeout(() => !w.isDestroyed() && w.destroy(), 2000)
   })
-  return true
-})
+}
+ipcMain.handle('screens:identify', () => { identifyScreens(); return true })
 
 /* ------------------------------------------------------------------
    Notifications Windows
@@ -253,6 +254,128 @@ ipcMain.handle('notify', (_e, { title, body, id }) => {
   n.show()
   return true
 })
+/* ------------------------------------------------------------------
+   Menu de l'application
+   Chaque entrée envoie une commande à la fenêtre principale ; la fenêtre
+   renvoie son état (layouts, panneaux, lecture…) pour cocher les entrées.
+   Les raccourcis déjà gérés par la fenêtre sont seulement affichés
+   (registerAccelerator: false), pour ne pas être déclenchés deux fois.
+   ------------------------------------------------------------------ */
+let uiState = { connected: false, layouts: [], activeLayout: null, sidebar: true, events: true, timeline: true, expand: false, liveMode: 'webrtc', live: true, playing: true, sync: true, unseen: 0, admin: false, version: '' }
+const send = (cmd, arg) => { showMain(); mainWin?.webContents.send('menu:command', { cmd, arg }) }
+const shown = (accelerator) => ({ accelerator, registerAccelerator: false })
+let menuTimer = null
+ipcMain.handle('menu:state', (_e, st) => { uiState = { ...uiState, ...st }; clearTimeout(menuTimer); menuTimer = setTimeout(buildMenu, 50); return true })
+
+function buildMenu() {
+  const c = uiState.connected
+  const isMac = process.platform === 'darwin'
+  const template = [
+    ...(isMac ? [{ role: 'appMenu', label: 'FrigateView' }] : []),
+    {
+      label: 'Fichier',
+      submenu: [
+        { label: 'Nouveau layout…', accelerator: 'CmdOrCtrl+N', enabled: c, click: () => send('layout:new') },
+        { type: 'separator' },
+        { label: 'Réglages…', ...shown('CmdOrCtrl+,'), click: () => send('settings') },
+        { type: 'separator' },
+        { label: 'Changer de serveur ou de mode…', enabled: c, click: () => send('server:change') },
+        { label: 'Se déconnecter', enabled: c, click: () => send('server:signout') },
+        { type: 'separator' },
+        { label: 'Fermer la fenêtre', accelerator: 'CmdOrCtrl+W', click: () => mainWin?.close() },
+        { label: 'Quitter FrigateView', accelerator: 'CmdOrCtrl+Q', click: () => { quitting = true; app.quit() } }
+      ]
+    },
+    {
+      label: 'Affichage',
+      submenu: [
+        { label: 'Layouts et caméras', type: 'checkbox', checked: uiState.sidebar, enabled: c, ...shown('CmdOrCtrl+1'), click: () => send('toggle:sidebar') },
+        { label: 'Événements', type: 'checkbox', checked: uiState.events, enabled: c, ...shown('CmdOrCtrl+2'), click: () => send('toggle:events') },
+        { label: 'Timeline', type: 'checkbox', checked: uiState.timeline, enabled: c, ...shown('CmdOrCtrl+3'), click: () => send('toggle:timeline') },
+        { type: 'separator' },
+        { label: 'Direct en vidéo (WebRTC)', type: 'radio', checked: uiState.liveMode === 'webrtc', enabled: c, click: () => send('livemode', 'webrtc') },
+        { label: 'Direct en images (1 par seconde)', type: 'radio', checked: uiState.liveMode === 'snapshot', enabled: c, click: () => send('livemode', 'snapshot') },
+        { type: 'separator' },
+        { label: 'Mur vidéo seul', type: 'checkbox', checked: uiState.expand, enabled: c, ...shown('CmdOrCtrl+E'), click: () => send('toggle:expand') },
+        { label: 'Plein écran', accelerator: isMac ? 'Ctrl+Cmd+F' : 'F11', click: () => mainWin?.setFullScreen(!mainWin.isFullScreen()) },
+        { type: 'separator' },
+        { label: 'Zoom avant', role: 'zoomIn' },
+        { label: 'Zoom arrière', role: 'zoomOut' },
+        { label: 'Taille réelle', role: 'resetZoom' },
+        { type: 'separator' },
+        { label: 'Recharger', role: 'reload' },
+        ...(app.isPackaged ? [] : [{ label: 'Outils de développement', role: 'toggleDevTools' }])
+      ]
+    },
+    {
+      label: 'Layouts',
+      submenu: [
+        ...(uiState.layouts.length
+          ? uiState.layouts.map((l, i) => ({ label: l.name, type: 'radio', checked: l.id === uiState.activeLayout, accelerator: i < 9 ? `CmdOrCtrl+Alt+${i + 1}` : undefined, click: () => send('layout:apply', l.id) }))
+          : [{ label: 'Aucun layout', enabled: false }]),
+        { type: 'separator' },
+        { label: 'Layout précédent', accelerator: 'CmdOrCtrl+Alt+Left', enabled: uiState.layouts.length > 1, click: () => send('layout:step', -1) },
+        { label: 'Layout suivant', accelerator: 'CmdOrCtrl+Alt+Right', enabled: uiState.layouts.length > 1, click: () => send('layout:step', 1) },
+        { type: 'separator' },
+        { label: 'Modifier le layout affiché…', enabled: !!uiState.activeLayout, click: () => send('layout:edit') },
+        { label: 'Nouveau layout…', enabled: c, click: () => send('layout:new') },
+        { label: 'Créer un layout avec toutes les caméras', enabled: c, click: () => send('layout:auto') }
+      ]
+    },
+    {
+      label: 'Lecture',
+      submenu: [
+        { label: uiState.live || uiState.playing ? 'Pause' : 'Lecture', enabled: c, ...shown('Space'), click: () => send('play:toggle') },
+        { label: 'Revenir au direct', enabled: c && !uiState.live, ...shown('L'), click: () => send('play:live') },
+        { type: 'separator' },
+        { label: 'Reculer de 10 s', enabled: c, ...shown('Left'), click: () => send('play:skip', -10) },
+        { label: 'Avancer de 10 s', enabled: c && !uiState.live, ...shown('Right'), click: () => send('play:skip', 10) },
+        { label: 'Reculer de 30 s', enabled: c, ...shown('Shift+Left'), click: () => send('play:skip', -30) },
+        { label: 'Avancer de 30 s', enabled: c && !uiState.live, ...shown('Shift+Right'), click: () => send('play:skip', 30) },
+        { type: 'separator' },
+        { label: 'Plus vite', enabled: c && !uiState.live, click: () => send('play:speed', 1) },
+        { label: 'Moins vite', enabled: c && !uiState.live, click: () => send('play:speed', -1) },
+        { type: 'separator' },
+        { label: 'Caméras synchronisées', type: 'checkbox', checked: uiState.sync, enabled: c, click: () => send('play:sync') },
+        { label: 'Il y a 15 minutes', enabled: c, click: () => send('play:ago', 15) },
+        { label: 'Il y a 1 heure', enabled: c, click: () => send('play:ago', 60) },
+        { label: 'Hier à la même heure', enabled: c, click: () => send('play:ago', 1440) }
+      ]
+    },
+    {
+      label: 'Événements',
+      submenu: [
+        { label: `Tout marquer comme vu${uiState.unseen ? ` (${uiState.unseen})` : ''}`, enabled: c && uiState.unseen > 0, click: () => send('events:seen') },
+        { type: 'separator' },
+        { label: 'Notifications Windows', type: 'checkbox', checked: settings.notify, click: (i) => { settings.notify = i.checked; saveSettings(); applySettings() } },
+        { label: 'Ne pas déranger', type: 'checkbox', checked: settings.dnd, click: (i) => { settings.dnd = i.checked; saveSettings(); applySettings() } },
+        { label: 'Réglages des notifications…', click: () => send('settings', 'notif') }
+      ]
+    },
+    {
+      label: 'Fenêtre',
+      submenu: [
+        { label: 'Murs vidéo sur les autres écrans…', click: () => send('settings', 'screens') },
+        { label: 'Identifier les écrans', click: identifyScreens },
+        { type: 'separator' },
+        { label: 'Réduire', role: 'minimize' },
+        ...(isMac ? [{ role: 'zoom', label: 'Agrandir' }, { role: 'front', label: 'Tout ramener au premier plan' }] : [])
+      ]
+    },
+    {
+      label: 'Aide',
+      submenu: [
+        { label: 'Raccourcis clavier', accelerator: 'F1', click: () => send('help') },
+        { label: 'Documentation Frigate', click: () => shell.openExternal('https://docs.frigate.video') },
+        { type: 'separator' },
+        { label: 'Ouvrir le dossier des données', click: () => shell.openPath(app.getPath('userData')) },
+        { label: 'À propos de FrigateView', click: () => dialog.showMessageBox(mainWin, { type: 'info', title: 'À propos', message: `FrigateView ${app.getVersion()}`, detail: `Mur vidéo pour Frigate NVR.\n${uiState.version ? `Serveur : Frigate ${uiState.version}\n` : ''}Electron ${process.versions.electron} · Chromium ${process.versions.chrome}`, icon: appIcon() }) }
+      ]
+    }
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
 ipcMain.handle('app:focused', () => !!mainWin && mainWin.isVisible() && mainWin.isFocused())
 
 /* ------------------------------------------------------------------
@@ -320,6 +443,7 @@ app.whenReady().then(() => {
     done({ responseHeaders: headers })
   })
   createTray()
+  buildMenu()
   createWindow()
   syncWalls()
   screen.on('display-added', syncWalls)

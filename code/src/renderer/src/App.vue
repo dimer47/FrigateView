@@ -15,6 +15,9 @@ import { useEventsStore, TYPE_LABELS } from '@/stores/events'
 import { useTimelineStore } from '@/stores/timeline'
 import { useAppSettings } from '@/stores/appSettings'
 import SettingsDialog from '@/components/SettingsDialog.vue'
+import LayoutDialog from '@/components/LayoutDialog.vue'
+import HelpDialog from '@/components/HelpDialog.vue'
+import { bestGrid } from '@/stores/layouts'
 import { load, save } from '@/stores/storage'
 
 const server = useServerStore()
@@ -59,6 +62,42 @@ watch(() => server.status === 'ok' && server.server, (on, was) => {
   if (!on && server.status !== 'lost') ev.stop()
 })
 
+/* ---------- Menu de l'application ---------- */
+const MENU = {
+  'layout:new': () => (ui.layoutDialog = null),
+  'layout:edit': () => layouts.activeId && (ui.layoutDialog = layouts.activeId),
+  'layout:apply': (id) => layouts.apply(id),
+  'layout:step': (d) => { const L = layouts.layouts, i = L.findIndex((l) => l.id === layouts.activeId); if (L.length) layouts.apply(L[(i + d + L.length) % L.length].id) },
+  'layout:auto': () => { const ids = server.cameras.map((c) => c.id); layouts.create('Toutes les caméras', bestGrid(ids.length), ids) },
+  settings: (tab) => appSettings.show(tab),
+  'server:change': () => server.changeServer(),
+  'server:signout': () => server.signOut(),
+  'toggle:sidebar': () => ui.toggleSidebar(),
+  'toggle:events': () => { ev.visible = !ev.visible; ev.persist() },
+  'toggle:timeline': () => { tl.visible = !tl.visible; tl.persist() },
+  'toggle:expand': () => (ui.expand = !ui.expand),
+  livemode: (m) => ui.setLiveMode(m),
+  'play:toggle': () => tl.togglePlay(),
+  'play:live': () => tl.goLive(),
+  'play:skip': (s) => tl.skip(s),
+  'play:speed': (d) => tl.setSpeed(d),
+  'play:sync': () => tl.toggleSync(),
+  'play:ago': (m) => tl.seek(Date.now() - m * 60e3, null, true),
+  'events:seen': () => ev.markAllSeen(),
+  help: () => (ui.helpOpen = true)
+}
+if (!wall) {
+  window.native.onMenu(({ cmd, arg }) => MENU[cmd]?.(arg))
+  // État renvoyé au menu (coches, liste des layouts, entrées actives)
+  watch(() => ({
+    connected: server.status === 'ok' || server.status === 'lost',
+    layouts: layouts.layouts.map((l) => ({ id: l.id, name: l.name })),
+    activeLayout: layouts.activeId,
+    sidebar: ui.sidebar, events: ev.visible, timeline: tl.visible, expand: ui.expand, liveMode: ui.liveMode,
+    live: tl.live, playing: tl.playing, sync: tl.sync, unseen: ev.unseenCount, version: server.version
+  }), (st) => window.native.setMenuState(JSON.parse(JSON.stringify(st))), { immediate: true, deep: true })
+}
+
 // État affiché sur l'icône de la zone de notification
 watch(() => [server.status, server.onlineCount, server.cameras.length], () => {
   if (wall) return
@@ -69,7 +108,7 @@ watch(() => [server.status, server.onlineCount, server.cameras.length], () => {
 watch(() => server.cameras, (cams) => { if (cams.length) layouts.prune(cams.map((c) => c.id)) })
 
 function onKey(e) {
-  if (wall || ev.detailId || appSettings.open) return
+  if (wall || ev.detailId || appSettings.open || ui.helpOpen || ui.layoutDialog !== undefined) { if (e.key === 'Escape') ui.helpOpen = false; return }
   if (e.ctrlKey && e.key === ',') { e.preventDefault(); appSettings.show(); return }
   if (e.key === 'Escape') {
     if (layouts.focus !== null) layouts.focus = null
@@ -117,5 +156,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   </div>
   <EventDetail v-if="ev.detailId" />
   <SettingsDialog v-if="appSettings.open && appSettings.s" />
+  <LayoutDialog v-if="ui.layoutDialog !== undefined && !wall" :layout-id="ui.layoutDialog" @close="ui.layoutDialog = undefined" />
+  <HelpDialog v-if="ui.helpOpen" />
   <AppToast />
 </template>
