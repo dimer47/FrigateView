@@ -526,9 +526,11 @@
     "expand": "Ampliar"
   },
   "fit": {
-    "contain": "Imagen completa (clic para rellenar)",
-    "cover": "Rellenar la celda (clic para imagen completa)",
-    "setting": "Rellenar las celdas",
-    "settingHint": "Imagen ampliada para cubrir toda la celda, bordes recortados si el formato difiere"
+    "contain": "Imagen completa",
+    "cover": "Rellenar (recortar)",
+    "fill": "Estirar",
+    "next": "Clic: modo siguiente",
+    "setting": "Visualización de imágenes",
+    "settingHint": "Imagen completa con bandas, rellenada recortando bordes o estirada a la celda"
   }
 }

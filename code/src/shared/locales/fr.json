@@ -526,9 +526,11 @@
     "expand": "Agrandir"
   },
   "fit": {
-    "contain": "Image entière (cliquer pour remplir la case)",
-    "cover": "Remplir la case (cliquer pour l’image entière)",
-    "setting": "Remplir les cases",
-    "settingHint": "Image agrandie pour couvrir toute la case, bords rognés si le format diffère"
+    "contain": "Image entière",
+    "cover": "Remplir (rogner)",
+    "fill": "Étirer",
+    "next": "Clic : mode suivant",
+    "setting": "Affichage des images",
+    "settingHint": "Image entière avec bandes, remplie en rognant les bords, ou étirée à la taille de la case"
   }
 }

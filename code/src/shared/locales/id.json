@@ -526,9 +526,11 @@
     "expand": "Perbesar"
   },
   "fit": {
-    "contain": "Gambar utuh (klik untuk memenuhi)",
-    "cover": "Penuhi kotak (klik untuk gambar utuh)",
-    "setting": "Penuhi kotak",
-    "settingHint": "Gambar diperbesar hingga menutupi seluruh kotak, tepi terpotong jika rasio berbeda"
+    "contain": "Gambar utuh",
+    "cover": "Penuhi (potong)",
+    "fill": "Regangkan",
+    "next": "Klik: mode berikutnya",
+    "setting": "Tampilan gambar",
+    "settingHint": "Gambar utuh dengan pita, dipenuhi dengan memotong tepi, atau diregangkan ke kotak"
   }
 }

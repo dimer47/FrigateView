@@ -526,9 +526,11 @@
     "expand": "Expand"
   },
   "fit": {
-    "contain": "Fit whole image (click to fill)",
-    "cover": "Fill tile (click to fit whole image)",
-    "setting": "Fill tiles",
-    "settingHint": "Image enlarged to cover the whole tile, edges cropped if the aspect ratio differs"
+    "contain": "Whole image",
+    "cover": "Fill (crop)",
+    "fill": "Stretch",
+    "next": "Click: next mode",
+    "setting": "Image display",
+    "settingHint": "Whole image with bars, filled by cropping edges, or stretched to the tile"
   }
 }

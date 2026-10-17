@@ -526,9 +526,11 @@
     "expand": "Expandir"
   },
   "fit": {
-    "contain": "Imagem inteira (clique para preencher)",
-    "cover": "Preencher a célula (clique para imagem inteira)",
-    "setting": "Preencher as células",
-    "settingHint": "Imagem ampliada para cobrir toda a célula, bordas cortadas se o formato for diferente"
+    "contain": "Imagem inteira",
+    "cover": "Preencher (cortar)",
+    "fill": "Esticar",
+    "next": "Clique: modo seguinte",
+    "setting": "Exibição das imagens",
+    "settingHint": "Imagem inteira com faixas, preenchida cortando as bordas ou esticada à célula"
   }
 }

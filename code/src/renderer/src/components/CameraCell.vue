@@ -244,8 +244,8 @@ onMounted(() => {
 onBeforeUnmount(() => { unregister(); stopSnapshots(); stopVideo(); stopPlayback(); stopStats(); clearInterval(clock) })
 
 const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString(loc()))
-// Remplir la case (rogner) ou afficher l'image entière ; en relecture aussi
-const fitStyle = computed(() => ({ objectFit: ui.cover ? 'cover' : 'contain' }))
+// Image entière, rognée ou étirée (réglage commun) ; en relecture aussi
+const fitStyle = computed(() => ({ objectFit: ui.fit }))
 </script>
 
 <template>

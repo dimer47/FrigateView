@@ -11,13 +11,16 @@ const loadFields = () => {
   return { global: { ...STAT_FIELDS.global, ...saved.global }, camera: { ...STAT_FIELDS.camera, ...saved.camera } }
 }
 
+export const FITS = ['contain', 'cover', 'fill']
+
 export const useUiStore = defineStore('ui', {
   state: () => ({
     sidebar: load('fv-ui', {}).sidebar ?? true,
     liveMode: load('fv-ui', {}).liveMode ?? 'webrtc', // webrtc | snapshot
     showStats: load('fv-ui', {}).showStats ?? false,
     showUser: load('fv-ui', {}).showUser ?? true,
-    cover: load('fv-ui', {}).cover ?? false, // remplir la case (image rognée) au lieu de l'afficher entière
+    // Image dans la case : contain = entière, cover = remplir en rognant, fill = étirer
+    fit: load('fv-ui', {}).fit ?? (load('fv-ui', {}).cover ? 'cover' : 'contain'),
     statFields: loadFields(),
     expand: false,
     layoutDialog: undefined, // undefined = fermé, null = création, id = édition
@@ -25,12 +28,13 @@ export const useUiStore = defineStore('ui', {
     toast: null
   }),
   actions: {
-    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, cover: this.cover, statFields: this.statFields }) },
+    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, fit: this.fit, statFields: this.statFields }) },
     toggleSidebar() { this.sidebar = !this.sidebar; this.persist() },
     setLiveMode(m) { this.liveMode = m; this.persist() },
     setStatField(group, key, on) { this.statFields[group][key] = on; this.persist() },
     toggleUser() { this.showUser = !this.showUser; this.persist() },
-    toggleCover() { this.cover = !this.cover; this.persist() },
+    setFit(f) { this.fit = f; this.persist() },
+    cycleFit() { this.setFit(FITS[(FITS.indexOf(this.fit) + 1) % FITS.length]) },
     toggleStats() { this.showStats = !this.showStats; this.persist() },
     notify(text, action) {
       clearTimeout(this._t)
