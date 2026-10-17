@@ -78,36 +78,55 @@ function toTimeline() {
 </script>
 
 <template>
-  <div v-if="e" class="fixed inset-0 z-50 flex items-center justify-center bg-black/45" @mousedown.self="ev.detailId = null">
-    <div class="w-[880px] max-w-[calc(100vw-40px)] rounded-xl border border-line-2 bg-modal p-5 shadow-2xl" role="dialog" aria-modal="true">
-      <div class="mb-3.5 flex items-center gap-2 text-[15px] font-bold">
-        <span :style="{ color: TYPE_COLORS[e.type] }">{{ TYPE_LABELS[e.type] }}</span> · {{ camName(e.cam) }}
-        <span class="ml-auto flex gap-1">
-          <button class="tbtn !size-7" title="Plus récent (↑)" @click="nav(-1)">‹</button>
-          <button class="tbtn !size-7" title="Plus ancien (↓)" @click="nav(1)">›</button>
-        </span>
-        <button class="tbtn !size-7" title="Fermer (Échap)" @click="ev.detailId = null">
-          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.6" /></svg>
+  <div v-if="e" class="fixed inset-0 z-50 flex items-center justify-center bg-black/55" @mousedown.self="ev.detailId = null">
+    <div class="w-[900px] max-w-[calc(100vw-40px)] overflow-hidden rounded-xl border border-line-2 bg-modal shadow-2xl" role="dialog" aria-modal="true">
+      <!-- En-tête : titre à gauche, navigation groupée puis fermeture séparée -->
+      <header class="flex items-center gap-3 border-b border-line px-5 py-3">
+        <span class="size-2.5 shrink-0 rounded-full" :style="{ background: TYPE_COLORS[e.type] }" />
+        <h2 class="truncate text-[15px] font-bold">
+          <span :style="{ color: TYPE_COLORS[e.type] }">{{ TYPE_LABELS[e.type] }}</span>
+          <span class="font-normal text-ink-3"> — </span>{{ camName(e.cam) }}
+          <span class="ml-2 font-mono text-[13px] font-normal text-ink-2">{{ hms(e.s) }}</span>
+        </h2>
+        <div class="ml-auto flex overflow-hidden rounded-md border border-line text-xs">
+          <button class="flex items-center gap-1 px-2.5 py-1.5 text-ink-2 hover:bg-raised hover:text-ink" title="Événement plus récent (↑)" @click="nav(-1)">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 6.5L5 3.5l3 3" fill="none" stroke="currentColor" stroke-width="1.6" /></svg>Plus récent
+          </button>
+          <button class="flex items-center gap-1 border-l border-line px-2.5 py-1.5 text-ink-2 hover:bg-raised hover:text-ink" title="Événement plus ancien (↓)" @click="nav(1)">
+            Plus ancien<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5L5 6.5l3-3" fill="none" stroke="currentColor" stroke-width="1.6" /></svg>
+          </button>
+        </div>
+        <div class="h-6 w-px bg-line" />
+        <button class="flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-bad/15 hover:text-bad" title="Fermer (Échap)" aria-label="Fermer" @click="ev.detailId = null">
+          <svg width="13" height="13" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.7" /></svg>
         </button>
-      </div>
-      <div class="grid grid-cols-[1fr_260px] gap-4.5">
-        <div>
-          <div class="mb-2 flex gap-1">
-            <button v-for="[k, l] in [['clip', 'Clip'], ['snap', 'Image']]" :key="k" class="rounded-full border px-2.5 py-0.5 text-xs" :class="view === k ? 'border-accent bg-accent text-white' : 'border-line text-ink-2'" @click="view = k">{{ l }}</button>
+      </header>
+
+      <div class="grid grid-cols-[1fr_250px] gap-5 p-5">
+        <div class="flex flex-col gap-3">
+          <!-- Choix clip / image : contrôle segmenté, détaché de la vidéo -->
+          <div class="flex items-center justify-between">
+            <div class="flex rounded-md border border-line p-0.5 text-xs">
+              <button v-for="[k, l] in [['clip', 'Clip vidéo'], ['snap', 'Meilleure image']]" :key="k" class="rounded px-3 py-1 font-semibold"
+                :class="view === k ? 'bg-raised text-ink' : 'text-ink-3 hover:text-ink'" @click="view = k">{{ l }}</button>
+            </div>
+            <span class="text-xs text-ink-3">{{ view === 'clip' ? '3 s avant et après l\'événement' : 'Vignette enregistrée par Frigate' }}</span>
           </div>
-          <div class="relative aspect-video overflow-hidden rounded-lg bg-black">
+          <div class="relative aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-line">
             <video v-if="view === 'clip'" ref="video" class="size-full" controls muted playsinline />
             <img v-else-if="e.thumb" :src="e.thumb" class="size-full object-contain" alt="">
             <div v-if="view === 'clip' && clipError" class="absolute inset-0 flex items-center justify-center text-[13px] text-ink-2">Clip indisponible pour cette période</div>
           </div>
         </div>
-        <div>
-          <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-[13px]">
-            <template v-for="[k, v] in info" :key="k"><dt class="text-ink-3">{{ k }}</dt><dd class="text-right">{{ v }}</dd></template>
+
+        <div class="flex flex-col">
+          <div class="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-3">Informations</div>
+          <dl class="divide-y divide-line rounded-lg border border-line text-[13px]">
+            <div v-for="[k, v] in info" :key="k" class="flex justify-between gap-3 px-3 py-2"><dt class="text-ink-3">{{ k }}</dt><dd class="truncate text-right">{{ v }}</dd></div>
           </dl>
-          <div class="mt-4 flex flex-col gap-1.5">
-            <button class="btn btn-primary text-left" @click="toTimeline">Relire dans la timeline</button>
-          </div>
+          <button class="btn btn-primary mt-auto flex items-center justify-center gap-2 py-2.5" @click="toTimeline">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M3 1.5v11l9.5-5.5z" /></svg>Relire dans la timeline
+          </button>
         </div>
       </div>
     </div>
