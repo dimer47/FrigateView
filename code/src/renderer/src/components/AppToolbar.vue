@@ -77,6 +77,10 @@ function fullscreen() { document.fullscreenElement ? document.exitFullscreen() :
       <span class="flex size-[26px] items-center justify-center rounded-full bg-accent/20 text-[12px] font-bold uppercase text-accent">{{ server.profile.username[0] }}</span>
       <span v-if="ui.showUser">{{ server.profile.username }} · {{ roleName }}</span>
     </button>
+    <button class="tbtn shrink-0" :class="{ on: ui.cover }" :title="ui.cover ? $t('fit.cover') : $t('fit.contain')" @click="ui.toggleCover()">
+      <svg v-if="ui.cover" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="3.5" width="15" height="11" rx="1.5" /><path d="M5 6.5V5h1.5M13 6.5V5h-1.5M5 11.5V13h1.5M13 11.5V13h-1.5" /></svg>
+      <svg v-else width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="3.5" width="15" height="11" rx="1.5" /><rect x="5" y="6" width="8" height="6" rx=".5" /></svg>
+    </button>
     <button class="tbtn shrink-0" :class="{ on: ui.showStats }" :title="$t('stats.toggle')" @click="ui.toggleStats()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 14l4-5 3 3 4-6 5 5" /><line x1="1" y1="17" x2="17" y2="17" /></svg>
     </button>

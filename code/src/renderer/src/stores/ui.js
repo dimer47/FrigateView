@@ -17,6 +17,7 @@ export const useUiStore = defineStore('ui', {
     liveMode: load('fv-ui', {}).liveMode ?? 'webrtc', // webrtc | snapshot
     showStats: load('fv-ui', {}).showStats ?? false,
     showUser: load('fv-ui', {}).showUser ?? true,
+    cover: load('fv-ui', {}).cover ?? false, // remplir la case (image rognée) au lieu de l'afficher entière
     statFields: loadFields(),
     expand: false,
     layoutDialog: undefined, // undefined = fermé, null = création, id = édition
@@ -24,11 +25,12 @@ export const useUiStore = defineStore('ui', {
     toast: null
   }),
   actions: {
-    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, statFields: this.statFields }) },
+    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, cover: this.cover, statFields: this.statFields }) },
     toggleSidebar() { this.sidebar = !this.sidebar; this.persist() },
     setLiveMode(m) { this.liveMode = m; this.persist() },
     setStatField(group, key, on) { this.statFields[group][key] = on; this.persist() },
     toggleUser() { this.showUser = !this.showUser; this.persist() },
+    toggleCover() { this.cover = !this.cover; this.persist() },
     toggleStats() { this.showStats = !this.showStats; this.persist() },
     notify(text, action) {
       clearTimeout(this._t)

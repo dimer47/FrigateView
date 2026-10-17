@@ -244,13 +244,15 @@ onMounted(() => {
 onBeforeUnmount(() => { unregister(); stopSnapshots(); stopVideo(); stopPlayback(); stopStats(); clearInterval(clock) })
 
 const time = computed(() => new Date(playback.value ? tl.time : frozen.value ? lastFrame.value || now.value : now.value).toLocaleTimeString(loc()))
+// Remplir la case (rogner) ou afficher l'image entière ; en relecture aussi
+const fitStyle = computed(() => ({ objectFit: ui.cover ? 'cover' : 'contain' }))
 </script>
 
 <template>
   <div ref="root" class="absolute inset-0 bg-[linear-gradient(160deg,#1b2636,#0b121c)]">
-    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full object-contain" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
-    <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full object-contain" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
-    <video ref="video" class="absolute inset-0 size-full object-contain" :class="{ invisible: !showVideo }" autoplay :muted="muted" playsinline @playing="onPlaying" />
+    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
+    <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
+    <video ref="video" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo }" autoplay :muted="muted" playsinline @playing="onPlaying" />
 
     <div class="absolute left-1.5 top-1.5 z-[3] flex flex-wrap items-center gap-1">
       <span v-if="playback" class="badge text-warn"><i class="bg-warn" />{{ $t('cell.playback') }}{{ tl.speed !== 1 ? ' ' + tl.speed + 'x' : '' }}</span>

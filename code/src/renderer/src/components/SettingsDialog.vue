@@ -60,6 +60,7 @@ const close = () => (app.open = false)
               </select>
             </label>
             <h3 class="mb-1.5 mt-5 font-semibold">{{ $t('stats.settingsTitle') }}</h3>
+            <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('fit.setting') }}<small class="block text-xs text-ink-3">{{ $t('fit.settingHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.cover" @change="ui.toggleCover()"></label>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('stats.toggle') }}<small class="block text-xs text-ink-3">{{ $t('stats.settingsHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.showStats" @change="ui.toggleStats()"></label>
             <div class="grid grid-cols-2 gap-x-6 pt-2" :class="{ 'pointer-events-none opacity-40': !ui.showStats }">
               <div v-for="g in ['global', 'camera']" :key="g">

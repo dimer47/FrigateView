@@ -524,5 +524,11 @@
     "someFailed": "Selesai dengan galat",
     "minimize": "Perkecil",
     "expand": "Perbesar"
+  },
+  "fit": {
+    "contain": "Gambar utuh (klik untuk memenuhi)",
+    "cover": "Penuhi kotak (klik untuk gambar utuh)",
+    "setting": "Penuhi kotak",
+    "settingHint": "Gambar diperbesar hingga menutupi seluruh kotak, tepi terpotong jika rasio berbeda"
   }
 }

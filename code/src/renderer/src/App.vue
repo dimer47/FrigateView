@@ -55,7 +55,7 @@ if (wall) {
   // Affichage changé dans la fenêtre principale (statistiques, mode vidéo/images) : repris ici
   addEventListener('storage', (e) => {
     if (e.key === 'fv-layouts') layouts.layouts = load('fv-layouts', [])
-    if (e.key === 'fv-ui') { const u = load('fv-ui', {}); Object.assign(ui, { showStats: !!u.showStats, liveMode: wallMode.value || u.liveMode || ui.liveMode, ...(u.statFields && { statFields: u.statFields }) }) }
+    if (e.key === 'fv-ui') { const u = load('fv-ui', {}); Object.assign(ui, { showStats: !!u.showStats, cover: !!u.cover, liveMode: wallMode.value || u.liveMode || ui.liveMode, ...(u.statFields && { statFields: u.statFields }) }) }
   })
   // Mur ouvert avant la connexion de la fenêtre principale : nouvel essai toutes les 5 s
   // (la session est partagée, la connexion faite dans la fenêtre principale suffit)

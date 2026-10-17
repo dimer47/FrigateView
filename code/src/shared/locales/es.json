@@ -524,5 +524,11 @@
     "someFailed": "Terminado con errores",
     "minimize": "Reducir",
     "expand": "Ampliar"
+  },
+  "fit": {
+    "contain": "Imagen completa (clic para rellenar)",
+    "cover": "Rellenar la celda (clic para imagen completa)",
+    "setting": "Rellenar las celdas",
+    "settingHint": "Imagen ampliada para cubrir toda la celda, bordes recortados si el formato difiere"
   }
 }

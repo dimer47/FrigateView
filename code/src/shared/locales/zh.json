@@ -524,5 +524,11 @@
     "someFailed": "已完成，有错误",
     "minimize": "收起",
     "expand": "展开"
+  },
+  "fit": {
+    "contain": "完整显示（点击填满）",
+    "cover": "填满格子（点击完整显示）",
+    "setting": "填满格子",
+    "settingHint": "放大图像以铺满整个格子，比例不同时裁剪边缘"
   }
 }

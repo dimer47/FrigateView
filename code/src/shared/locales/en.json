@@ -524,5 +524,11 @@
     "someFailed": "Done with errors",
     "minimize": "Minimize",
     "expand": "Expand"
+  },
+  "fit": {
+    "contain": "Fit whole image (click to fill)",
+    "cover": "Fill tile (click to fit whole image)",
+    "setting": "Fill tiles",
+    "settingHint": "Image enlarged to cover the whole tile, edges cropped if the aspect ratio differs"
   }
 }

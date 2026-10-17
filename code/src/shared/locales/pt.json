@@ -524,5 +524,11 @@
     "someFailed": "Concluído com erros",
     "minimize": "Reduzir",
     "expand": "Expandir"
+  },
+  "fit": {
+    "contain": "Imagem inteira (clique para preencher)",
+    "cover": "Preencher a célula (clique para imagem inteira)",
+    "setting": "Preencher as células",
+    "settingHint": "Imagem ampliada para cobrir toda a célula, bordas cortadas se o formato for diferente"
   }
 }

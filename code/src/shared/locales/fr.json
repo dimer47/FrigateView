@@ -524,5 +524,11 @@
     "someFailed": "Terminé avec erreurs",
     "minimize": "Réduire",
     "expand": "Agrandir"
+  },
+  "fit": {
+    "contain": "Image entière (cliquer pour remplir la case)",
+    "cover": "Remplir la case (cliquer pour l’image entière)",
+    "setting": "Remplir les cases",
+    "settingHint": "Image agrandie pour couvrir toute la case, bords rognés si le format diffère"
   }
 }
