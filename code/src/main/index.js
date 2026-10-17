@@ -233,8 +233,12 @@ function syncWalls() {
     if (!conf?.enabled || !conf.layout) continue
     let w = walls.get(id)
     if (!w || w.isDestroyed()) {
-      w = new BrowserWindow({ ...baseOptions(), x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height, fullscreen: true, frame: false })
+      // macOS : plein écran « simple » (pas d'animation ni d'espace séparé, la barre de menu est masquée)
+      const mac = process.platform === 'darwin'
+      w = new BrowserWindow({ ...baseOptions(), x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height, fullscreen: !mac, frame: false })
+      if (mac) w.setSimpleFullScreen(true)
       w.setMenu(null)
+      if (process.env.FV_DEBUG) w.webContents.on('console-message', (e) => console.log(`[mur ${id}]`, e.message))
       w.on('close', (e) => { if (!quitting) { e.preventDefault(); settings.screens[id] = { ...settings.screens[id], enabled: false }; saveSettings(); syncWalls(); applySettings() } })
       walls.set(id, w)
       loadRenderer(w, { wall: '1', layout: conf.layout })
@@ -509,6 +513,7 @@ function smokeTest(win, out) {
       if (process.env.FV_SMOKE_JS) await win.webContents.executeJavaScript(process.env.FV_SMOKE_JS)
       setTimeout(async () => {
         writeFileSync(out, (await win.webContents.capturePage()).toPNG())
+        for (const [id, w] of walls) if (!w.isDestroyed()) writeFileSync(out.replace(/\.png$/, `-mur${id}.png`), (await w.webContents.capturePage()).toPNG())
         app.quit()
       }, Number(process.env.FV_SMOKE_WAIT || 4000))
     }, 500)

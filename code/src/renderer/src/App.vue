@@ -41,7 +41,22 @@ if (wall) {
   layouts.persist = () => save('fv-layouts', layouts.layouts) // ne jamais changer le layout de la fenêtre principale
   window.native.onWallLayout((id) => (layouts.activeId = id))
   // Layouts modifiés dans la fenêtre principale : rechargés ici (sans toucher au layout affiché)
-  addEventListener('storage', (e) => { if (e.key === 'fv-layouts') layouts.layouts = load('fv-layouts', []) })
+  // Affichage changé dans la fenêtre principale (statistiques, mode vidéo/images) : repris ici
+  addEventListener('storage', (e) => {
+    if (e.key === 'fv-layouts') layouts.layouts = load('fv-layouts', [])
+    if (e.key === 'fv-ui') { const u = load('fv-ui', {}); Object.assign(ui, { showStats: !!u.showStats, liveMode: u.liveMode || ui.liveMode, ...(u.statFields && { statFields: u.statFields }) }) }
+  })
+  // Mur ouvert avant la connexion de la fenêtre principale : nouvel essai toutes les 5 s
+  // (la session est partagée, la connexion faite dans la fenêtre principale suffit)
+  let since = Date.now(), last = ''
+  setInterval(() => {
+    if (server.status !== last) { last = server.status; since = Date.now() }
+    const stuck = server.status === 'connecting' && Date.now() - since > 20000
+    if (server.status !== 'auth' && server.server && !stuck) return
+    since = Date.now()
+    server.server = load('fv-server', null)
+    if (server.server) server.resume()
+  }, 5000)
 }
 
 onMounted(async () => {
