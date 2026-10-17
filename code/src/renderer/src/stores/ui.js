@@ -26,6 +26,7 @@ export const useUiStore = defineStore('ui', {
     layoutDialog: undefined, // undefined = fermé, null = création, id = édition
     helpOpen: false,
     facesOpen: false,
+    platesOpen: false,
     toast: null
   }),
   actions: {

@@ -15,7 +15,8 @@
     "serverTitle": "Frigate {version} — connexion, compte, changement de serveur",
     "showUser": "clic pour afficher le nom",
     "hideUser": "clic pour masquer le nom",
-    "faces": "Galerie des visages"
+    "faces": "Galerie des visages",
+    "plates": "Galerie des plaques"
   },
   "roles": {
     "admin": "administrateur",
@@ -340,7 +341,8 @@
     "capture": "Capture d'image de la caméra sélectionnée",
     "exportClip": "Exporter un clip",
     "sound": "Son de la caméra sélectionnée",
-    "faces": "Galerie des visages"
+    "faces": "Galerie des visages",
+    "plates": "Galerie des plaques"
   },
   "app": {
     "serverUnreachable": "serveur injoignable",
@@ -425,7 +427,8 @@
     "capture": "Capture d'image",
     "exportClip": "Exporter un clip…",
     "sound": "Son de la caméra sélectionnée",
-    "faces": "Visages…"
+    "faces": "Visages…",
+    "plates": "Plaques…"
   },
   "main": {
     "aboutText": "Mur vidéo pour Frigate NVR.",
@@ -630,5 +633,25 @@
     "deleted": "{n} image supprimée | {n} images supprimées",
     "uploaded": "{n} image ajoutée | {n} images ajoutées",
     "personDeleted": "{name} supprimé(e)"
+  },
+  "plates": {
+    "title": "Plaques",
+    "reload": "Actualiser",
+    "loading": "Chargement…",
+    "disabledTitle": "Lecture des plaques désactivée",
+    "disabledText": "Ce serveur Frigate n'a pas la lecture des plaques d'immatriculation activée (Frigate 0.16 ou plus récent requis). Activez-la dans la configuration de Frigate, puis redémarrez-le.",
+    "errorTitle": "Impossible de charger les plaques",
+    "retry": "Réessayer",
+    "filter": "Filtrer : plaque, nom, caméra",
+    "known": "Plaques connues",
+    "names": "{n} nom | {n} noms",
+    "recent": "Vues ces 30 derniers jours",
+    "noPlates": "Aucune plaque lue ces 30 derniers jours.",
+    "noMatch": "Aucune plaque ne correspond.",
+    "passages": "{n} passage | {n} passages",
+    "readOnlyHint": "Lecture seule : les plaques connues se modifient dans la configuration de Frigate (lpr.known_plates).",
+    "noKnown": "Aucune plaque connue dans la configuration.",
+    "notSeen": "Pas vue ces 30 derniers jours",
+    "replay": "Relire ce passage"
   }
 }

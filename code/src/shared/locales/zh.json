@@ -15,7 +15,8 @@
     "serverTitle": "Frigate {version} — 连接、账户、更换服务器",
     "showUser": "点击显示名称",
     "hideUser": "点击隐藏名称",
-    "faces": "人脸库"
+    "faces": "人脸库",
+    "plates": "车牌库"
   },
   "roles": {
     "admin": "管理员",
@@ -340,7 +341,8 @@
     "capture": "所选摄像头的截图",
     "exportClip": "导出片段",
     "sound": "所选摄像头的声音",
-    "faces": "人脸库"
+    "faces": "人脸库",
+    "plates": "车牌库"
   },
   "app": {
     "serverUnreachable": "服务器无法连接",
@@ -425,7 +427,8 @@
     "capture": "截图",
     "exportClip": "导出片段…",
     "sound": "所选摄像头的声音",
-    "faces": "人脸…"
+    "faces": "人脸…",
+    "plates": "车牌…"
   },
   "main": {
     "aboutText": "适用于 Frigate NVR 的视频墙。",
@@ -630,5 +633,25 @@
     "deleted": "已删除 {n} 张图片 | 已删除 {n} 张图片",
     "uploaded": "已添加 {n} 张图片 | 已添加 {n} 张图片",
     "personDeleted": "已删除 {name}"
+  },
+  "plates": {
+    "title": "车牌",
+    "reload": "刷新",
+    "loading": "加载中…",
+    "disabledTitle": "车牌识别已关闭",
+    "disabledText": "此 Frigate 服务器未启用车牌识别（需要 Frigate 0.16 或更高版本）。请在 Frigate 配置中启用，然后重启。",
+    "errorTitle": "无法加载车牌",
+    "retry": "重试",
+    "filter": "筛选：车牌、名称、摄像头",
+    "known": "已知车牌",
+    "names": "{n} 个名称 | {n} 个名称",
+    "recent": "最近 30 天出现",
+    "noPlates": "最近 30 天没有识别到车牌。",
+    "noMatch": "没有匹配的车牌。",
+    "passages": "{n} 次经过 | {n} 次经过",
+    "readOnlyHint": "只读：已知车牌需在 Frigate 配置中修改（lpr.known_plates）。",
+    "noKnown": "配置中没有已知车牌。",
+    "notSeen": "最近 30 天未出现",
+    "replay": "回放这次经过"
   }
 }

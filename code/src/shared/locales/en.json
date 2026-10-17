@@ -15,7 +15,8 @@
     "serverTitle": "Frigate {version} — connection, account, change server",
     "showUser": "click to show the name",
     "hideUser": "click to hide the name",
-    "faces": "Face gallery"
+    "faces": "Face gallery",
+    "plates": "License plate gallery"
   },
   "roles": {
     "admin": "administrator",
@@ -340,7 +341,8 @@
     "capture": "Snapshot of the selected camera",
     "exportClip": "Export a clip",
     "sound": "Sound of the selected camera",
-    "faces": "Face gallery"
+    "faces": "Face gallery",
+    "plates": "License plate gallery"
   },
   "app": {
     "serverUnreachable": "server unreachable",
@@ -425,7 +427,8 @@
     "capture": "Snapshot",
     "exportClip": "Export a clip…",
     "sound": "Sound of the selected camera",
-    "faces": "Faces…"
+    "faces": "Faces…",
+    "plates": "Plates…"
   },
   "main": {
     "aboutText": "Video wall for Frigate NVR.",
@@ -630,5 +633,25 @@
     "deleted": "{n} image deleted | {n} images deleted",
     "uploaded": "{n} image added | {n} images added",
     "personDeleted": "{name} deleted"
+  },
+  "plates": {
+    "title": "Plates",
+    "reload": "Refresh",
+    "loading": "Loading…",
+    "disabledTitle": "License plate recognition disabled",
+    "disabledText": "This Frigate server does not have license plate recognition enabled (Frigate 0.16 or later required). Enable it in the Frigate configuration, then restart it.",
+    "errorTitle": "Unable to load plates",
+    "retry": "Retry",
+    "filter": "Filter: plate, name, camera",
+    "known": "Known plates",
+    "names": "{n} name | {n} names",
+    "recent": "Seen in the last 30 days",
+    "noPlates": "No plate read in the last 30 days.",
+    "noMatch": "No plate matches.",
+    "passages": "{n} pass | {n} passes",
+    "readOnlyHint": "Read only: known plates are edited in the Frigate configuration (lpr.known_plates).",
+    "noKnown": "No known plates in the configuration.",
+    "notSeen": "Not seen in the last 30 days",
+    "replay": "Play back this pass"
   }
 }

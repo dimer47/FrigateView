@@ -15,7 +15,8 @@
     "serverTitle": "Frigate {version} — conexión, cuenta, cambiar de servidor",
     "showUser": "clic para mostrar el nombre",
     "hideUser": "clic para ocultar el nombre",
-    "faces": "Galería de rostros"
+    "faces": "Galería de rostros",
+    "plates": "Galería de matrículas"
   },
   "roles": {
     "admin": "administrador",
@@ -340,7 +341,8 @@
     "capture": "Captura de la cámara seleccionada",
     "exportClip": "Exportar un clip",
     "sound": "Sonido de la cámara seleccionada",
-    "faces": "Galería de rostros"
+    "faces": "Galería de rostros",
+    "plates": "Galería de matrículas"
   },
   "app": {
     "serverUnreachable": "servidor inaccesible",
@@ -425,7 +427,8 @@
     "capture": "Captura de imagen",
     "exportClip": "Exportar un clip…",
     "sound": "Sonido de la cámara seleccionada",
-    "faces": "Rostros…"
+    "faces": "Rostros…",
+    "plates": "Matrículas…"
   },
   "main": {
     "aboutText": "Videowall para Frigate NVR.",
@@ -630,5 +633,25 @@
     "deleted": "{n} imagen eliminada | {n} imágenes eliminadas",
     "uploaded": "{n} imagen añadida | {n} imágenes añadidas",
     "personDeleted": "{name} eliminado/a"
+  },
+  "plates": {
+    "title": "Matrículas",
+    "reload": "Actualizar",
+    "loading": "Cargando…",
+    "disabledTitle": "Lectura de matrículas desactivada",
+    "disabledText": "Este servidor Frigate no tiene activado el reconocimiento de matrículas (se requiere Frigate 0.16 o posterior). Actívelo en la configuración de Frigate y reinícielo.",
+    "errorTitle": "No se pueden cargar las matrículas",
+    "retry": "Reintentar",
+    "filter": "Filtrar: matrícula, nombre, cámara",
+    "known": "Matrículas conocidas",
+    "names": "{n} nombre | {n} nombres",
+    "recent": "Vistas en los últimos 30 días",
+    "noPlates": "Ninguna matrícula leída en los últimos 30 días.",
+    "noMatch": "Ninguna matrícula coincide.",
+    "passages": "{n} paso | {n} pasos",
+    "readOnlyHint": "Solo lectura: las matrículas conocidas se editan en la configuración de Frigate (lpr.known_plates).",
+    "noKnown": "No hay matrículas conocidas en la configuración.",
+    "notSeen": "No vista en los últimos 30 días",
+    "replay": "Reproducir este paso"
   }
 }

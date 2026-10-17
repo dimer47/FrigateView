@@ -102,6 +102,9 @@ function fullscreen() { document.fullscreenElement ? document.exitFullscreen() :
     <button class="tbtn shrink-0" :class="{ on: ui.facesOpen }" :title="$t('toolbar.faces') + ' (Ctrl+Shift+F)'" @click="ui.facesOpen = true">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" /><circle cx="9.5" cy="10" r=".9" fill="currentColor" /><circle cx="14.5" cy="10" r=".9" fill="currentColor" /><path d="M9 15c1.7 1.3 4.3 1.3 6 0" /></svg>
     </button>
+    <button class="tbtn shrink-0" :class="{ on: ui.platesOpen }" :title="$t('toolbar.plates') + ' (Ctrl+Shift+P)'" @click="ui.platesOpen = true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="20" height="10" rx="2" /><path d="M6 12h2M10 12h4M16 12h2" /></svg>
+    </button>
     <button class="tbtn shrink-0" :title="$t('toolbar.wall') + ' (Ctrl+E)'" @click="ui.expand = true">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="11,1 17,1 17,7" /><polyline points="7,17 1,17 1,11" /><line x1="17" y1="1" x2="10" y2="8" /><line x1="1" y1="17" x2="8" y2="10" /></svg>
     </button>

@@ -26,11 +26,17 @@ if (!existsSync(mediaDir + 'route.ts')) {
     execSync(`ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=640x360:rate=15 -vf hue=h=${Math.floor(rnd(c) * 360)} -t 10 -c:v libx264 -pix_fmt yuv420p -g 15 -f mpegts "${mediaDir}${c}.ts"`)
 }
 const ZONES = { route: ['chaussee', 'trottoir'], devant: ['portail', 'allee'], devant_local: ['parking'], bureau_arriere: ['cour'], bureau_devant: ['entree'] }
+// Lecture des plaques (LPR, 0.16+) : plaques fictives tirées d'un petit lot pour qu'elles reviennent.
+// MOCK_NO_LPR=1 : lpr.enabled false et aucune plaque dans les événements
+const LPR_ON = !process.env.MOCK_NO_LPR
+const PLATES = ['AB-123-CD', 'AB-456-CD', 'ZZ-001-ZZ', 'XY-777-QA', 'FV-042-MK', 'QQ-314-PI', 'MO-999-CK', 'TE-500-ST']
+const KNOWN_PLATES = { 'Voiture Alex': ['AB-123-CD'], 'Livreur': ['AB-4\\d\\d-CD', 'XY-777-QA'], 'Voisin': ['ZZ-999-ZZ'] }
+const knownName = (plate) => Object.entries(KNOWN_PLATES).find(([, l]) => l.some((x) => new RegExp(`^${x}$`).test(plate)))?.[0] || null
 const viewed = new Set()
 const live = [] // revues créées pendant que le serveur tourne
 function review(c, s0, obj, end) {
   const id = `${s0}-${c}`
-  const sub = obj === 'car' && rnd(id) < 0.6 ? [['AB-' + String(100 + Math.floor(rnd(id + 'p') * 900)) + '-CD', 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [[rnd(id + 'f') < 0.6 ? 'Alex' : 'Marie', 0.88]] : []
+  const sub = obj === 'car' && LPR_ON && rnd(id) < 0.6 ? [[PLATES[Math.floor(rnd(id + 'p') ** 2 * PLATES.length)], 0.9]] : obj === 'person' && rnd(id) < 0.3 ? [[rnd(id + 'f') < 0.6 ? 'Alex' : 'Marie', 0.88]] : []
   return { id, camera: c, start_time: s0, end_time: end, severity: obj === 'person' ? 'alert' : 'detection', thumb_path: `/media/frigate/clips/review/thumb-${c}-${id}.webp`,
     data: { objects: [obj], sub_labels: sub.map((x) => x[0]), zones: [ZONES[c][Math.floor(rnd(id + 'z') * ZONES[c].length)]], detections: [id] } }
 }
@@ -50,7 +56,7 @@ function allReviews(after, before, list) {
 }
 const toEvent = (r) => {
   const sub = r.data.sub_labels[0], plate = sub && /\d/.test(sub) ? sub : null
-  return { id: r.id + '-ev', camera: r.camera, label: r.data.objects[0], sub_label: plate ? null : sub || null, zones: r.data.zones, start_time: r.start_time, end_time: r.end_time,
+  return { id: r.id + '-ev', camera: r.camera, label: r.data.objects[0], sub_label: plate ? knownName(plate) : sub || null, zones: r.data.zones, start_time: r.start_time, end_time: r.end_time,
     has_clip: true, has_snapshot: true, top_score: 0.8, false_positive: null, box: null, data: { type: 'object', score: 0.8, recognized_license_plate: plate } }
 }
 const withViewed = (r) => ({ ...r, has_been_reviewed: viewed.has(r.id) || r.start_time < Date.now() / 1000 - 3600 })
@@ -153,7 +159,7 @@ function handler(secure) {
   const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
   if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
-  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
+  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, lpr: { enabled: LPR_ON, known_plates: LPR_ON ? KNOWN_PLATES : {} }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)
@@ -188,14 +194,14 @@ function handler(secure) {
   // Événements (un par revue) : sub_label = visage (chaîne), plaque dans data.recognized_license_plate (0.16+)
   if (url.pathname === '/api/events') {
     const p = url.searchParams, set = (k) => (p.get(k) && p.get(k) !== 'all' ? p.get(k).split(',').map((x) => x.toLowerCase()) : null)
-    const labels = set('labels') || set('label'), zones = set('zones') || set('zone'), subs = set('sub_labels') || set('sub_label'), plates = set('recognized_license_plate')
+    const labels = set('labels') || set('label'), zones = set('zones') || set('zone'), subs = set('sub_labels') || set('sub_label'), plateQ = p.get('recognized_license_plate') && p.get('recognized_license_plate') !== 'all' ? p.get('recognized_license_plate').split(',') : null
     const out = allReviews(+p.get('after') || 0, +p.get('before') || Date.now() / 1000, set('cameras') || cams).map(toEvent)
       .filter((e) => (!labels || labels.includes(e.label)) && (!zones || e.zones.some((z) => zones.includes(z))) &&
-        (!subs || (e.sub_label && subs.includes(e.sub_label.toLowerCase()))) && (!plates || (e.data.recognized_license_plate && plates.includes(e.data.recognized_license_plate.toLowerCase()))))
+        (!subs || (e.sub_label && subs.includes(e.sub_label.toLowerCase()))) && (!plateQ || (e.data.recognized_license_plate && plateQ.some((q) => (/^\^|[.[\]?+*]/.test(q) ? new RegExp(q).test(e.data.recognized_license_plate) : q === e.data.recognized_license_plate)))))
     return send(200, 'application/json', JSON.stringify(out.slice(+p.get('offset') || 0).slice(0, +p.get('limit') || 100)))
   }
   if (url.pathname === '/api/sub_labels') return send(200, 'application/json', JSON.stringify(['Alex', 'Marie']))
-  if (url.pathname === '/api/recognized_license_plates') return send(200, 'application/json', JSON.stringify(['AB-123-CD', 'AB-456-CD']))
+  if (url.pathname === '/api/recognized_license_plates') return send(200, 'application/json', JSON.stringify(LPR_ON ? [...PLATES].sort() : []))
   if (url.pathname === '/api/labels') return send(200, 'application/json', JSON.stringify(['car', 'dog', 'person']))
   r = url.pathname.match(/^\/api\/events\/(\d+)-([a-z_]+)-ev\/thumbnail\.webp$/)
   if (r && cams.includes(r[2])) return send(200, 'image/svg+xml', frame(r[2], 180))

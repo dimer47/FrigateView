@@ -15,7 +15,8 @@
     "serverTitle": "Frigate {version} — koneksi, akun, ganti server",
     "showUser": "klik untuk menampilkan nama",
     "hideUser": "klik untuk menyembunyikan nama",
-    "faces": "Galeri wajah"
+    "faces": "Galeri wajah",
+    "plates": "Galeri pelat nomor"
   },
   "roles": {
     "admin": "administrator",
@@ -340,7 +341,8 @@
     "capture": "Tangkapan kamera yang dipilih",
     "exportClip": "Ekspor klip",
     "sound": "Suara kamera yang dipilih",
-    "faces": "Galeri wajah"
+    "faces": "Galeri wajah",
+    "plates": "Galeri pelat nomor"
   },
   "app": {
     "serverUnreachable": "server tidak terjangkau",
@@ -425,7 +427,8 @@
     "capture": "Tangkapan gambar",
     "exportClip": "Ekspor klip…",
     "sound": "Suara kamera yang dipilih",
-    "faces": "Wajah…"
+    "faces": "Wajah…",
+    "plates": "Pelat…"
   },
   "main": {
     "aboutText": "Dinding video untuk Frigate NVR.",
@@ -630,5 +633,25 @@
     "deleted": "{n} gambar dihapus | {n} gambar dihapus",
     "uploaded": "{n} gambar ditambahkan | {n} gambar ditambahkan",
     "personDeleted": "{name} dihapus"
+  },
+  "plates": {
+    "title": "Pelat",
+    "reload": "Muat ulang",
+    "loading": "Memuat…",
+    "disabledTitle": "Pengenalan pelat nomor dinonaktifkan",
+    "disabledText": "Server Frigate ini tidak mengaktifkan pengenalan pelat nomor (perlu Frigate 0.16 atau lebih baru). Aktifkan di konfigurasi Frigate, lalu mulai ulang.",
+    "errorTitle": "Tidak dapat memuat pelat",
+    "retry": "Coba lagi",
+    "filter": "Saring: pelat, nama, kamera",
+    "known": "Pelat yang dikenal",
+    "names": "{n} nama | {n} nama",
+    "recent": "Terlihat 30 hari terakhir",
+    "noPlates": "Tidak ada pelat terbaca dalam 30 hari terakhir.",
+    "noMatch": "Tidak ada pelat yang cocok.",
+    "passages": "{n} kali lewat | {n} kali lewat",
+    "readOnlyHint": "Hanya baca: pelat yang dikenal diubah di konfigurasi Frigate (lpr.known_plates).",
+    "noKnown": "Tidak ada pelat yang dikenal di konfigurasi.",
+    "notSeen": "Tidak terlihat 30 hari terakhir",
+    "replay": "Putar ulang lintasan ini"
   }
 }

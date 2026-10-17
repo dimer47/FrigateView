@@ -15,7 +15,8 @@
     "serverTitle": "Frigate {version} — conexão, conta, trocar de servidor",
     "showUser": "clique para mostrar o nome",
     "hideUser": "clique para ocultar o nome",
-    "faces": "Galeria de rostos"
+    "faces": "Galeria de rostos",
+    "plates": "Galeria de matrículas"
   },
   "roles": {
     "admin": "administrador",
@@ -340,7 +341,8 @@
     "capture": "Captura da câmera selecionada",
     "exportClip": "Exportar um clipe",
     "sound": "Som da câmera selecionada",
-    "faces": "Galeria de rostos"
+    "faces": "Galeria de rostos",
+    "plates": "Galeria de matrículas"
   },
   "app": {
     "serverUnreachable": "servidor inacessível",
@@ -425,7 +427,8 @@
     "capture": "Captura de imagem",
     "exportClip": "Exportar um clipe…",
     "sound": "Som da câmera selecionada",
-    "faces": "Rostos…"
+    "faces": "Rostos…",
+    "plates": "Matrículas…"
   },
   "main": {
     "aboutText": "Mural de vídeo para o Frigate NVR.",
@@ -630,5 +633,25 @@
     "deleted": "{n} imagem excluída | {n} imagens excluídas",
     "uploaded": "{n} imagem adicionada | {n} imagens adicionadas",
     "personDeleted": "{name} excluído(a)"
+  },
+  "plates": {
+    "title": "Matrículas",
+    "reload": "Atualizar",
+    "loading": "A carregar…",
+    "disabledTitle": "Leitura de matrículas desativada",
+    "disabledText": "Este servidor Frigate não tem o reconhecimento de matrículas ativado (requer Frigate 0.16 ou posterior). Ative-o na configuração do Frigate e reinicie-o.",
+    "errorTitle": "Não foi possível carregar as matrículas",
+    "retry": "Tentar novamente",
+    "filter": "Filtrar: matrícula, nome, câmara",
+    "known": "Matrículas conhecidas",
+    "names": "{n} nome | {n} nomes",
+    "recent": "Vistas nos últimos 30 dias",
+    "noPlates": "Nenhuma matrícula lida nos últimos 30 dias.",
+    "noMatch": "Nenhuma matrícula corresponde.",
+    "passages": "{n} passagem | {n} passagens",
+    "readOnlyHint": "Só leitura: as matrículas conhecidas editam-se na configuração do Frigate (lpr.known_plates).",
+    "noKnown": "Nenhuma matrícula conhecida na configuração.",
+    "notSeen": "Não vista nos últimos 30 dias",
+    "replay": "Reproduzir esta passagem"
   }
 }

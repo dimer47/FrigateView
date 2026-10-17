@@ -470,6 +470,7 @@ function buildMenu() {
       label: tr('menu.events'),
       submenu: [
         { label: tr('menu.faces'), accelerator: 'CmdOrCtrl+Shift+F', enabled: c, click: () => send('faces:open') },
+        { label: tr('menu.plates'), accelerator: 'CmdOrCtrl+Shift+P', enabled: c, click: () => send('plates:open') },
         { type: 'separator' },
         { label: tr('menu.markAllSeen') + (uiState.unseen ? ` (${uiState.unseen})` : ''), enabled: c && uiState.unseen > 0, click: () => send('events:seen') },
         { type: 'separator' },
