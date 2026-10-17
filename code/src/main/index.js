@@ -285,8 +285,11 @@ function createTray() {
 /* ------------------------------------------------------------------
    Démarrage
    ------------------------------------------------------------------ */
+// Tests automatiques : profil séparé (ne touche ni aux réglages ni à la session de l'utilisateur)
+if (process.env.FV_SMOKE_PROFILE) app.setPath('userData', process.env.FV_SMOKE_PROFILE)
+
 // Une seule instance : relancer l'application ramène la fenêtre existante
-if (!app.requestSingleInstanceLock()) app.quit()
+if (!process.env.FV_SMOKE_PROFILE && !app.requestSingleInstanceLock()) app.quit()
 else app.on('second-instance', showMain)
 
 app.on('before-quit', () => { quitting = true })
