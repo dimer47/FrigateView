@@ -26,7 +26,7 @@ function onLayoutDrop(targetId) { if (dragLayout.value && dragLayout.value !== t
 </script>
 
 <template>
-  <aside class="flex w-[230px] shrink-0 flex-col overflow-hidden border-r border-line bg-panel">
+  <aside class="flex w-[230px] select-none shrink-0 flex-col overflow-hidden border-r border-line bg-panel">
     <div class="flex min-h-0 flex-1 flex-col">
       <div class="flex items-center justify-between px-3 pb-1.5 pt-2.5">
         <span class="text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('sidebar.layouts') }} <span class="ml-1 rounded-lg bg-raised px-1.5 font-normal">{{ store.layouts.length }}</span></span>

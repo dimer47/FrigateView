@@ -21,12 +21,12 @@ function fullscreen() { document.fullscreenElement ? document.exitFullscreen() :
       FrigateView
     </div>
     <div class="h-[22px] w-px bg-line" />
-    <div class="flex items-center gap-2 text-[13px] text-ink-2" :title="`Frigate ${server.version}`">
+    <button class="flex items-center gap-2 rounded px-1.5 py-0.5 text-[13px] text-ink-2 hover:bg-raised hover:text-ink" :title="$t('toolbar.serverTitle', { version: server.version || '?' })" @click="appSettings.show('server')">
       <span class="size-[9px] rounded-full" :class="server.status === 'ok' ? 'bg-ok' : 'bg-bad'" />
       {{ server.server.host }}
       <span v-if="server.status === 'ok'">· {{ $t('toolbar.online', { n: server.onlineCount, total: server.cameras.length }) }}</span>
       <span v-else class="font-semibold text-bad">{{ $t('toolbar.unreachable') }}</span>
-    </div>
+    </button>
     <div class="flex-1" />
 
     <div class="flex overflow-hidden rounded-md border border-line text-xs" :title="$t('toolbar.liveMode')">

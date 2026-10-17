@@ -11,7 +11,8 @@
     "timeline": "Línea de tiempo",
     "wall": "Solo videowall",
     "fullscreen": "Pantalla completa",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "serverTitle": "Frigate {version} — conexión, cuenta, cambiar de servidor"
   },
   "roles": {
     "admin": "administrador",
@@ -285,7 +286,8 @@
     "account": "Cuenta",
     "accountHint": "Las cuentas se gestionan en la interfaz web de Frigate",
     "signOut": "Cerrar sesión",
-    "changeServer": "Cambiar de servidor o de modo"
+    "changeServer": "Cambiar de servidor o de modo",
+    "noServer": "Ningún servidor configurado: indíquelo en la pantalla de conexión."
   },
   "help": {
     "panels": "Layouts · Eventos · Línea de tiempo",
@@ -372,7 +374,14 @@
     "events": "Eventos",
     "pause": "Pausa",
     "play": "Reproducir",
-    "markAllSeen": "Marcar todo como visto"
+    "markAllSeen": "Marcar todo como visto",
+    "edit": "Edición",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "selectAll": "Seleccionar todo"
   },
   "main": {
     "aboutText": "Videowall para Frigate NVR.",

@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore, bestGrid } from '@/stores/layouts'
 import { t } from '@/i18n'
+import { useAppSettings } from '@/stores/appSettings'
+const appSettings = useAppSettings()
 
 const server = useServerStore()
 const layouts = useLayoutStore()
@@ -27,7 +29,8 @@ const firstInput = ref(null)
 const passInput = ref(null)
 
 const internal = computed(() => mode.value === 'local')
-const reconnecting = computed(() => !!prev && server.status === 'auth')
+// Reconnexion au même serveur : seuls les identifiants sont demandés (désactivé par « Changer de serveur »)
+const reconnecting = ref(!!prev && server.status === 'auth')
 const canGo = computed(() => host.value.trim() && /^\d+$/.test(port.value.trim()) && (internal.value || (user.value.trim() && password.value)))
 
 onMounted(() => (reconnecting.value && user.value ? passInput : firstInput).value?.focus())
@@ -55,12 +58,24 @@ async function trust() {
   go()
 }
 
-async function changeServer() { await server.changeServer(); host.value = ''; user.value = ''; firstInput.value?.focus() }
+async function changeServer() {
+  await server.changeServer()
+  reconnecting.value = false
+  state.value = 'idle'
+  host.value = ''
+  user.value = ''
+  password.value = ''
+  await nextTick()
+  firstInput.value?.focus()
+}
 const fp = (f) => (f || '').replace(/^sha256\//, '')
 </script>
 
 <template>
-  <div class="flex h-full items-center justify-center" style="background: radial-gradient(ellipse at 50% 30%, #1c2a40, #0b111b 70%)">
+  <div class="relative flex h-full items-center justify-center" style="background: radial-gradient(ellipse at 50% 30%, #1c2a40, #0b111b 70%)">
+    <button type="button" class="tbtn absolute right-3 top-3" :title="$t('toolbar.settings')" @click="appSettings.show('general')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+    </button>
     <form class="w-[460px] rounded-2xl border border-line-2 bg-modal p-7 shadow-2xl" @submit.prevent="go">
       <div class="mb-1 flex items-center gap-2 text-[22px] font-bold text-accent">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>

@@ -286,11 +286,23 @@ function buildMenu() {
         { type: 'separator' },
         { label: tr('menu.settings'), ...shown('CmdOrCtrl+,'), click: () => send('settings') },
         { type: 'separator' },
-        { label: tr('menu.changeServer'), enabled: c, click: () => send('server:change') },
-        { label: tr('menu.signOut'), enabled: c, click: () => send('server:signout') },
+        { label: tr('menu.changeServer'), enabled: uiState.hasServer, click: () => send('server:change') },
+        { label: tr('menu.signOut'), enabled: uiState.hasServer, click: () => send('server:signout') },
         { type: 'separator' },
         { label: tr('menu.closeWindow'), accelerator: 'CmdOrCtrl+W', click: () => mainWin?.close() },
         { label: tr('menu.quit'), accelerator: 'CmdOrCtrl+Q', click: () => { quitting = true; app.quit() } }
+      ]
+    },
+    {
+      label: tr('menu.edit'),
+      submenu: [
+        { label: tr('menu.undo'), role: 'undo' },
+        { label: tr('menu.redo'), role: 'redo' },
+        { type: 'separator' },
+        { label: tr('menu.cut'), role: 'cut' },
+        { label: tr('menu.copy'), role: 'copy' },
+        { label: tr('menu.paste'), role: 'paste' },
+        { label: tr('menu.selectAll'), role: 'selectAll' }
       ]
     },
     {

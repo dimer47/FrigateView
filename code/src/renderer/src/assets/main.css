@@ -20,7 +20,8 @@
 }
 
 html, body, #app { height: 100%; }
-body { margin: 0; background: var(--color-bg); color: var(--color-ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; user-select: none; overflow: hidden; }
+body { margin: 0; background: var(--color-bg); color: var(--color-ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; overflow: hidden; }
+button, .tbtn, .badge, header { user-select: none; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }

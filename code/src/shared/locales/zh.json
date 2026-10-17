@@ -11,7 +11,8 @@
     "timeline": "时间轴",
     "wall": "仅显示视频墙",
     "fullscreen": "全屏",
-    "settings": "设置"
+    "settings": "设置",
+    "serverTitle": "Frigate {version} — 连接、账户、更换服务器"
   },
   "roles": {
     "admin": "管理员",
@@ -285,7 +286,8 @@
     "account": "账户",
     "accountHint": "账户在 Frigate 网页界面中管理",
     "signOut": "退出登录",
-    "changeServer": "更换服务器或模式"
+    "changeServer": "更换服务器或模式",
+    "noServer": "未配置服务器：请在登录界面中填写。"
   },
   "help": {
     "panels": "布局 · 事件 · 时间轴",
@@ -372,7 +374,14 @@
     "events": "事件",
     "pause": "暂停",
     "play": "播放",
-    "markAllSeen": "全部标记为已查看"
+    "markAllSeen": "全部标记为已查看",
+    "edit": "编辑",
+    "undo": "撤销",
+    "redo": "重做",
+    "cut": "剪切",
+    "copy": "复制",
+    "paste": "粘贴",
+    "selectAll": "全选"
   },
   "main": {
     "aboutText": "适用于 Frigate NVR 的视频墙。",

@@ -11,7 +11,8 @@
     "timeline": "Timeline",
     "wall": "Video wall only",
     "fullscreen": "Full screen",
-    "settings": "Settings"
+    "settings": "Settings",
+    "serverTitle": "Frigate {version} — connection, account, change server"
   },
   "roles": {
     "admin": "administrator",
@@ -285,7 +286,8 @@
     "account": "Account",
     "accountHint": "Accounts are managed in the Frigate web interface",
     "signOut": "Sign out",
-    "changeServer": "Change server or mode"
+    "changeServer": "Change server or mode",
+    "noServer": "No server configured: enter it on the sign-in screen."
   },
   "help": {
     "panels": "Layouts · Events · Timeline",
@@ -372,7 +374,14 @@
     "events": "Events",
     "pause": "Pause",
     "play": "Play",
-    "markAllSeen": "Mark all as seen"
+    "markAllSeen": "Mark all as seen",
+    "edit": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select All"
   },
   "main": {
     "aboutText": "Video wall for Frigate NVR.",

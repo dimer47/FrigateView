@@ -11,7 +11,8 @@
     "timeline": "Timeline",
     "wall": "Mur vidéo seul",
     "fullscreen": "Plein écran",
-    "settings": "Réglages"
+    "settings": "Réglages",
+    "serverTitle": "Frigate {version} — connexion, compte, changement de serveur"
   },
   "roles": {
     "admin": "administrateur",
@@ -285,7 +286,8 @@
     "account": "Compte",
     "accountHint": "Les comptes se gèrent dans l'interface web de Frigate",
     "signOut": "Se déconnecter",
-    "changeServer": "Changer de serveur ou de mode"
+    "changeServer": "Changer de serveur ou de mode",
+    "noServer": "Aucun serveur configuré : renseignez-le sur l'écran de connexion."
   },
   "help": {
     "panels": "Layouts · Événements · Timeline",
@@ -372,7 +374,14 @@
     "events": "Événements",
     "pause": "Pause",
     "play": "Lecture",
-    "markAllSeen": "Tout marquer comme vu"
+    "markAllSeen": "Tout marquer comme vu",
+    "edit": "Édition",
+    "undo": "Annuler",
+    "redo": "Rétablir",
+    "cut": "Couper",
+    "copy": "Copier",
+    "paste": "Coller",
+    "selectAll": "Tout sélectionner"
   },
   "main": {
     "aboutText": "Mur vidéo pour Frigate NVR.",

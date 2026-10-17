@@ -96,6 +96,7 @@ if (!wall) {
   // État renvoyé au menu (coches, liste des layouts, entrées actives)
   watch(() => ({
     connected: server.status === 'ok' || server.status === 'lost',
+    hasServer: !!server.server,
     layouts: layouts.layouts.map((l) => ({ id: l.id, name: l.name })),
     activeLayout: layouts.activeId,
     sidebar: ui.sidebar, events: ev.visible, timeline: tl.visible, expand: ui.expand, liveMode: ui.liveMode,

@@ -38,7 +38,7 @@ function autoLayout() {
 </script>
 
 <template>
-  <main class="relative">
+  <main class="relative select-none">
     <div v-if="!layout" class="absolute inset-0 flex flex-col items-center justify-center gap-2.5 p-5 text-center text-[13px] text-ink-2">
       <h2 class="text-lg font-semibold text-ink">{{ $t('grid.noLayoutTitle') }}</h2>
       <p>{{ $t('grid.noLayoutText') }}<br>{{ $t('grid.camerasFound', { n: server.cameras.length }) }}</p>

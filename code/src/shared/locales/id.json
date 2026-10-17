@@ -11,7 +11,8 @@
     "timeline": "Linimasa",
     "wall": "Dinding video saja",
     "fullscreen": "Layar penuh",
-    "settings": "Pengaturan"
+    "settings": "Pengaturan",
+    "serverTitle": "Frigate {version} — koneksi, akun, ganti server"
   },
   "roles": {
     "admin": "administrator",
@@ -285,7 +286,8 @@
     "account": "Akun",
     "accountHint": "Akun dikelola di antarmuka web Frigate",
     "signOut": "Keluar",
-    "changeServer": "Ganti server atau mode"
+    "changeServer": "Ganti server atau mode",
+    "noServer": "Belum ada server yang dikonfigurasi: masukkan di layar masuk."
   },
   "help": {
     "panels": "Layout · Peristiwa · Linimasa",
@@ -372,7 +374,14 @@
     "events": "Peristiwa",
     "pause": "Jeda",
     "play": "Putar",
-    "markAllSeen": "Tandai semua sudah dilihat"
+    "markAllSeen": "Tandai semua sudah dilihat",
+    "edit": "Edit",
+    "undo": "Urungkan",
+    "redo": "Ulangi",
+    "cut": "Potong",
+    "copy": "Salin",
+    "paste": "Tempel",
+    "selectAll": "Pilih semua"
   },
   "main": {
     "aboutText": "Dinding video untuk Frigate NVR.",

@@ -137,7 +137,7 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
 </script>
 
 <template>
-  <section class="relative flex shrink-0 flex-col border-t border-[#1e2a3a] bg-[#0c1018]" :style="{ height: tl.height + 'px' }">
+  <section class="relative flex shrink-0 select-none flex-col border-t border-[#1e2a3a] bg-[#0c1018]" :style="{ height: tl.height + 'px' }">
     <div class="absolute inset-x-0 -top-[3px] z-10 h-[6px] cursor-row-resize hover:bg-accent" :title="$t('common.resize')" @mousedown.prevent="startResize" />
 
     <!-- En-tête -->

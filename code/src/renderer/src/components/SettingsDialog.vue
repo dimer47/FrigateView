@@ -106,9 +106,12 @@ const close = () => (app.open = false)
           <!-- Serveur -->
           <template v-else>
             <h3 class="mb-1.5 font-semibold">{{ $t('settings.serverTitle') }}</h3>
+            <p v-if="!server.server" class="py-2.5 text-ink-3">{{ $t('settings.noServer') }}</p>
+            <template v-else>
             <div class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ server.server.host }}:{{ server.server.port }}<small class="block text-xs text-ink-3">Frigate {{ server.version }} · {{ $t('timeline.cameras', { n: server.cameras.length }, server.cameras.length) }} · {{ isInternal(server.server) ? $t('settings.modeLocal') : $t('settings.modeSecure') }}</small></span><span :class="server.status === 'ok' ? 'text-ok' : 'text-bad'">{{ server.status === 'ok' ? $t('settings.connected') : $t('settings.unreachable') }}</span></div>
             <div v-if="server.profile.username" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.account') }}<small class="block text-xs text-ink-3">{{ $t('settings.accountHint') }}</small></span><span>{{ server.profile.username }} · {{ server.profile.role }}</span></div>
             <div class="mt-4 flex gap-2"><button class="btn" @click="close(); server.signOut()">{{ $t('settings.signOut') }}</button><button class="btn" @click="close(); server.changeServer()">{{ $t('settings.changeServer') }}</button></div>
+            </template>
           </template>
         </div>
       </div>
