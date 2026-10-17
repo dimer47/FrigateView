@@ -1,4 +1,5 @@
 // Fuses Electron + signature « ad hoc » macOS (sans certificat Apple ; aucune clé du trousseau).
+// Avec CSC_LINK (certificat Apple de la CI) : fuses seulement, la vraie signature suit.
 // electron-builder bascule ses fuses (option electronFuses) APRÈS afterPack : la signature ad hoc
 // faite ici serait alors invalidée. On les bascule donc ici, puis on signe.
 // Ne pas renseigner build.electronFuses dans package.json (double bascule après la signature).
@@ -18,6 +19,8 @@ exports.default = async function (ctx) {
     [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true
   })
   if (ctx.electronPlatformName !== 'darwin') return
+  // Certificat Apple fourni (CI) : electron-builder signe et notarise lui-même après ce hook
+  if (process.env.CSC_LINK) return
   const app = join(ctx.appOutDir, `${ctx.packager.appInfo.productFilename}.app`)
   execFileSync('codesign', ['--force', '--deep', '--sign', '-', app], { stdio: 'inherit' })
 }

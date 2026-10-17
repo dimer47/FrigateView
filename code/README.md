@@ -59,6 +59,7 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 - Windows : mise à jour téléchargée en arrière-plan, installée au redémarrage
 - macOS : nouvelle version signalée, téléchargement du dmg depuis la release (mise à jour en place impossible sans certificat Apple)
 - Menu Aide → Rechercher des mises à jour
+- Signature facultative : secrets GitHub `MAC_CERT_P12`, `MAC_CERT_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` (macOS signé et notarisé, mise à jour automatique) ; `WIN_CERT_P12`, `WIN_CERT_PASSWORD` (Windows) ; détail en tête de `release.yml`
 
 ## Installation sans certificat
 

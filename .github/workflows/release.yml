@@ -1,5 +1,15 @@
-# Release : pousser un tag « v1.2.3 » construit Windows et macOS, puis publie la release GitHub.
-# Aucun certificat : Windows affiche « éditeur inconnu », macOS est signé ad hoc.
+# Release : pousser un tag « v1.2.3 » lance les tests, construit Windows et macOS, puis publie la release GitHub.
+#
+# Signature, facultative : utilisée seulement si les secrets existent (Settings → Secrets and variables → Actions).
+#   macOS (certificat « Developer ID Application » + notarisation) :
+#     MAC_CERT_P12                 certificat exporté en .p12, encodé en base64
+#     MAC_CERT_PASSWORD            mot de passe du .p12
+#     APPLE_ID                     identifiant Apple du compte développeur
+#     APPLE_APP_SPECIFIC_PASSWORD  mot de passe d'app (appleid.apple.com)
+#     APPLE_TEAM_ID                identifiant d'équipe (10 caractères)
+#   Windows (certificat de signature de code) :
+#     WIN_CERT_P12, WIN_CERT_PASSWORD
+# Sans secrets : Windows affiche « éditeur inconnu », macOS est signé ad hoc (mise à jour manuelle).
 name: Release
 
 on:
@@ -14,18 +24,37 @@ defaults:
     working-directory: code
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: code/package-lock.json
+      - run: npm ci
+      - run: npm test
+
   build:
+    needs: test
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
             target: --win
-          - os: macos-latest
+          # macOS 15 : sous macOS 26, electron-builder n'arrive plus à déverrouiller le trousseau de signature
+          - os: macos-15
             target: --mac
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    env:
+      HAS_MAC_CERT: ${{ secrets.MAC_CERT_P12 != '' }}
+      HAS_WIN_CERT: ${{ secrets.WIN_CERT_P12 != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,9 +68,37 @@ jobs:
         shell: bash
         run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
       - run: npx electron-vite build
-      - run: npx electron-builder ${{ matrix.target }} --publish never
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        shell: bash
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          WIN_CSC_LINK: ${{ secrets.WIN_CERT_P12 }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+        run: |
+          [ "$HAS_WIN_CERT" = true ] || unset WIN_CSC_LINK WIN_CSC_KEY_PASSWORD
+          npx electron-builder --win --publish never
+
+      - name: Build macOS signé et notarisé
+        if: runner.os == 'macOS' && env.HAS_MAC_CERT == 'true'
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        # identity: null (package.json) empêche toute signature sur un poste : levé ici seulement
+        run: |
+          node -e "const f='package.json',p=require('./'+f);delete p.build.mac.identity;require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
+          npx electron-builder --mac --publish never -c.extraMetadata.fvAppleSigned=true
+
+      - name: Build macOS ad hoc
+        if: runner.os == 'macOS' && env.HAS_MAC_CERT != 'true'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --mac --publish never
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.os }}
@@ -70,4 +127,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -la out
-          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --title "FrigateView ${GITHUB_REF_NAME#v}" --generate-notes
+          # Tag repoussé : on remplace les fichiers au lieu d'échouer
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --title "FrigateView ${GITHUB_REF_NAME#v}" --generate-notes
+          fi

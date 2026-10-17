@@ -1,8 +1,11 @@
 // Mise à jour automatique depuis les releases GitHub.
 // Windows : téléchargement en arrière-plan, installation au redémarrage.
-// macOS : l'app n'a pas de certificat Apple, la mise à jour en place est impossible ;
-// on signale la nouvelle version et on ouvre la page de téléchargement.
+// macOS signé par un certificat Apple (CI avec secrets) : comme Windows.
+// macOS signé ad hoc : mise à jour en place impossible ; on signale la nouvelle version
+// et on ouvre la page de téléchargement.
 import { app, dialog, shell } from 'electron'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import electronUpdater from 'electron-updater'
 
 const { autoUpdater } = electronUpdater
@@ -11,7 +14,10 @@ const SIX_HOURS = 6 * 3600e3
 
 export function initUpdater({ tr, win }) {
   if (!app.isPackaged) return () => {}
-  const mac = process.platform === 'darwin'
+  // fvAppleSigned : ajouté au package.json de l'app par la CI quand elle signe avec un certificat Apple
+  let signed = false
+  try { signed = !!JSON.parse(readFileSync(join(app.getAppPath(), 'package.json'), 'utf8')).fvAppleSigned } catch { /* ad hoc */ }
+  const mac = process.platform === 'darwin' && !signed
   autoUpdater.autoDownload = !mac
   autoUpdater.autoInstallOnAppQuit = true
   let manual = false // vérification demandée depuis le menu : on répond même si rien de neuf
