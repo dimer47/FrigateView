@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FrigateView — Maquette Moniteur v6</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #111827;
+      --bg-secondary: #1f2937;
+      --bg-tertiary: #374151;
+      --bg-card: #1a2332;
+      --bg-modal: #1e293b;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --accent: #3b82f6;
+      --accent-bg: rgba(59,130,246,0.15);
+      --accent-border: rgba(59,130,246,0.3);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+      --border: #374151;
+      --border-light: #4b5563;
+      --timeline-bg: #0f172a;
+      --motion-color: #3b82f6;
+      --person-color: #ef4444;
+      --car-color: #f59e0b;
+      --toolbar-height: 46px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      font-size: 14px;
+    }
+
+    /* === TOOLBAR === */
+    .toolbar {
+      height: var(--toolbar-height); background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 14px; gap: 12px; flex-shrink: 0; z-index: 20;
+    }
+    .logo { font-weight: 700; font-size: 18px; color: var(--accent); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .sep { width: 1px; height: 22px; background: var(--border); }
+    .spacer { flex: 1; }
+    .status-bar { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--text-secondary); }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--success); }
+    .tbtn { background: transparent; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer; padding: 5px 8px; border-radius: 5px; font-size: 16px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; line-height: 1; }
+    .tbtn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+
+    /* === MAIN === */
+    .main-row { flex: 1; display: flex; overflow: hidden; min-height: 0; position: relative; }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      width: 230px; min-width: 160px; max-width: 400px;
+      background: var(--bg-secondary); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+      z-index: 10; position: relative;
+    }
+    .sidebar.collapsed { width: 0 !important; min-width: 0; border-right: none; overflow: hidden; }
+
+    .sidebar-section-wrap {
+      flex: 1; min-height: 80px; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    .sidebar-section-wrap .section { flex-shrink: 0; padding: 8px 12px; border-bottom: none; }
+    .sidebar-section-wrap .section-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 12px 8px; }
+
+    .sidebar-resize-v {
+      height: 4px; cursor: row-resize; background: transparent; flex-shrink: 0;
+      transition: background 0.15s; border-top: 1px solid var(--border);
+    }
+    .sidebar-resize-v:hover, .sidebar-resize-v.active { background: var(--accent); }
+
+    /* Resize handles */
+    .resize-h {
+      width: 4px; cursor: col-resize; background: transparent; flex-shrink: 0;
+      position: relative; z-index: 15; transition: background 0.15s;
+    }
+    .resize-h:hover, .resize-h.active { background: var(--accent); }
+    .resize-h::after {
+      content: ''; position: absolute; top: 50%; left: -3px; transform: translateY(-50%);
+      width: 10px; height: 40px; /* invisible hit area */
+    }
+
+    .resize-v {
+      height: 4px; cursor: row-resize; background: transparent; flex-shrink: 0;
+      position: relative; z-index: 15; transition: background 0.15s;
+    }
+    .resize-v:hover, .resize-v.active { background: var(--accent); }
+
+    /* Sections */
+    .section { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .section:last-child { border-bottom: none; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 5px 0; margin-bottom: 5px; }
+    .section-header:hover .section-title { color: var(--text-secondary); }
+    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; transition: color 0.1s; }
+    .section-actions { display: flex; align-items: center; gap: 2px; }
+    .section-chevron { font-size: 11px; color: var(--text-muted); transition: transform 0.2s; padding: 2px 4px; }
+    .section-chevron.collapsed { transform: rotate(-90deg); }
+    .sa-btn { font-size: 14px; color: var(--text-muted); cursor: pointer; line-height: 1; transition: all 0.1s; padding: 3px 5px; border-radius: 4px; }
+    .sa-btn:hover { color: var(--accent); background: rgba(59,130,246,0.1); }
+    .sa-btn.reorder-active { color: var(--accent); background: var(--accent-bg); }
+    .section-body { overflow: hidden; transition: max-height 0.25s ease; }
+    .section-body.collapsed { max-height: 0 !important; }
+
+    /* Layout items */
+    .layout-item {
+      display: flex; align-items: center; gap: 9px; padding: 6px 9px; border-radius: 6px;
+      cursor: pointer; transition: all 0.1s; margin-bottom: 2px; font-size: 13px;
+      color: var(--text-secondary); border: 1px solid transparent; position: relative;
+    }
+    .layout-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+    .layout-item.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-border); }
+    .layout-item.reordering { cursor: grab; }
+    .layout-item.drag-over-layout { border-top: 2px solid var(--accent); }
+    .layout-item.dragging-layout { opacity: 0.35; }
+
+    .layout-icon { width: 24px; height: 16px; display: grid; gap: 1px; flex-shrink: 0; }
+    .layout-icon div { background: currentColor; border-radius: 1px; opacity: 0.45; }
+    .layout-item.active .layout-icon div { opacity: 0.8; }
+    .li-1x1 { grid-template: 1fr / 1fr; }
+    .li-2x2 { grid-template: 1fr 1fr / 1fr 1fr; }
+    .li-3x3 { grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr; }
+    .li-4x4 { grid-template: 1fr 1fr 1fr 1fr / 1fr 1fr 1fr 1fr; }
+    .li-1p5 { grid-template: 1fr 1fr 1fr / 2fr 1fr; }
+    .li-1p5 div:first-child { grid-row: 1 / 4; }
+    .li-1p7 { grid-template: 1fr 1fr 1fr 1fr / 3fr 1fr; }
+    .li-1p7 div:first-child { grid-row: 1 / 5; }
+    .layout-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .layout-edit { font-size: 12px; color: var(--text-muted); cursor: pointer; opacity: 0; transition: opacity 0.15s, color 0.15s; padding: 2px 5px; border-radius: 3px; flex-shrink: 0; }
+    .layout-item:hover .layout-edit { opacity: 1; }
+    .layout-edit:hover { color: var(--accent); background: rgba(59,130,246,0.1); }
+
+    /* Camera items */
+    .cam-item { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 6px; cursor: grab; transition: background 0.1s; margin-bottom: 2px; font-size: 13px; }
+    .cam-item:hover { background: var(--bg-tertiary); }
+    .cam-item.dragging { opacity: 0.4; }
+    .cam-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .cam-dot.on { background: var(--success); }
+    .cam-dot.off { background: var(--danger); }
+    .cam-name { flex: 1; font-weight: 500; }
+    .cam-badge-sm { font-size: 9px; padding: 2px 6px; border-radius: 8px; font-weight: 700; background: var(--motion-color); color: white; }
+
+    /* === POPOVER === */
+    .popover-overlay { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.3); }
+    .popover-overlay.visible { display: block; }
+
+    .popover {
+      position: fixed; z-index: 51; background: var(--bg-modal); border: 1px solid var(--border-light);
+      border-radius: 12px; padding: 20px; width: 340px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .popover.visible { display: block; }
+
+    .popover-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .popover-close { font-size: 16px; color: var(--text-muted); cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.1s; }
+    .popover-close:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+    .popover-field { margin-bottom: 16px; }
+    .popover-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+    .popover-input { width: 100%; background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.15s; }
+    .popover-input:focus { border-color: var(--accent); }
+
+    .popover-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .popover-grid-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; padding: 8px 4px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.1s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .popover-grid-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .popover-grid-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+    .popover-grid-btn .pg-icon { width: 28px; height: 18px; display: grid; gap: 1px; }
+    .popover-grid-btn .pg-icon div { background: currentColor; border-radius: 1px; opacity: 0.5; }
+    .popover-grid-btn.active .pg-icon div { opacity: 0.85; }
+    .pg-1x1 { grid-template: 1fr / 1fr; }
+    .pg-2x2 { grid-template: 1fr 1fr / 1fr 1fr; }
+    .pg-3x3 { grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr; }
+    .pg-4x4 { grid-template: 1fr 1fr 1fr 1fr / 1fr 1fr 1fr 1fr; }
+    .pg-1p5 { grid-template: 1fr 1fr 1fr / 2fr 1fr; }
+    .pg-1p5 div:first-child { grid-row: 1 / 4; }
+    .pg-1p7 { grid-template: 1fr 1fr 1fr 1fr / 3fr 1fr; }
+    .pg-1p7 div:first-child { grid-row: 1 / 5; }
+
+    .popover-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+    .popover-btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.1s; border: 1px solid transparent; white-space: nowrap; }
+    .popover-btn-delete { background: var(--bg-tertiary); color: var(--danger); border-color: var(--border); margin-right: auto; }
+    .popover-btn-delete:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); }
+    .popover-btn-cancel { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border); }
+    .popover-btn-cancel:hover { color: var(--text-primary); border-color: var(--border-light); }
+    .popover-btn-save { background: var(--accent); color: white; border-color: var(--accent); }
+    .popover-btn-save:hover { background: #60a5fa; border-color: #60a5fa; }
+
+    /* Confirm dialog */
+    .confirm-overlay { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    .confirm-overlay.visible { display: flex; }
+    .confirm-box { background: var(--bg-modal); border: 1px solid var(--border-light); border-radius: 12px; padding: 22px; width: 320px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
+    .confirm-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+    .confirm-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
+    .confirm-text strong { color: var(--text-primary); }
+    .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .confirm-btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.1s; border: 1px solid transparent; }
+    .confirm-btn-cancel { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border); }
+    .confirm-btn-cancel:hover { color: var(--text-primary); }
+    .confirm-btn-confirm { background: var(--danger); color: white; border-color: var(--danger); }
+    .confirm-btn-confirm:hover { background: #dc2626; }
+
+    /* === GRID === */
+    .content-area { flex: 1; display: flex; overflow: hidden; min-width: 0; }
+    .grid-area { flex: 1; min-width: 0; }
+    .grid-wrap { width: 100%; height: 100%; padding: 4px; display: grid; gap: 3px; overflow: hidden; }
+    .g-1x1 { grid-template: 1fr / 1fr; }
+    .g-2x2 { grid-template: 1fr 1fr / 1fr 1fr; }
+    .g-3x3 { grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr; }
+    .g-4x4 { grid-template: 1fr 1fr 1fr 1fr / 1fr 1fr 1fr 1fr; }
+    .g-1p5 { grid-template: 1fr 1fr 1fr / 2fr 1fr; }
+    .g-1p5 .cell:first-child { grid-row: 1 / 4; }
+    .g-1p7 { grid-template: 1fr 1fr 1fr 1fr / 3fr 1fr; }
+    .g-1p7 .cell:first-child { grid-row: 1 / 5; }
+
+    .cell { background: var(--bg-card); border-radius: 5px; position: relative; overflow: hidden; border: 1px solid var(--border); transition: border-color 0.15s; min-height: 0; }
+    .cell:hover { border-color: rgba(59,130,246,0.5); }
+    .cell.selected { border-color: var(--accent); border-width: 2px; }
+    .cell.drop-target { border: 2px dashed var(--accent); background: rgba(59,130,246,0.08); }
+    .cell-feed { width: 100%; height: 100%; background: linear-gradient(145deg, #1a2332, #0d1520); display: flex; align-items: center; justify-content: center; }
+    .cell-feed .ph { color: var(--text-muted); font-size: 28px; opacity: 0.15; }
+    .cell-feed::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 25% 55%, rgba(40,65,90,0.3) 0%, transparent 55%), radial-gradient(ellipse at 75% 35%, rgba(30,50,70,0.2) 0%, transparent 50%); }
+    .cell-badges { position: absolute; top: 6px; right: 6px; z-index: 3; display: flex; gap: 3px; }
+    .badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; text-transform: uppercase; }
+    .badge-live { background: var(--danger); color: white; }
+    .badge-rec { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid rgba(239,68,68,0.35); }
+    .badge-motion { background: var(--motion-color); color: white; }
+    .cell-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 10px; background: linear-gradient(transparent, rgba(0,0,0,0.75)); display: flex; justify-content: space-between; align-items: flex-end; z-index: 3; }
+    .cell-label { font-size: 13px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+    .cell-time { font-size: 12px; color: var(--text-secondary); font-family: monospace; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+    .cell-empty { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 12px; gap: 4px; }
+    .cell-empty .drop-icon { font-size: 22px; opacity: 0.25; }
+    .det-box { position: absolute; border: 2px solid var(--person-color); border-radius: 2px; z-index: 3; }
+    .det-label { position: absolute; top: -16px; left: 0; background: var(--person-color); color: white; font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 700; white-space: nowrap; }
+
+    /* === EVENTS === */
+    .events-panel {
+      width: 290px; min-width: 180px; max-width: 500px;
+      background: var(--bg-secondary); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; z-index: 10;
+    }
+    .events-panel.collapsed { width: 0 !important; min-width: 0; border-left: none; overflow: hidden; }
+    .ep-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+    .ep-header h3 { font-size: 14px; font-weight: 600; white-space: nowrap; }
+    .filter-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .chip { font-size: 11px; padding: 3px 10px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.1s; white-space: nowrap; }
+    .chip:hover { border-color: var(--accent); }
+    .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .ep-list { flex: 1; overflow-y: auto; padding: 6px; }
+    .evt { display: flex; gap: 8px; padding: 8px 9px; border-radius: 6px; cursor: pointer; transition: background 0.1s; margin-bottom: 2px; }
+    .evt:hover { background: var(--bg-tertiary); }
+    .evt-thumb { width: 56px; height: 38px; background: var(--bg-card); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; overflow: hidden; }
+    .evt-thumb::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(30,42,58,0.7), rgba(13,21,32,0.85)); }
+    .evt-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .evt-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; margin-bottom: 1px; }
+    .evt-type { font-size: 13px; font-weight: 600; margin-bottom: 1px; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .evt-type .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .evt-cam { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* === TIMELINE === */
+    /* === TIMELINE (Synology-inspired) === */
+    .timeline {
+      height: 180px; min-height: 100px; max-height: 400px;
+      background: #0c1018; border-top: 1px solid #1e2a3a;
+      display: flex; flex-direction: column; flex-shrink: 0; z-index: 10;
+    }
+    .timeline.collapsed { height: 0 !important; min-height: 0; overflow: hidden; border-top: none; }
+
+    /* Top bar: time + tools left, LIVE right */
+    .tl-top {
+      height: 44px; display: flex; align-items: center; padding: 0 16px;
+      border-bottom: 1px solid #1a2432; flex-shrink: 0; gap: 8px;
+    }
+
+    .tl-clock { font-size: 20px; font-family: 'SF Mono', Consolas, monospace; color: #f59e0b; font-weight: 700; margin-right: 10px; }
+    .tl-date { font-size: 13px; color: var(--text-muted); margin-right: 10px; }
+
+    .tl-tool {
+      background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 5px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.1s;
+    }
+    .tl-tool:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .tl-tool svg { width: 18px; height: 18px; }
+
+    .tl-spacer { flex: 1; }
+
+    .tl-live {
+      font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 5px; transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+    .tl-live:hover { background: rgba(34,197,94,0.08); color: var(--success); }
+    .tl-live.active { color: var(--success); background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); }
+    .tl-live-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .tl-sync {
+      font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 5px; transition: all 0.15s;
+      margin-left: 6px; border: 1px solid transparent;
+    }
+    .tl-sync:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .tl-sync.active { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+    .tl-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    /* Filter popover */
+    .tl-filter-pop, .tl-calendar-pop {
+      display: none; position: absolute; z-index: 55;
+      background: var(--bg-modal); border: 1px solid var(--border-light);
+      border-radius: 10px; padding: 14px; min-width: 200px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .tl-filter-pop.visible, .tl-calendar-pop.visible { display: block; }
+
+    .tl-pop-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
+
+    .tl-filter-item {
+      display: flex; align-items: center; gap: 8px; padding: 5px 4px;
+      cursor: pointer; border-radius: 4px; font-size: 13px; color: var(--text-secondary);
+      transition: background 0.1s;
+    }
+    .tl-filter-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+    .tl-filter-check {
+      width: 16px; height: 16px; border-radius: 3px; border: 1.5px solid var(--border-light);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all 0.1s; font-size: 11px;
+    }
+    .tl-filter-item.checked .tl-filter-check {
+      background: var(--accent); border-color: var(--accent); color: white;
+    }
+
+    .tl-filter-dot { width: 8px; height: 4px; border-radius: 1px; flex-shrink: 0; }
+
+    /* Calendar popover */
+    .tl-cal-field { margin-bottom: 10px; }
+    .tl-cal-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; display: block; }
+    .tl-cal-input {
+      width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 6px 10px; border-radius: 5px; font-size: 12px;
+      outline: none;
+    }
+    .tl-cal-input:focus { border-color: var(--accent); }
+    .tl-cal-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 12px; }
+    .tl-cal-btn {
+      padding: 5px 12px; border-radius: 5px; font-size: 11px; font-weight: 600;
+      cursor: pointer; border: 1px solid transparent;
+    }
+    .tl-cal-btn-cancel { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border); }
+    .tl-cal-btn-apply { background: var(--accent); color: white; }
+
+    /* Main area: timeline left + controls right */
+    .tl-main { flex: 1; display: flex; overflow: hidden; }
+
+    /* Body: camera labels left + tracks right */
+    .tl-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+    /* Controls panel (right side) */
+    .tl-controls {
+      width: 160px; min-width: 100px; max-width: 300px; flex-shrink: 0;
+      background: #0f1520; border-left: 1px solid #1a2432;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 12px;
+    }
+
+    .tl-controls-resize {
+      width: 4px; cursor: col-resize; background: transparent; flex-shrink: 0;
+      transition: background 0.15s; align-self: stretch;
+    }
+    .tl-controls-resize:hover, .tl-controls-resize.active { background: var(--accent); }
+
+    .tl-speed-wrap {
+      display: flex; align-items: center; gap: 0;
+    }
+
+    .tl-speed-btn {
+      background: #1a2432; border: 1px solid #2a3a4e; color: var(--text-secondary);
+      width: 30px; height: 32px; cursor: pointer; font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; transition: all 0.1s;
+    }
+    .tl-speed-btn:first-child { border-radius: 5px 0 0 5px; border-right: none; }
+    .tl-speed-btn:last-child { border-radius: 0 5px 5px 0; border-left: none; }
+    .tl-speed-btn:hover { background: #2a3a4e; color: var(--text-primary); }
+
+    .tl-speed {
+      background: #1a2432; border: 1px solid #2a3a4e; border-left: none; border-right: none;
+      color: var(--text-primary); padding: 6px 10px; font-size: 15px; font-weight: 700;
+      cursor: pointer; text-align: center; transition: all 0.1s; min-width: 42px;
+    }
+    .tl-speed:hover { color: var(--accent); }
+
+    .tl-pb { display: flex; align-items: center; gap: 4px; justify-content: center; }
+    .tl-pb-btn {
+      background: transparent; border: none; color: var(--text-secondary); cursor: pointer;
+      padding: 5px 7px; font-size: 18px; transition: all 0.1s; display: flex; align-items: center;
+      border-radius: 4px;
+    }
+    .tl-pb-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .tl-pb-btn.play { color: var(--text-primary); font-size: 24px; }
+
+    .tl-labels {
+      width: 90px; flex-shrink: 0; display: flex; flex-direction: column;
+      border-right: 1px solid #1a2432; padding-top: 22px;
+    }
+
+    .tl-label {
+      height: 22px; display: flex; align-items: center; padding: 0 8px;
+      font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; cursor: pointer; transition: color 0.1s;
+    }
+    .tl-label:hover { color: var(--text-primary); }
+    .tl-label.active { color: var(--accent); font-weight: 600; }
+
+    .tl-content { flex: 1; position: relative; overflow: hidden; cursor: crosshair; }
+
+    /* Ruler */
+    .tl-ruler {
+      height: 22px; position: relative; border-bottom: 1px solid #1a2432;
+    }
+    .tick {
+      position: absolute; top: 4px; font-size: 10px; color: #4b5563;
+      transform: translateX(-50%);
+    }
+    .tick::after {
+      content: ''; display: block; width: 1px; height: 8px;
+      background: #2a3a4e; margin: 2px auto 0;
+    }
+    .tick-major { color: var(--text-muted); font-weight: 600; }
+    .tick-major::after { height: 12px; background: #374151; }
+
+    /* Tracks area */
+    .tl-tracks-area { position: absolute; top: 23px; left: 0; right: 0; bottom: 0; }
+
+    .tl-track {
+      height: 22px; position: relative; border-bottom: 1px solid #111827;
+    }
+    .tl-track:hover { background: rgba(255,255,255,0.02); }
+
+    .seg {
+      position: absolute; height: 14px; top: 4px; border-radius: 2px; opacity: 0.8;
+      min-width: 3px;
+    }
+    .seg.motion { background: #4b5563; }
+    .seg.person { background: var(--person-color); }
+    .seg.car { background: var(--car-color); }
+    .seg.recording { background: #374151; opacity: 0.4; }
+
+    /* Current position cursor (orange) */
+    .tl-cursor {
+      position: absolute; top: 0; bottom: 0; width: 2px; background: #f59e0b;
+      z-index: 5; pointer-events: none;
+    }
+    .tl-cursor::before {
+      content: ''; position: absolute; top: 0; left: -4px;
+      width: 0; height: 0; border-left: 5px solid transparent;
+      border-right: 5px solid transparent; border-top: 6px solid #f59e0b;
+    }
+
+    /* Hover cursor (white, with preview) */
+    .tl-hover-cursor {
+      position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.4);
+      z-index: 4; pointer-events: none; display: none;
+    }
+
+    .tl-hover-time {
+      position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; font-family: monospace; color: white; background: rgba(0,0,0,0.7);
+      padding: 1px 5px; border-radius: 3px; white-space: nowrap;
+    }
+
+    /* Floating preview (positioned by JS, outside timeline overflow) */
+    .tl-preview-float {
+      position: fixed; z-index: 60; pointer-events: none; display: none;
+      flex-direction: column; align-items: center;
+    }
+    .tl-preview-float.visible { display: flex; }
+
+    .tl-preview-box {
+      width: 180px; height: 100px; background: #111; border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+      position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    .tl-preview-box::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(145deg, rgba(30,50,70,0.5), rgba(10,20,30,0.7));
+    }
+    .tl-preview-box .ph { font-size: 28px; opacity: 0.2; z-index: 1; }
+    .tl-preview-cam {
+      position: absolute; bottom: 5px; left: 8px; font-size: 10px; color: white;
+      font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.9); z-index: 2;
+    }
+    .tl-preview-time-label {
+      position: absolute; bottom: 5px; right: 8px; font-size: 10px; color: var(--text-secondary);
+      font-family: monospace; text-shadow: 0 1px 3px rgba(0,0,0,0.9); z-index: 2;
+    }
+    .tl-preview-arrow {
+      width: 0; height: 0; border-left: 7px solid transparent;
+      border-right: 7px solid transparent; border-top: 7px solid rgba(255,255,255,0.3);
+    }
+
+    /* Legend (bottom of timeline) */
+    .tl-legend {
+      height: 20px; display: flex; align-items: center; padding: 0 12px; gap: 14px;
+      border-top: 1px solid #1a2432; flex-shrink: 0;
+    }
+    .leg { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-muted); }
+    .leg-dot { width: 10px; height: 4px; border-radius: 1px; }
+
+    /* Expand mode */
+    body.expanded .toolbar { height: 0; overflow: hidden; border: none; }
+    body.expanded .sidebar { width: 0 !important; min-width: 0; border: none; overflow: hidden; }
+    body.expanded .events-panel { width: 0 !important; min-width: 0; border: none; overflow: hidden; }
+    body.expanded .timeline { height: 0 !important; min-height: 0; border: none; overflow: hidden; }
+    body.expanded .resize-h, body.expanded .resize-v { display: none; }
+    body.expanded .grid-wrap { padding: 0; gap: 1px; }
+    body.expanded .cell { border-radius: 0; }
+
+    .expand-exit {
+      display: none; position: fixed; top: 8px; right: 8px; z-index: 100;
+      background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; backdrop-filter: blur(4px); transition: opacity 0.3s;
+      opacity: 0;
+    }
+    body.expanded .expand-exit { display: block; opacity: 0; }
+    body.expanded:hover .expand-exit { opacity: 1; }
+    .expand-exit:hover { background: rgba(59,130,246,0.7); border-color: var(--accent); }
+
+    .demo { position: fixed; top: 52px; right: 16px; background: var(--accent); color: white; padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; z-index: 100; box-shadow: 0 4px 12px rgba(59,130,246,0.4); cursor: pointer; max-width: 360px; line-height: 1.5; }
+    kbd { background: rgba(255,255,255,0.15); padding: 1px 5px; border-radius: 3px; font-size: 11px; font-family: monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> FrigateView</div>
+    <div class="sep"></div>
+    <div class="status-bar"><span class="status-dot"></span> 5 caméras</div>
+    <div class="spacer"></div>
+    <button class="tbtn" onclick="togglePanel('sidebar')" title="Panneau latéral (Ctrl+1)">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2"/><line x1="6" y1="1" x2="6" y2="17"/></svg>
+    </button>
+    <button class="tbtn" onclick="togglePanel('events')" title="Événements (Ctrl+2)">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2"/><line x1="12" y1="1" x2="12" y2="17"/></svg>
+    </button>
+    <button class="tbtn" onclick="togglePanel('timeline')" title="Timeline (Ctrl+3)">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="16" rx="2"/><line x1="1" y1="12" x2="17" y2="12"/></svg>
+    </button>
+    <div class="sep"></div>
+    <button class="tbtn" id="expandBtn" onclick="toggleExpand()" title="Mode expand — caméras uniquement (Ctrl+E)">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="11,1 17,1 17,7"/><polyline points="7,17 1,17 1,11"/><line x1="17" y1="1" x2="10" y2="8"/><line x1="1" y1="17" x2="8" y2="10"/></svg>
+    </button>
+    <button class="tbtn" onclick="document.documentElement.requestFullscreen()" title="Plein écran (F11)">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,6 1,1 6,1"/><polyline points="12,1 17,1 17,6"/><polyline points="17,12 17,17 12,17"/><polyline points="6,17 1,17 1,12"/></svg>
+    </button>
+  </div>
+
+  <div class="popover-overlay" id="popoverOverlay" onclick="closePopover()"></div>
+  <div class="popover" id="layoutPopover">
+    <div class="popover-title">Modifier le layout <span class="popover-close" onclick="closePopover()">✕</span></div>
+    <div class="popover-field">
+      <label class="popover-label">Nom</label>
+      <input class="popover-input" id="popoverName" type="text" placeholder="Nom du layout">
+    </div>
+    <div class="popover-field">
+      <label class="popover-label">Grille</label>
+      <div class="popover-grid">
+        <button class="popover-grid-btn" data-grid="1x1" onclick="selGrid(this)"><div class="pg-icon pg-1x1"><div></div></div>1×1</button>
+        <button class="popover-grid-btn" data-grid="2x2" onclick="selGrid(this)"><div class="pg-icon pg-2x2"><div></div><div></div><div></div><div></div></div>2×2</button>
+        <button class="popover-grid-btn" data-grid="3x3" onclick="selGrid(this)"><div class="pg-icon pg-3x3"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>3×3</button>
+        <button class="popover-grid-btn" data-grid="4x4" onclick="selGrid(this)"><div class="pg-icon pg-4x4"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>4×4</button>
+        <button class="popover-grid-btn" data-grid="1p5" onclick="selGrid(this)"><div class="pg-icon pg-1p5"><div></div><div></div><div></div><div></div></div>1+5</button>
+        <button class="popover-grid-btn" data-grid="1p7" onclick="selGrid(this)"><div class="pg-icon pg-1p7"><div></div><div></div><div></div><div></div><div></div></div>1+7</button>
+      </div>
+    </div>
+    <div class="popover-actions">
+      <button class="popover-btn popover-btn-delete" onclick="deleteLayout()">Supprimer</button>
+      <button class="popover-btn popover-btn-cancel" onclick="closePopover()">Annuler</button>
+      <button class="popover-btn popover-btn-save" onclick="savePopover()">Enregistrer</button>
+    </div>
+  </div>
+
+  <!-- Add layout dialog -->
+  <div class="popover-overlay" id="addLayoutOverlay" onclick="closeAddLayout()"></div>
+  <div class="popover" id="addLayoutPopover">
+    <div class="popover-title">Nouveau layout <span class="popover-close" onclick="closeAddLayout()">✕</span></div>
+    <div class="popover-field">
+      <label class="popover-label">Nom</label>
+      <input class="popover-input" id="addLayoutName" type="text" placeholder="Ex: Parking, Nuit, Bureau...">
+    </div>
+    <div class="popover-field">
+      <label class="popover-label">Grille</label>
+      <div class="popover-grid" id="addLayoutGrid">
+        <button class="popover-grid-btn active" data-grid="2x2" onclick="selAddGrid(this)"><div class="pg-icon pg-2x2"><div></div><div></div><div></div><div></div></div>2×2</button>
+        <button class="popover-grid-btn" data-grid="1x1" onclick="selAddGrid(this)"><div class="pg-icon pg-1x1"><div></div></div>1×1</button>
+        <button class="popover-grid-btn" data-grid="3x3" onclick="selAddGrid(this)"><div class="pg-icon pg-3x3"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>3×3</button>
+        <button class="popover-grid-btn" data-grid="4x4" onclick="selAddGrid(this)"><div class="pg-icon pg-4x4"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>4×4</button>
+        <button class="popover-grid-btn" data-grid="1p5" onclick="selAddGrid(this)"><div class="pg-icon pg-1p5"><div></div><div></div><div></div><div></div></div>1+5</button>
+        <button class="popover-grid-btn" data-grid="1p7" onclick="selAddGrid(this)"><div class="pg-icon pg-1p7"><div></div><div></div><div></div><div></div><div></div></div>1+7</button>
+      </div>
+    </div>
+    <div class="popover-actions">
+      <button class="popover-btn popover-btn-cancel" onclick="closeAddLayout()">Annuler</button>
+      <button class="popover-btn popover-btn-save" onclick="saveAddLayout()">Créer</button>
+    </div>
+  </div>
+
+  <!-- Confirm delete dialog -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-title">Supprimer le layout</div>
+      <div class="confirm-text">Êtes-vous sûr de vouloir supprimer le layout <strong id="confirmName"></strong> ? Cette action est irréversible.</div>
+      <div class="confirm-actions">
+        <button class="confirm-btn confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
+        <button class="confirm-btn confirm-btn-confirm" onclick="confirmDelete()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-row">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-section-wrap" id="layoutWrap">
+        <div class="section">
+          <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">Layouts</span>
+            <div class="section-actions">
+              <span class="sa-btn" onclick="event.stopPropagation(); openAddLayout()" title="Créer un layout">+</span>
+              <span class="sa-btn" id="reorderBtn" onclick="event.stopPropagation(); toggleReorder()" title="Réordonner">⇅</span>
+              <span class="section-chevron">▼</span>
+            </div>
+          </div>
+        </div>
+        <div class="section-body" id="layoutList">
+          <div class="layout-item active" data-grid="2x2" data-name="Général" onclick="applyLayout(this)"><div class="layout-icon li-2x2"><div></div><div></div><div></div><div></div></div><span class="layout-name">Général</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1p5" data-name="Extérieur" onclick="applyLayout(this)"><div class="layout-icon li-1p5"><div></div><div></div><div></div><div></div></div><span class="layout-name">Extérieur</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1x1" data-name="Bureau" onclick="applyLayout(this)"><div class="layout-icon li-1x1"><div></div></div><span class="layout-name">Bureau</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="3x3" data-name="Toutes" onclick="applyLayout(this)"><div class="layout-icon li-3x3"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><span class="layout-name">Toutes</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1p7" data-name="Focus" onclick="applyLayout(this)"><div class="layout-icon li-1p7"><div></div><div></div><div></div><div></div><div></div></div><span class="layout-name">Focus + Vignettes</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="2x2" data-name="Parking" onclick="applyLayout(this)"><div class="layout-icon li-2x2"><div></div><div></div><div></div><div></div></div><span class="layout-name">Parking</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="3x3" data-name="Entrepôt" onclick="applyLayout(this)"><div class="layout-icon li-3x3"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><span class="layout-name">Entrepôt</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1x1" data-name="Accueil" onclick="applyLayout(this)"><div class="layout-icon li-1x1"><div></div></div><span class="layout-name">Accueil</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="4x4" data-name="Vue complète" onclick="applyLayout(this)"><div class="layout-icon li-4x4"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><span class="layout-name">Vue complète</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1p5" data-name="Entrée nord" onclick="applyLayout(this)"><div class="layout-icon li-1p5"><div></div><div></div><div></div><div></div></div><span class="layout-name">Entrée nord</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="2x2" data-name="Entrée sud" onclick="applyLayout(this)"><div class="layout-icon li-2x2"><div></div><div></div><div></div><div></div></div><span class="layout-name">Entrée sud</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1p7" data-name="Nuit" onclick="applyLayout(this)"><div class="layout-icon li-1p7"><div></div><div></div><div></div><div></div><div></div></div><span class="layout-name">Nuit</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="3x3" data-name="Week-end" onclick="applyLayout(this)"><div class="layout-icon li-3x3"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><span class="layout-name">Week-end</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+          <div class="layout-item" data-grid="1x1" data-name="Caisse" onclick="applyLayout(this)"><div class="layout-icon li-1x1"><div></div></div><span class="layout-name">Caisse</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span></div>
+        </div>
+      </div>
+      <div class="sidebar-resize-v" id="sidebarResizeV"></div>
+      <div class="sidebar-section-wrap" id="cameraWrap">
+        <div class="section">
+          <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-title">Caméras</span>
+            <div class="section-actions"><span class="section-chevron">▼</span></div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="cam-item" draggable="true" data-cam="route"><span class="cam-dot on"></span><span class="cam-name">Route</span><span class="cam-badge-sm">M</span></div>
+          <div class="cam-item" draggable="true" data-cam="devant"><span class="cam-dot on"></span><span class="cam-name">Devant</span></div>
+          <div class="cam-item" draggable="true" data-cam="devant_local"><span class="cam-dot on"></span><span class="cam-name">Devant Local</span></div>
+          <div class="cam-item" draggable="true" data-cam="bureau_arriere"><span class="cam-dot on"></span><span class="cam-name">Bureau Arrière</span></div>
+          <div class="cam-item" draggable="true" data-cam="bureau_devant"><span class="cam-dot on"></span><span class="cam-name">Bureau Devant</span></div>
+          <div class="cam-item" draggable="true" data-cam="parking_a"><span class="cam-dot on"></span><span class="cam-name">Parking A</span></div>
+          <div class="cam-item" draggable="true" data-cam="parking_b"><span class="cam-dot on"></span><span class="cam-name">Parking B</span></div>
+          <div class="cam-item" draggable="true" data-cam="entree_nord"><span class="cam-dot on"></span><span class="cam-name">Entrée Nord</span></div>
+          <div class="cam-item" draggable="true" data-cam="entree_sud"><span class="cam-dot off"></span><span class="cam-name">Entrée Sud</span></div>
+          <div class="cam-item" draggable="true" data-cam="entrepot_1"><span class="cam-dot on"></span><span class="cam-name">Entrepôt 1</span></div>
+          <div class="cam-item" draggable="true" data-cam="entrepot_2"><span class="cam-dot on"></span><span class="cam-name">Entrepôt 2</span></div>
+          <div class="cam-item" draggable="true" data-cam="entrepot_3"><span class="cam-dot on"></span><span class="cam-name">Entrepôt 3</span></div>
+          <div class="cam-item" draggable="true" data-cam="quai"><span class="cam-dot on"></span><span class="cam-name">Quai chargement</span></div>
+          <div class="cam-item" draggable="true" data-cam="accueil"><span class="cam-dot on"></span><span class="cam-name">Accueil</span></div>
+          <div class="cam-item" draggable="true" data-cam="caisse_1"><span class="cam-dot on"></span><span class="cam-name">Caisse 1</span></div>
+          <div class="cam-item" draggable="true" data-cam="caisse_2"><span class="cam-dot off"></span><span class="cam-name">Caisse 2</span></div>
+          <div class="cam-item" draggable="true" data-cam="couloir_a"><span class="cam-dot on"></span><span class="cam-name">Couloir A</span></div>
+          <div class="cam-item" draggable="true" data-cam="couloir_b"><span class="cam-dot on"></span><span class="cam-name">Couloir B</span></div>
+          <div class="cam-item" draggable="true" data-cam="salle_serveur"><span class="cam-dot on"></span><span class="cam-name">Salle serveur</span></div>
+          <div class="cam-item" draggable="true" data-cam="terrasse"><span class="cam-dot on"></span><span class="cam-name">Terrasse</span></div>
+        </div>
+      </div>
+    </div><!-- /sidebar -->
+
+    <div class="resize-h" id="resizeLeft"></div>
+
+    <div class="content-area">
+      <div class="grid-area">
+        <div class="grid-wrap g-2x2" id="grid">
+          <div class="cell selected" data-cam="route"><div class="cell-feed"><span class="ph">📹</span></div><div class="cell-badges"><span class="badge badge-live">LIVE</span><span class="badge badge-rec">REC</span></div><div class="det-box" style="top:32%;left:38%;width:14%;height:32%;"><span class="det-label">Personne 92%</span></div><div class="cell-overlay"><span class="cell-label">Route</span><span class="cell-time"></span></div></div>
+          <div class="cell" data-cam="devant"><div class="cell-feed"><span class="ph">📹</span></div><div class="cell-badges"><span class="badge badge-live">LIVE</span><span class="badge badge-rec">REC</span></div><div class="cell-overlay"><span class="cell-label">Devant</span><span class="cell-time"></span></div></div>
+          <div class="cell" data-cam="devant_local"><div class="cell-feed"><span class="ph">📹</span></div><div class="cell-badges"><span class="badge badge-live">LIVE</span><span class="badge badge-motion">MOT</span></div><div class="cell-overlay"><span class="cell-label">Devant Local</span><span class="cell-time"></span></div></div>
+          <div class="cell" data-cam="bureau_arriere"><div class="cell-feed"><span class="ph">📹</span></div><div class="cell-badges"><span class="badge badge-live">LIVE</span></div><div class="cell-overlay"><span class="cell-label">Bureau Arrière</span><span class="cell-time"></span></div></div>
+        </div>
+      </div>
+
+      <div class="resize-h" id="resizeRight"></div>
+
+      <div class="events-panel" id="events">
+        <div class="ep-header"><h3>Événements</h3><div class="filter-chips"><button class="chip active">Tout</button><button class="chip">Alertes</button><button class="chip">Détect.</button></div></div>
+        <div class="ep-list">
+          <div class="evt"><div class="evt-thumb">📹</div><div class="evt-info"><div class="evt-time">17:02</div><div class="evt-type"><span class="dot" style="background:var(--person-color)"></span> Personne</div><div class="evt-cam">Route</div></div></div>
+          <div class="evt"><div class="evt-thumb">📹</div><div class="evt-info"><div class="evt-time">16:48</div><div class="evt-type"><span class="dot" style="background:var(--car-color)"></span> Voiture</div><div class="evt-cam">Devant Local</div></div></div>
+          <div class="evt"><div class="evt-thumb">📹</div><div class="evt-info"><div class="evt-time">16:31</div><div class="evt-type"><span class="dot" style="background:var(--person-color)"></span> Personne</div><div class="evt-cam">Devant</div></div></div>
+          <div class="evt"><div class="evt-thumb">📹</div><div class="evt-info"><div class="evt-time">16:15</div><div class="evt-type"><span class="dot" style="background:var(--car-color)"></span> Voiture</div><div class="evt-cam">Route</div></div></div>
+          <div class="evt"><div class="evt-thumb">📹</div><div class="evt-info"><div class="evt-time">15:52</div><div class="evt-type"><span class="dot" style="background:var(--car-color)"></span> Voiture</div><div class="evt-cam">Devant Local</div></div></div>
+          <div class="evt"><div class="evt-thumb">📹</div><div class="evt-info"><div class="evt-time">15:20</div><div class="evt-type"><span class="dot" style="background:var(--person-color)"></span> Personne</div><div class="evt-cam">Route</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="resize-v" id="resizeBottom"></div>
+
+  <div class="timeline" id="timeline">
+    <!-- Top bar -->
+    <div class="tl-top">
+      <span class="tl-clock" id="tlClock">18:48:48</span>
+      <span class="tl-date">2026-07-04 SAM</span>
+
+      <button class="tl-tool" title="Zoom avant">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="14" y2="14"/><line x1="5" y1="7" x2="9" y2="7"/><line x1="7" y1="5" x2="7" y2="9"/></svg>
+      </button>
+      <button class="tl-tool" title="Zoom arrière">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="14" y2="14"/><line x1="5" y1="7" x2="9" y2="7"/></svg>
+      </button>
+      <div style="position:relative;display:inline-flex;">
+        <button class="tl-tool" title="Filtrer par événement" onclick="toggleTlPopover('filter')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="1,2 15,2 9,8 9,13 7,14 7,8"/></svg>
+        </button>
+        <div class="tl-filter-pop" id="tlFilterPop">
+          <div class="tl-pop-title">Filtrer les événements</div>
+          <div class="tl-filter-item checked" onclick="this.classList.toggle('checked')">
+            <span class="tl-filter-check">✓</span>
+            <span class="tl-filter-dot" style="background:#4b5563"></span>
+            Mouvement
+          </div>
+          <div class="tl-filter-item checked" onclick="this.classList.toggle('checked')">
+            <span class="tl-filter-check">✓</span>
+            <span class="tl-filter-dot" style="background:var(--person-color)"></span>
+            Personne
+          </div>
+          <div class="tl-filter-item checked" onclick="this.classList.toggle('checked')">
+            <span class="tl-filter-check">✓</span>
+            <span class="tl-filter-dot" style="background:var(--car-color)"></span>
+            Véhicule
+          </div>
+          <div class="tl-filter-item checked" onclick="this.classList.toggle('checked')">
+            <span class="tl-filter-check">✓</span>
+            <span class="tl-filter-dot" style="background:var(--success)"></span>
+            Animal
+          </div>
+        </div>
+      </div>
+
+      <div style="position:relative;display:inline-flex;">
+        <button class="tl-tool" title="Calendrier / Plage horaire" onclick="toggleTlPopover('calendar')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="12" rx="1"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="4" y1="1" x2="4" y2="5"/><line x1="12" y1="1" x2="12" y2="5"/></svg>
+        </button>
+        <div class="tl-calendar-pop" id="tlCalendarPop">
+          <div class="tl-pop-title">Plage horaire</div>
+          <div class="tl-cal-field">
+            <label class="tl-cal-label">Début</label>
+            <input class="tl-cal-input" type="datetime-local" value="2026-07-04T14:00">
+          </div>
+          <div class="tl-cal-field">
+            <label class="tl-cal-label">Fin</label>
+            <input class="tl-cal-input" type="datetime-local" value="2026-07-04T19:00">
+          </div>
+          <div class="tl-cal-actions">
+            <button class="tl-cal-btn tl-cal-btn-cancel" onclick="toggleTlPopover('calendar')">Annuler</button>
+            <button class="tl-cal-btn tl-cal-btn-apply" onclick="toggleTlPopover('calendar')">Appliquer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-spacer"></div>
+
+      <div class="tl-live active" title="Revenir au live" onclick="this.classList.toggle('active')"><span class="tl-live-dot"></span> LIVE</div>
+      <div class="tl-sync active" title="Synchroniser les pistes" onclick="this.classList.toggle('active')"><span class="tl-sync-dot"></span> Sync</div>
+    </div>
+
+    <!-- Main: timeline body + controls panel -->
+    <div class="tl-main">
+
+      <!-- Body: labels + tracks -->
+      <div class="tl-body">
+      <!-- Camera labels -->
+      <div class="tl-labels">
+        <div class="tl-label active">ROUTE</div>
+        <div class="tl-label">DEVANT</div>
+        <div class="tl-label">DEVANT LOCAL</div>
+        <div class="tl-label">BUREAU ARR.</div>
+      </div>
+
+      <!-- Tracks content -->
+      <div class="tl-content">
+        <!-- Time ruler -->
+        <div class="tl-ruler">
+          <span class="tick" style="left:3%">15:00</span>
+          <span class="tick" style="left:9%">15:10</span>
+          <span class="tick" style="left:14%">15:20</span>
+          <span class="tick tick-major" style="left:20%">15:30</span>
+          <span class="tick" style="left:26%">15:40</span>
+          <span class="tick" style="left:31%">15:50</span>
+          <span class="tick tick-major" style="left:37%">16:00</span>
+          <span class="tick" style="left:43%">16:10</span>
+          <span class="tick" style="left:48%">16:20</span>
+          <span class="tick tick-major" style="left:54%">16:30</span>
+          <span class="tick" style="left:60%">16:40</span>
+          <span class="tick" style="left:65%">16:50</span>
+          <span class="tick tick-major" style="left:71%">17:00</span>
+          <span class="tick" style="left:77%">17:10</span>
+          <span class="tick" style="left:82%">17:20</span>
+          <span class="tick tick-major" style="left:88%">17:30</span>
+          <span class="tick" style="left:94%">17:40</span>
+        </div>
+
+        <!-- Tracks -->
+        <div class="tl-tracks-area">
+          <!-- Route -->
+          <div class="tl-track">
+            <div class="seg recording" style="left:2%;width:96%"></div>
+            <div class="seg motion" style="left:8%;width:4%"></div>
+            <div class="seg motion" style="left:18%;width:2%"></div>
+            <div class="seg person" style="left:19%;width:1.5%"></div>
+            <div class="seg motion" style="left:35%;width:6%"></div>
+            <div class="seg car" style="left:36%;width:3%"></div>
+            <div class="seg motion" style="left:52%;width:3%"></div>
+            <div class="seg motion" style="left:68%;width:5%"></div>
+            <div class="seg person" style="left:69%;width:2%"></div>
+            <div class="seg car" style="left:80%;width:2%"></div>
+            <div class="seg motion" style="left:79%;width:4%"></div>
+            <div class="seg motion" style="left:90%;width:3%"></div>
+          </div>
+          <!-- Devant -->
+          <div class="tl-track">
+            <div class="seg recording" style="left:2%;width:96%"></div>
+            <div class="seg motion" style="left:12%;width:3%"></div>
+            <div class="seg motion" style="left:28%;width:2%"></div>
+            <div class="seg car" style="left:29%;width:1.5%"></div>
+            <div class="seg motion" style="left:45%;width:5%"></div>
+            <div class="seg person" style="left:46%;width:2%"></div>
+            <div class="seg motion" style="left:62%;width:3%"></div>
+            <div class="seg motion" style="left:75%;width:4%"></div>
+            <div class="seg car" style="left:76%;width:2%"></div>
+            <div class="seg motion" style="left:88%;width:5%"></div>
+          </div>
+          <!-- Devant Local -->
+          <div class="tl-track">
+            <div class="seg recording" style="left:2%;width:96%"></div>
+            <div class="seg motion" style="left:5%;width:2%"></div>
+            <div class="seg car" style="left:5.5%;width:1%"></div>
+            <div class="seg motion" style="left:22%;width:4%"></div>
+            <div class="seg car" style="left:23%;width:2%"></div>
+            <div class="seg motion" style="left:40%;width:3%"></div>
+            <div class="seg motion" style="left:55%;width:6%"></div>
+            <div class="seg car" style="left:56%;width:3%"></div>
+            <div class="seg person" style="left:58%;width:1%"></div>
+            <div class="seg motion" style="left:72%;width:2%"></div>
+            <div class="seg motion" style="left:85%;width:4%"></div>
+            <div class="seg car" style="left:86%;width:2%"></div>
+          </div>
+          <!-- Bureau Arrière -->
+          <div class="tl-track">
+            <div class="seg recording" style="left:2%;width:96%"></div>
+            <div class="seg motion" style="left:15%;width:2%"></div>
+            <div class="seg motion" style="left:33%;width:1%"></div>
+            <div class="seg motion" style="left:50%;width:2%"></div>
+            <div class="seg motion" style="left:70%;width:1%"></div>
+          </div>
+        </div>
+
+        <!-- Current position cursor -->
+        <div class="tl-cursor" style="left:88%"></div>
+
+        <!-- Hover cursor (line only) -->
+        <div class="tl-hover-cursor" id="tlHover">
+          <div class="tl-hover-time" id="tlHoverTime">17:24:15</div>
+        </div>
+      </div>
+    </div>
+
+      <!-- Resize handle -->
+      <div class="tl-controls-resize" id="resizeControls"></div>
+
+      <!-- Controls panel (right) -->
+      <div class="tl-controls" id="tlControls">
+        <div class="tl-speed-wrap">
+          <button class="tl-speed-btn" onclick="changeSpeed(-1)" title="Vitesse −">−</button>
+          <span class="tl-speed" id="tlSpeed" onclick="cycleSpeed()" title="Cliquer pour changer">1x</span>
+          <button class="tl-speed-btn" onclick="changeSpeed(1)" title="Vitesse +">+</button>
+        </div>
+        <div class="tl-pb">
+          <button class="tl-pb-btn" title="Reculer 10s">
+            <svg width="16" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="8,1 1,7 8,13"/><text x="10" y="10" font-size="7" fill="currentColor" stroke="none" font-weight="600">10</text></svg>
+          </button>
+          <button class="tl-pb-btn" title="Image précédente">◀</button>
+          <button class="tl-pb-btn play" title="Pause">❚❚</button>
+          <button class="tl-pb-btn" title="Image suivante">▶</button>
+          <button class="tl-pb-btn" title="Avancer 10s">
+            <svg width="16" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="10,1 17,7 10,13"/><text x="1" y="10" font-size="7" fill="currentColor" stroke="none" font-weight="600">10</text></svg>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /tl-main -->
+
+    <!-- Legend -->
+    <div class="tl-legend">
+      <span class="leg"><span class="leg-dot" style="background:#4b5563"></span> Mouvement</span>
+      <span class="leg"><span class="leg-dot" style="background:var(--person-color)"></span> Personne</span>
+      <span class="leg"><span class="leg-dot" style="background:var(--car-color)"></span> Véhicule</span>
+      <span class="leg"><span class="leg-dot" style="background:#374151"></span> Enregistrement</span>
+    </div>
+  </div>
+
+  <!-- Floating preview (positioned by JS) -->
+  <div class="tl-preview-float" id="tlPreviewFloat">
+    <div class="tl-preview-box">
+      <span class="ph">📹</span>
+      <span class="tl-preview-cam" id="tlPreviewCam">ROUTE</span>
+      <span class="tl-preview-time-label" id="tlPreviewTime">17:24:15</span>
+    </div>
+    <div class="tl-preview-arrow"></div>
+  </div>
+
+  <button class="expand-exit" id="expandExit" onclick="toggleExpand()">✕ Quitter le mode expand</button>
+
+  <div class="demo" onclick="this.style.display='none'">
+    MAQUETTE v6 — Panneaux redimensionnables (glisser les bords). Modal d'édition layout corrigée. Réordonnement avec ⇅. <kbd>Ctrl+1/2/3</kbd> panneaux.
+  </div>
+
+  <script>
+    const cameras = [
+      { id: 'route', name: 'Route' }, { id: 'devant', name: 'Devant' },
+      { id: 'devant_local', name: 'Devant Local' }, { id: 'bureau_arriere', name: 'Bureau Arrière' },
+      { id: 'bureau_devant', name: 'Bureau Devant' },
+    ];
+    let editingLayoutEl = null, reorderMode = false, expandMode = false;
+
+    // Add layout
+    function openAddLayout() {
+      document.getElementById('addLayoutName').value = '';
+      document.getElementById('addLayoutGrid').querySelectorAll('.popover-grid-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+      const pop = document.getElementById('addLayoutPopover');
+      pop.style.top = '50%'; pop.style.left = '50%'; pop.style.transform = 'translate(-50%, -50%)';
+      pop.classList.add('visible');
+      document.getElementById('addLayoutOverlay').classList.add('visible');
+      setTimeout(() => document.getElementById('addLayoutName').focus(), 50);
+    }
+    function closeAddLayout() {
+      document.getElementById('addLayoutPopover').classList.remove('visible');
+      document.getElementById('addLayoutOverlay').classList.remove('visible');
+    }
+    function selAddGrid(btn) {
+      document.getElementById('addLayoutGrid').querySelectorAll('.popover-grid-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    function saveAddLayout() {
+      const name = document.getElementById('addLayoutName').value.trim() || 'Nouveau layout';
+      const gridBtn = document.querySelector('#addLayoutGrid .popover-grid-btn.active');
+      const grid = gridBtn ? gridBtn.dataset.grid : '2x2';
+      const counts = { '1x1': 1, '2x2': 4, '3x3': 9, '4x4': 16, '1p5': 4, '1p7': 5 };
+
+      const item = document.createElement('div');
+      item.className = 'layout-item';
+      item.dataset.grid = grid;
+      item.dataset.name = name;
+      item.onclick = function() { applyLayout(this); };
+
+      let iconDivs = '';
+      for (let i = 0; i < (counts[grid] || 4); i++) iconDivs += '<div></div>';
+
+      item.innerHTML = `<div class="layout-icon li-${grid}">${iconDivs}</div><span class="layout-name">${name}</span><span class="layout-edit" onclick="event.stopPropagation(); openPopover(this.closest('.layout-item'))">✏</span>`;
+
+      document.getElementById('layoutList').appendChild(item);
+      closeAddLayout();
+      applyLayout(item);
+    }
+
+    function toggleExpand() {
+      expandMode = !expandMode;
+      document.body.classList.toggle('expanded', expandMode);
+      savePanelState('expand', expandMode);
+    }
+
+    function savePanelState(key, visible) {
+      const states = JSON.parse(localStorage.getItem('fv-panel-states') || '{}');
+      states[key] = visible;
+      localStorage.setItem('fv-panel-states', JSON.stringify(states));
+    }
+    function restorePanelStates() {
+      const states = JSON.parse(localStorage.getItem('fv-panel-states') || '{}');
+      if (states.sidebar === false) document.getElementById('sidebar').classList.add('collapsed');
+      if (states.events === false) document.getElementById('events').classList.add('collapsed');
+      if (states.timeline === false) document.getElementById('timeline').classList.add('collapsed');
+      if (states.expand === true) { expandMode = true; document.body.classList.add('expanded'); }
+    }
+    restorePanelStates();
+
+    function togglePanel(p) {
+      const el = document.getElementById(p);
+      el.classList.toggle('collapsed');
+      savePanelState(p, !el.classList.contains('collapsed'));
+    }
+    function toggleSection(h) { h.nextElementSibling.classList.toggle('collapsed'); h.querySelector('.section-chevron').classList.toggle('collapsed'); }
+
+    // Popover
+    function openPopover(li) {
+      editingLayoutEl = li;
+      const pop = document.getElementById('layoutPopover');
+      const overlay = document.getElementById('popoverOverlay');
+      document.getElementById('popoverName').value = li.dataset.name;
+      pop.querySelectorAll('.popover-grid-btn').forEach(b => b.classList.toggle('active', b.dataset.grid === li.dataset.grid));
+      const r = li.getBoundingClientRect();
+      let top = r.top, left = r.right + 10;
+      if (left + 340 > window.innerWidth) left = r.left - 350;
+      if (left < 10) left = 10;
+      if (top + 420 > window.innerHeight) top = window.innerHeight - 430;
+      if (top < 50) top = 50;
+      pop.style.top = top + 'px'; pop.style.left = left + 'px';
+      pop.classList.add('visible'); overlay.classList.add('visible');
+      setTimeout(() => document.getElementById('popoverName').focus(), 50);
+    }
+    function closePopover() { document.getElementById('layoutPopover').classList.remove('visible'); document.getElementById('popoverOverlay').classList.remove('visible'); editingLayoutEl = null; }
+    function selGrid(btn) { document.querySelectorAll('.popover-grid-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+    function savePopover() {
+      if (!editingLayoutEl) return;
+      const name = document.getElementById('popoverName').value.trim() || 'Sans nom';
+      const gb = document.querySelector('.popover-grid-btn.active');
+      const grid = gb ? gb.dataset.grid : editingLayoutEl.dataset.grid;
+      editingLayoutEl.dataset.name = name; editingLayoutEl.dataset.grid = grid;
+      editingLayoutEl.querySelector('.layout-name').textContent = name;
+      const icon = editingLayoutEl.querySelector('.layout-icon');
+      icon.className = 'layout-icon li-' + grid;
+      const c = { '1x1': 1, '2x2': 4, '3x3': 9, '4x4': 16, '1p5': 4, '1p7': 5 };
+      icon.innerHTML = ''; for (let i = 0; i < (c[grid] || 4); i++) icon.appendChild(document.createElement('div'));
+      if (editingLayoutEl.classList.contains('active')) setGrid(grid);
+      closePopover();
+    }
+    function deleteLayout() {
+      if (!editingLayoutEl) return;
+      document.getElementById('confirmName').textContent = editingLayoutEl.dataset.name;
+      document.getElementById('confirmOverlay').classList.add('visible');
+    }
+    function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('visible'); }
+    function confirmDelete() {
+      if (!editingLayoutEl) return;
+      const next = editingLayoutEl.nextElementSibling || editingLayoutEl.previousElementSibling;
+      if (editingLayoutEl.classList.contains('active') && next && next.classList.contains('layout-item')) applyLayout(next);
+      editingLayoutEl.remove();
+      closeConfirm();
+      closePopover();
+    }
+
+    // Reorder
+    function toggleReorder() {
+      reorderMode = !reorderMode;
+      document.getElementById('reorderBtn').classList.toggle('reorder-active', reorderMode);
+      document.querySelectorAll('.layout-item').forEach(item => {
+        item.classList.toggle('reordering', reorderMode);
+        if (reorderMode) {
+          item.setAttribute('draggable', 'true');
+          item.ondragstart = e => { e.dataTransfer.setData('layout-reorder', '1'); item.classList.add('dragging-layout'); };
+          item.ondragover = e => { e.preventDefault(); document.querySelectorAll('.layout-item').forEach(x => x.classList.remove('drag-over-layout')); item.classList.add('drag-over-layout'); };
+          item.ondragleave = () => item.classList.remove('drag-over-layout');
+          item.ondrop = e => {
+            e.preventDefault(); item.classList.remove('drag-over-layout');
+            const dragged = document.querySelector('.layout-item.dragging-layout');
+            if (dragged && dragged !== item) {
+              const list = document.getElementById('layoutList');
+              const all = [...list.querySelectorAll('.layout-item')];
+              if (all.indexOf(dragged) < all.indexOf(item)) item.after(dragged); else item.before(dragged);
+            }
+          };
+          item.ondragend = () => { item.classList.remove('dragging-layout'); document.querySelectorAll('.layout-item').forEach(x => x.classList.remove('drag-over-layout')); };
+        } else {
+          item.removeAttribute('draggable');
+          item.ondragstart = item.ondragover = item.ondragleave = item.ondrop = item.ondragend = null;
+        }
+      });
+    }
+
+    // Resize
+    function initResize(handleId, target, prop, dir) {
+      const handle = document.getElementById(handleId);
+      if (!handle) return;
+      let startPos, startSize;
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const el = typeof target === 'string' ? document.getElementById(target) : target;
+        startPos = dir === 'h' ? e.clientX : e.clientY;
+        startSize = dir === 'h' ? el.offsetWidth : el.offsetHeight;
+        handle.classList.add('active');
+        document.body.style.cursor = dir === 'h' ? 'col-resize' : 'row-resize';
+
+        const onMove = ev => {
+          const delta = dir === 'h' ? ev.clientX - startPos : startPos - ev.clientY;
+          const mult = prop === 'right' ? -1 : 1;
+          el.style[dir === 'h' ? 'width' : 'height'] = (startSize + delta * mult) + 'px';
+        };
+        const onUp = () => {
+          handle.classList.remove('active');
+          document.body.style.cursor = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          const sizeKey = handleId === 'resizeLeft' ? 'sidebar' : handleId === 'resizeRight' ? 'events' : handleId === 'resizeControls' ? 'tlControls' : 'timeline';
+          savePanelSize(sizeKey, dir === 'h' ? el.offsetWidth : el.offsetHeight);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+
+    // Restore saved panel sizes
+    function restorePanelSizes() {
+      const sizes = JSON.parse(localStorage.getItem('fv-panel-sizes') || '{}');
+      if (sizes.sidebar) document.getElementById('sidebar').style.width = sizes.sidebar + 'px';
+      if (sizes.events) document.getElementById('events').style.width = sizes.events + 'px';
+      if (sizes.timeline) document.getElementById('timeline').style.height = sizes.timeline + 'px';
+      if (sizes.tlControls) document.getElementById('tlControls').style.width = sizes.tlControls + 'px';
+      if (sizes.layoutWrap) { const lw = document.getElementById('layoutWrap'); lw.style.flex = 'none'; lw.style.height = sizes.layoutWrap + 'px'; }
+      if (sizes.cameraWrap) { const cw = document.getElementById('cameraWrap'); cw.style.flex = 'none'; cw.style.height = sizes.cameraWrap + 'px'; }
+    }
+    function savePanelSize(key, value) {
+      const sizes = JSON.parse(localStorage.getItem('fv-panel-sizes') || '{}');
+      sizes[key] = value;
+      localStorage.setItem('fv-panel-sizes', JSON.stringify(sizes));
+    }
+    restorePanelSizes();
+
+    initResize('resizeLeft', 'sidebar', 'left', 'h');
+    initResize('resizeRight', 'events', 'right', 'h');
+    initResize('resizeBottom', 'timeline', 'bottom', 'v');
+    initResize('resizeControls', 'tlControls', 'right', 'h');
+
+    // Sidebar internal resize (between layouts and cameras)
+    (function() {
+      const handle = document.getElementById('sidebarResizeV');
+      if (!handle) return;
+      const layoutWrap = document.getElementById('layoutWrap');
+      const cameraWrap = document.getElementById('cameraWrap');
+      let startY, startLayoutH, startCameraH;
+
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        startY = e.clientY;
+        startLayoutH = layoutWrap.offsetHeight;
+        startCameraH = cameraWrap.offsetHeight;
+        handle.classList.add('active');
+        document.body.style.cursor = 'row-resize';
+
+        const onMove = ev => {
+          const delta = ev.clientY - startY;
+          const newLayoutH = Math.max(80, startLayoutH + delta);
+          const newCameraH = Math.max(80, startCameraH - delta);
+          layoutWrap.style.flex = 'none';
+          cameraWrap.style.flex = 'none';
+          layoutWrap.style.height = newLayoutH + 'px';
+          cameraWrap.style.height = newCameraH + 'px';
+        };
+        const onUp = () => {
+          handle.classList.remove('active');
+          document.body.style.cursor = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          savePanelSize('layoutWrap', layoutWrap.offsetHeight);
+          savePanelSize('cameraWrap', cameraWrap.offsetHeight);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.key === '1') { e.preventDefault(); togglePanel('sidebar'); }
+      if (e.ctrlKey && e.key === '2') { e.preventDefault(); togglePanel('events'); }
+      if (e.ctrlKey && e.key === '3') { e.preventDefault(); togglePanel('timeline'); }
+      if (e.key === 'Escape') { if (expandMode) { toggleExpand(); return; } closeConfirm(); closePopover(); if (document.fullscreenElement) document.exitFullscreen(); }
+      if (e.ctrlKey && e.key === 'e') { e.preventDefault(); toggleExpand(); }
+      if (e.key === 'F11') { e.preventDefault(); document.documentElement.requestFullscreen(); }
+    });
+
+    function setGrid(type) {
+      const grid = document.getElementById('grid');
+      grid.className = 'grid-wrap g-' + type;
+      const counts = { '1x1': 1, '2x2': 4, '3x3': 9, '4x4': 16, '1p5': 6, '1p7': 8 };
+      grid.innerHTML = '';
+      for (let i = 0; i < (counts[type] || 4); i++) grid.appendChild(i < cameras.length ? makeCamCell(cameras[i], i === 0) : makeEmptyCell());
+    }
+    function applyLayout(el) { document.querySelectorAll('.layout-item').forEach(l => l.classList.remove('active')); el.classList.add('active'); setGrid(el.dataset.grid); }
+
+    function makeCamCell(cam, sel) {
+      const c = document.createElement('div'); c.className = 'cell' + (sel ? ' selected' : ''); c.dataset.cam = cam.id;
+      c.innerHTML = `<div class="cell-feed"><span class="ph">📹</span></div><div class="cell-badges"><span class="badge badge-live">LIVE</span></div><div class="cell-overlay"><span class="cell-label">${cam.name}</span><span class="cell-time"></span></div>`;
+      c.addEventListener('click', () => { document.querySelectorAll('.cell').forEach(x => x.classList.remove('selected')); c.classList.add('selected'); });
+      c.addEventListener('dblclick', () => setGrid('1x1'));
+      c.addEventListener('dragover', e => { if (!reorderMode) { e.preventDefault(); c.classList.add('drop-target'); } });
+      c.addEventListener('dragleave', () => c.classList.remove('drop-target'));
+      c.addEventListener('drop', e => { if (reorderMode) return; e.preventDefault(); c.classList.remove('drop-target'); const cam = cameras.find(x => x.id === e.dataTransfer.getData('text/plain')); if (cam) { c.dataset.cam = cam.id; c.querySelector('.cell-label').textContent = cam.name; } });
+      return c;
+    }
+    function makeEmptyCell() {
+      const c = document.createElement('div'); c.className = 'cell';
+      c.innerHTML = '<div class="cell-empty"><span class="drop-icon">+</span>Glisser une caméra</div>';
+      c.addEventListener('dragover', e => { if (!reorderMode) { e.preventDefault(); c.classList.add('drop-target'); } });
+      c.addEventListener('dragleave', () => c.classList.remove('drop-target'));
+      c.addEventListener('drop', e => { if (reorderMode) return; e.preventDefault(); c.classList.remove('drop-target'); const cam = cameras.find(x => x.id === e.dataTransfer.getData('text/plain')); if (cam) c.replaceWith(makeCamCell(cam, false)); });
+      return c;
+    }
+
+    document.querySelectorAll('.cam-item[draggable]').forEach(item => {
+      item.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', item.dataset.cam); item.classList.add('dragging'); });
+      item.addEventListener('dragend', () => item.classList.remove('dragging'));
+    });
+    document.querySelectorAll('.chip').forEach(chip => { chip.addEventListener('click', () => { chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); chip.classList.add('active'); }); });
+
+    // Timeline popovers
+    function toggleTlPopover(type) {
+      const filterId = 'tlFilterPop';
+      const calId = 'tlCalendarPop';
+      const targetId = type === 'filter' ? filterId : calId;
+      const otherId = type === 'filter' ? calId : filterId;
+
+      document.getElementById(otherId).classList.remove('visible');
+      const el = document.getElementById(targetId);
+      el.classList.toggle('visible');
+
+      if (el.classList.contains('visible')) {
+        // Position below the button
+        const btn = el.parentElement.querySelector('.tl-tool');
+        const rect = btn.getBoundingClientRect();
+        el.style.top = '-' + (el.offsetHeight + 8) + 'px';
+        el.style.left = '0px';
+      }
+    }
+
+    // Close popovers on outside click
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.tl-filter-pop') && !e.target.closest('.tl-tool[title*="Filtrer"]')) {
+        document.getElementById('tlFilterPop').classList.remove('visible');
+      }
+      if (!e.target.closest('.tl-calendar-pop') && !e.target.closest('.tl-tool[title*="Calendrier"]')) {
+        document.getElementById('tlCalendarPop').classList.remove('visible');
+      }
+    });
+
+    // Speed control
+    const speeds = [0.5, 1, 1.5, 2, 4, 8, 16];
+    let currentSpeedIdx = 1;
+
+    function updateSpeedDisplay() {
+      const s = speeds[currentSpeedIdx];
+      document.getElementById('tlSpeed').textContent = (s % 1 === 0 ? s : s.toFixed(1)) + 'x';
+    }
+
+    function cycleSpeed() {
+      currentSpeedIdx = (currentSpeedIdx + 1) % speeds.length;
+      updateSpeedDisplay();
+    }
+
+    function changeSpeed(dir) {
+      currentSpeedIdx = Math.max(0, Math.min(speeds.length - 1, currentSpeedIdx + dir));
+      updateSpeedDisplay();
+    }
+
+    // Timeline hover + scroll + preview
+    (function() {
+      const content = document.querySelector('.tl-content');
+      const hover = document.getElementById('tlHover');
+      const hoverTime = document.getElementById('tlHoverTime');
+      const previewFloat = document.getElementById('tlPreviewFloat');
+      const previewTime = document.getElementById('tlPreviewTime');
+      const previewCam = document.getElementById('tlPreviewCam');
+      if (!content || !hover || !previewFloat) return;
+
+      // Get active camera name
+      function getActiveCamera() {
+        const active = document.querySelector('.tl-label.active');
+        return active ? active.textContent : 'ROUTE';
+      }
+
+      content.addEventListener('mousemove', e => {
+        const rect = content.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const pct = x / rect.width;
+
+        // Hover line
+        hover.style.left = x + 'px';
+        hover.style.display = 'block';
+
+        // Time from position (15:00 to 18:00 range)
+        const totalMin = 15 * 60 + pct * 3 * 60;
+        const h = Math.floor(totalMin / 60);
+        const m = Math.floor(totalMin % 60);
+        const s = Math.floor((totalMin * 60) % 60);
+        const timeStr = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        hoverTime.textContent = timeStr;
+        previewTime.textContent = timeStr;
+        previewCam.textContent = getActiveCamera();
+
+        // Position floating preview above timeline
+        const previewW = 180;
+        let previewX = e.clientX - previewW / 2;
+        if (previewX < rect.left) previewX = rect.left;
+        if (previewX + previewW > rect.right) previewX = rect.right - previewW;
+
+        previewFloat.style.left = previewX + 'px';
+        previewFloat.style.top = (rect.top - 118) + 'px';
+        previewFloat.classList.add('visible');
+      });
+
+      content.addEventListener('mouseleave', () => {
+        hover.style.display = 'none';
+        previewFloat.classList.remove('visible');
+      });
+
+      // Click to move cursor
+      content.addEventListener('click', e => {
+        const rect = content.getBoundingClientRect();
+        const pct = ((e.clientX - rect.left) / rect.width) * 100;
+        const cursor = content.querySelector('.tl-cursor');
+        if (cursor) cursor.style.left = pct + '%';
+      });
+
+      // Click on camera labels to select
+      document.querySelectorAll('.tl-label').forEach(label => {
+        label.addEventListener('click', () => {
+          document.querySelectorAll('.tl-label').forEach(l => l.classList.remove('active'));
+          label.classList.add('active');
+        });
+      });
+    })();
+
+    setInterval(() => {
+      const t = new Date().toTimeString().split(' ')[0];
+      document.querySelectorAll('.cell-time').forEach(el => el.textContent = t);
+      const tlClock = document.getElementById('tlClock');
+      if (tlClock) tlClock.textContent = t;
+    }, 1000);
+  </script>
+</body>
+</html>
