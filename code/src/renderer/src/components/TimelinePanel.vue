@@ -181,7 +181,8 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
 
     <div class="flex min-h-0 flex-1">
       <!-- Pistes -->
-      <div ref="body" class="relative flex min-w-0 flex-1 flex-col" @mousedown="onDown" @wheel="onWheel" @mouseleave="hover = null">
+      <!-- L'axe du temps va toujours de gauche à droite, même en arabe -->
+      <div ref="body" dir="ltr" class="relative flex min-w-0 flex-1 flex-col" @mousedown="onDown" @wheel="onWheel" @mouseleave="hover = null">
         <div class="flex h-6 shrink-0 overflow-hidden border-b border-[#1e2a3a] [scrollbar-gutter:stable]">
           <div class="flex w-[120px] shrink-0 items-center border-r border-[#1e2a3a] px-2.5 text-[11px] text-ink-3">{{ $t('timeline.cameras', { n: cams.length }, cams.length) }}</div>
           <div ref="ruler" data-track class="relative flex-1 cursor-pointer overflow-hidden">

@@ -31,3 +31,11 @@ Electron + Vue 3 + Pinia + Tailwind CSS 4. Maquette de référence : `../mockups
 - Certificat auto-signé : empreinte affichée, à approuver une fois (`trusted-certs.json` dans le dossier utilisateur)
 - « Rester connecté » : mot de passe chiffré par le système (DPAPI sous Windows), reconnexion automatique si la session expire
 - Port 5000 : accès interne sans compte, déconseillé (avertissement affiché)
+
+## Langues
+
+- 10 langues : anglais, chinois simplifié, hindi, espagnol, arabe (droite à gauche), français, bengali, portugais (Brésil), russe, indonésien
+- Fichiers : `src/shared/locales/*.json`, communs à la fenêtre et au processus principal (menu, icône, notifications)
+- Le français (`fr.json`) est la langue source ; une clé absente d'une traduction s'affiche en anglais, puis en français
+- Choix : Réglages → Général → Langue ; par défaut, la langue du système
+- Pluriels au format vue-i18n : `singulier | pluriel`
