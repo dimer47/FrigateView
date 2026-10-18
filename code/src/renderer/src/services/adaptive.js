@@ -9,7 +9,10 @@ export const CFG = {
   firstTryMs: 4000, // lecture SD stable avant le premier essai HD
   firstTryFocusedMs: 1500, // caméra agrandie : essai HD presque immédiat
   stableMs: 20000, // lecture stable exigée avant une nouvelle remontée après un échec
-  trialTimeoutMs: 8000, // la HD doit afficher une image dans ce délai, sinon abandon
+  trialTimeoutMs: 8000,
+  settleMs: 6000, // juste après la bascule HD : à-coups normaux (image clé, tampon), non comptés
+  freezeShare: 0.5, // gel > 50 % de l'intervalle = dégradé (un gel bref isolé est normal en HD)
+  maxJitterMs: 1000, // la HD doit afficher une image dans ce délai, sinon abandon
   backoffBase: 30000, // délai après le 1er échec, doublé à chaque échec suivant
   backoffMax: 10 * 60000,
   resetAfterMs: 5 * 60000, // HD stable pendant 5 min : compteur d'échecs remis à zéro
@@ -39,6 +42,7 @@ export function metrics(prev, cur) {
   const d = (k) => Math.max(0, (cur[k] || 0) - (prev[k] || 0))
   const pkts = d('packetsReceived') + d('packetsLost'), frames = d('framesDecoded') + d('framesDropped'), emitted = d('jitterBufferEmittedCount')
   return {
+    ms: cur.t && prev.t ? cur.t - prev.t : CFG.sampleMs,
     loss: pkts ? d('packetsLost') / pkts : 0,
     drop: frames ? d('framesDropped') / frames : 0,
     fps: cur.fps ?? null,
@@ -50,16 +54,16 @@ export function metrics(prev, cur) {
   }
 }
 
-export const isBad = (m) => !!m && (m.stalled || m.loss > 0.03 || m.drop > 0.1 || m.freezes > 0 || m.jitterMs > 400 || (m.fps != null && m.fps > 0 && m.fps < 4))
-export const isExcellent = (m) => !!m && !isBad(m) && m.loss < 0.005 && m.drop < 0.02 && m.jitterMs < 150 && (m.kbpsAvail == null || m.kbpsAvail > 8000)
+export const isBad = (m) => !!m && (m.stalled || m.loss > 0.03 || m.drop > 0.1 || m.freezeMs > CFG.freezeShare * (m.ms || CFG.sampleMs) || m.jitterMs > CFG.maxJitterMs || (m.fps != null && m.fps > 0 && m.fps < 4))
+export const isExcellent = (m) => !!m && !isBad(m) && !m.freezes && m.loss < 0.005 && m.drop < 0.02 && m.jitterMs < 150
 
 // Raison lisible (clé i18n + valeurs) pour l'info-bulle
 export function reason(m) {
   if (!m) return null
-  if (m.stalled || m.freezes) return { key: 'freeze' }
+  if (m.stalled || m.freezeMs > CFG.freezeShare * (m.ms || CFG.sampleMs)) return { key: 'freeze' }
   if (m.loss > 0.03) return { key: 'loss', pct: Math.round(m.loss * 100) }
   if (m.drop > 0.1) return { key: 'drop', pct: Math.round(m.drop * 100) }
-  if (m.jitterMs > 400) return { key: 'jitter', ms: Math.round(m.jitterMs) }
+  if (m.jitterMs > CFG.maxJitterMs) return { key: 'jitter', ms: Math.round(m.jitterMs) }
   return { key: 'ok', pct: Math.round(m.loss * 1000) / 10 }
 }
 
@@ -86,6 +90,7 @@ export function step(s, { now, m, focused = false, tiles = 1, lastTry = 0 }) {
   }
   if (s.trying) return { state: s, action: 'none' }
   if (s.level === 'high') {
+    if (now - s.highSince < CFG.settleMs) { s.badStreak = 0; return { state: s, action: 'none' } }
     if (s.badStreak >= CFG.badSamples) {
       s.failures++
       Object.assign(s, { level: 'low', badStreak: 0, goodSince: now, highSince: null, nextTry: now + backoff(s.failures) })

@@ -7,8 +7,8 @@ const run = (s, ms, opts = {}, m = good) => { let a = []; for (let t = s.t; t <=
 
 describe('mesures', () => {
   it('metrics : pertes, images perdues, gigue, gel', () => {
-    const a = { packetsReceived: 100, packetsLost: 0, framesDecoded: 100, framesDropped: 0, jitterBufferDelay: 1, jitterBufferEmittedCount: 10, freezeCount: 0 }
-    const b = { packetsReceived: 190, packetsLost: 10, framesDecoded: 130, framesDropped: 0, jitterBufferDelay: 2, jitterBufferEmittedCount: 20, freezeCount: 1, fps: 15 }
+    const a = { t: 0, packetsReceived: 100, packetsLost: 0, framesDecoded: 100, framesDropped: 0, jitterBufferDelay: 1, jitterBufferEmittedCount: 10, freezeCount: 0 }
+    const b = { t: 1500, packetsReceived: 190, packetsLost: 10, framesDecoded: 130, framesDropped: 0, jitterBufferDelay: 2, jitterBufferEmittedCount: 20, freezeCount: 1, fps: 15 }
     const m = metrics(a, b)
     expect(m.loss).toBeCloseTo(0.1)
     expect(m.jitterMs).toBeCloseTo(100)
@@ -20,7 +20,10 @@ describe('mesures', () => {
     expect(isBad({ ...good, stalled: true })).toBe(true)
     expect(isBad(good)).toBe(false)
     expect(isExcellent(good)).toBe(true)
-    expect(isExcellent({ ...good, kbpsAvail: 3000 })).toBe(false)
+    expect(isExcellent({ ...good, freezes: 1, freezeMs: 200 })).toBe(false)
+    expect(isBad({ ...good, freezes: 1, freezeMs: 300, ms: 1500 })).toBe(false) // gel bref isolé
+    expect(isBad({ ...good, freezes: 1, freezeMs: 1000, ms: 1500 })).toBe(true)
+    expect(isBad({ ...good, jitterMs: 700 })).toBe(false)
   })
   it('readReport', () => {
     const r = new Map([['a', { type: 'inbound-rtp', kind: 'video', packetsReceived: 5, framesDecoded: 3 }], ['b', { type: 'candidate-pair', nominated: true, availableIncomingBitrate: 9e6 }]])
@@ -42,12 +45,18 @@ describe('décisions', () => {
     expect(step(initState(0), { now: CFG.firstTryFocusedMs, m: good, focused: true }).action).toBe('tryHigh')
   })
   it('descente après 2 mesures dégradées seulement (hystérésis)', () => {
-    let s = { ...initState(0), level: 'high', highSince: 0 }
+    let s = { ...initState(0), level: 'high', highSince: -1e9 }
     let r = step(s, { now: 1000, m: bad }); expect(r.action).toBe('none')
     r = step(r.state, { now: 2500, m: good }); expect(r.action).toBe('none') // une mesure isolée ne suffit pas
     r = step(r.state, { now: 4000, m: bad }); r = step(r.state, { now: 5500, m: bad })
     expect(r.action).toBe('down')
     expect(r.state.level).toBe('low')
+  })
+  it('pas de descente pendant la mise en route de la HD', () => {
+    let r = { state: { ...initState(0), level: 'high', highSince: 0 } }
+    for (let t = 1500; t < CFG.settleMs; t += 1500) { r = step(r.state, { now: t, m: bad }); expect(r.action).toBe('none') }
+    r = step(r.state, { now: CFG.settleMs, m: bad }); r = step(r.state, { now: CFG.settleMs + 1500, m: bad })
+    expect(r.action).toBe('down')
   })
   it('backoff exponentiel après chaque échec', () => {
     let s = trialDone({ ...initState(0), trying: true }, false, 0)
@@ -83,6 +92,6 @@ describe('budget mosaïque', () => {
     expect(budgetOk({ focused: true, tiles: 16, now: 1, lastTry: 1 })).toBe(true)
   })
   it('step respecte le budget', () => {
-    expect(step(initState(0), { now: 1e5, m: { ...good, kbpsAvail: 1000 }, tiles: 9 }).action).toBe('none')
+    expect(step(initState(0), { now: 1e5, m: { ...good, jitterMs: 300 }, tiles: 9 }).action).toBe('none')
   })
 })
