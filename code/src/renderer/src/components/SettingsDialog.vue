@@ -4,12 +4,15 @@ import { useAppSettings } from '@/stores/appSettings'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
 import { useUiStore, STAT_FIELDS, FITS } from '@/stores/ui'
+import { QUALITIES, hasSubStream } from '@/services/streams'
 import { TYPE_KEYS, typeLabel } from '@/stores/events'
 import { t, loc, LANGS } from '@/i18n'
 import { isInternal, getJson } from '@/services/frigate'
 import { getFaces, faceRecognitionEnabled } from '@/services/faces'
 import { lprEnabled, knownPlates } from '@/services/plates'
 import { useEventsStore } from '@/stores/events'
+import FixedCams from './FixedCams.vue'
+const native = window.native
 import { toggleIn, normPlate } from '@/services/watch'
 
 const app = useAppSettings()
@@ -86,6 +89,9 @@ const close = () => (app.open = false)
             </label>
             <h3 class="mb-1.5 mt-5 font-semibold">{{ $t('stats.settingsTitle') }}</h3>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('fit.setting') }}<small class="block text-xs text-ink-3">{{ $t('fit.settingHint') }}</small></span><select class="input !w-44" :value="ui.fit" @change="ui.setFit($event.target.value)"><option v-for="f in FITS" :key="f" :value="f">{{ $t('fit.' + f) }}</option></select></label>
+            <!-- Flux HD / SD : visible seulement si au moins une caméra a un sous-flux -->
+            <label v-if="server.cameras.some(hasSubStream)" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('quality.setting') }}<small class="block text-xs text-ink-3">{{ $t('quality.desc.' + ui.quality) }}</small></span><select class="input !w-44" :value="ui.quality" @change="ui.setQuality($event.target.value)"><option v-for="q in QUALITIES" :key="q" :value="q" :title="$t('quality.desc.' + q)">{{ $t('quality.' + q) }}</option></select></label>
+            <div v-if="Object.keys(ui.camQuality).length" class="border-b border-line py-2.5"><div class="mb-1 text-xs text-ink-3">{{ $t('quality.help.fixedTitle') }}</div><FixedCams /></div>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('stats.toggle') }}<small class="block text-xs text-ink-3">{{ $t('stats.settingsHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.showStats" @change="ui.toggleStats()"></label>
             <div class="grid grid-cols-2 gap-x-6 pt-2" :class="{ 'pointer-events-none opacity-40': !ui.showStats }">
               <div v-for="g in ['global', 'camera']" :key="g">
@@ -170,6 +176,8 @@ const close = () => (app.open = false)
             <div v-if="server.profile.username" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.account') }}<small class="block text-xs text-ink-3">{{ $t('settings.accountHint') }}</small></span><span>{{ server.profile.username }} · {{ server.profile.role }}</span></div>
             <div class="mt-4 flex gap-2"><button class="btn" @click="close(); server.signOut()">{{ $t('settings.signOut') }}</button><button class="btn" @click="close(); server.changeServer()">{{ $t('settings.changeServer') }}</button></div>
             </template>
+            <h3 class="mb-1.5 mt-6 font-semibold">{{ $t('settings.cacheTitle') }}</h3>
+            <div class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.clearCache') }}<small class="block text-xs text-ink-3">{{ $t('settings.clearCacheHint') }}</small></span><button class="btn shrink-0" @click="native.clearCache()">{{ $t('settings.clearCacheGo') }}</button></div>
           </template>
         </div>
       </div>

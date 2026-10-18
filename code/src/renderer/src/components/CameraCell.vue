@@ -5,13 +5,15 @@ import { useUiStore } from '@/stores/ui'
 import Hls from 'hls.js'
 import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
+import { pickStream, hasSubStream, cellQuality, QUALITIES } from '@/services/streams'
+import { CFG, readReport, metrics, step, trialDone, initState, reason, slot } from '@/services/adaptive'
 import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
 import { useStatsStore, fmtRate, serverCamera } from '@/stores/stats'
 import { t } from '@/i18n'
 import { useMediaStore } from '@/stores/media'
 
-const props = defineProps({ camId: { type: String, required: true }, zoomable: { type: Boolean, default: false } })
+const props = defineProps({ camId: { type: String, required: true }, zoomable: { type: Boolean, default: false }, tiles: { type: Number, default: 1 } })
 const server = useServerStore()
 const ui = useUiStore()
 const tl = useTimelineStore()
@@ -22,7 +24,12 @@ const media = useMediaStore()
 const muted = computed(() => media.audioCam !== props.camId)
 
 const root = ref(null)
-const video = ref(null)
+// Deux éléments vidéo : le flux affiché et, pendant une bascule HD ↔ SD, le nouveau flux caché
+const vA = ref(null)
+const vB = ref(null)
+const cur = ref(0)
+const video = computed(() => (cur.value ? vB.value : vA.value))
+const spare = computed(() => (cur.value ? vA.value : vB.value))
 const imgSrc = ref('')
 const imgError = ref(false)
 const lastFrame = ref(0)
@@ -34,6 +41,49 @@ const offline = computed(() => server.online[props.camId] === false)
 const frozen = computed(() => server.status === 'lost')
 const wantVideo = computed(() => ui.liveMode === 'webrtc' && !frozen.value && !offline.value && !playback.value)
 const showVideo = computed(() => wantVideo.value && rtc.value === 'playing')
+
+/* ---- Flux HD / SD (seulement si Frigate déclare un sous-flux dans live.streams) ---- */
+const hasSub = computed(() => hasSubStream(cam.value))
+const override = ref(null) // choix manuel de la case : null = suivre le réglage
+// Auto = adaptatif : démarre en SD, tente la HD si le débit le permet (services/adaptive.js).
+// Choix manuel de la case ou Toujours HD / SD : flux verrouillé, aucune mesure.
+// Réglage de cette caméra (clic droit) prioritaire sur le réglage global
+const camPref = computed(() => ui.camQuality[props.camId] || null)
+const pref = computed(() => camPref.value || ui.quality)
+const adaptive = computed(() => hasSub.value && ui.liveMode === 'webrtc' && pref.value === 'auto' && !override.value)
+const level = ref('low') // niveau courant en mode adaptatif
+const trying = ref(false) // essai HD en cours
+const lastM = ref(null) // dernière mesure, pour l'info-bulle
+const quality = computed(() => (adaptive.value ? level.value : cellQuality({ pref: pref.value, override: override.value, tiles: props.tiles, focused: props.zoomable })))
+const streamId = computed(() => (cam.value ? pickStream(cam.value, quality.value).id : props.camId))
+// Clic sur le badge : HD forcé → SD forcé → retour au mode normal (réglage de la caméra ou général)
+function toggleQuality() { override.value = override.value === null ? 'high' : override.value === 'high' ? 'low' : null }
+watch(() => props.camId, () => { override.value = null; qMenu.value = null })
+// Menu « flux de cette caméra » : clic droit n'importe où sur la case, placé sous le curseur
+const qMenu = ref(null) // { x, y } dans la case, ou null
+function openQMenu(e) {
+  if (!hasSub.value || ui.liveMode !== 'webrtc' || playback.value) return
+  e.preventDefault()
+  const r = root.value.getBoundingClientRect()
+  qMenu.value = { x: Math.max(4, Math.min(e.clientX - r.left, r.width - 200)), y: Math.max(4, Math.min(e.clientY - r.top, r.height - 190)) }
+}
+function pickCamQuality(q) { ui.setCamQuality(props.camId, q); override.value = null; qMenu.value = null }
+const closeQMenu = (e) => { if (qMenu.value && !(e.target.closest && e.target.closest('[data-qmenu]'))) qMenu.value = null }
+onMounted(() => { document.addEventListener('pointerdown', closeQMenu, true); window.addEventListener('blur', closeQMenu) })
+onBeforeUnmount(() => { document.removeEventListener('pointerdown', closeQMenu, true); window.removeEventListener('blur', closeQMenu) })
+const badgeTitle = computed(() => {
+  const parts = []
+  if (adaptive.value) {
+    parts.push(t(trying.value ? 'quality.state.trying' : 'quality.state.' + level.value))
+    const why = reason(lastM.value)
+    if (why) parts.push(t('quality.why.' + why.key, why))
+  }
+  if (camPref.value) parts.push(t('quality.camSet', { mode: t('quality.' + camPref.value) }))
+  if (override.value) parts.push(t(override.value === 'high' ? 'quality.forcedHigh' : 'quality.forcedLow'))
+  parts.push(t(override.value === null ? 'quality.clickHigh' : override.value === 'high' ? 'quality.clickLow' : 'quality.clickBack', { mode: t('quality.' + pref.value) }))
+  parts.push(t('quality.rightClick'))
+  return parts.join(' · ')
+})
 
 /* ---- Images fixes (mode Images, ou en attendant / à défaut de la vidéo) ---- */
 let snapTimer = null
@@ -73,9 +123,14 @@ async function startVideo() {
   const gen = rtcGen
   rtc.value = 'connecting'
   lastRtcBytes = 0
+  if (adaptive.value) { // nouvelle connexion : on repart en SD, en gardant l'historique d'échecs
+    level.value = 'low'
+    aState = { ...initState(Date.now()), failures: aState?.failures || 0, nextTry: aState?.nextTry || 0 }
+  }
+  connectedStream = streamId.value
   try {
-    const p = await connectWebRTC(server.server, props.camId, video.value, () => {
-      if (gen !== rtcGen) return
+    const p = await connectWebRTC(server.server, connectedStream, video.value, () => {
+      if (gen !== rtcGen || p !== pc) return
       rtc.value = 'failed'
       scheduleRetry()
     })
@@ -92,9 +147,93 @@ function stopVideo() {
   rtcGen++
   clearTimeout(retryTimer)
   if (pc) { pc.onconnectionstatechange = null; pc.close(); pc = null }
-  if (video.value) video.value.srcObject = null
+  closeTrial()
+  for (const v of [vA.value, vB.value]) if (v) v.srcObject = null
+  connectedStream = null
   rtc.value = 'off'
 }
+
+/* ---- Bascule HD ↔ SD sans écran noir ----
+   Le nouveau flux s'ouvre dans l'élément caché ; on échange l'affichage à sa première image
+   décodée, puis on ferme l'ancienne connexion. Délai dépassé ou erreur : on garde l'ancien. */
+let connectedStream = null
+let trialPc = null
+let aState = null
+let prevRaw = null
+function closeTrial() {
+  trying.value = false
+  if (trialPc) { trialPc.onconnectionstatechange = null; trialPc.close(); trialPc = null }
+}
+function firstFrame(el, ms) {
+  return new Promise((resolve) => {
+    let done = false
+    const finish = (ok) => { if (done) return; done = true; clearTimeout(timer); clearInterval(poll); el.removeEventListener('playing', onPlay); resolve(ok) }
+    const onPlay = () => (el.requestVideoFrameCallback ? el.requestVideoFrameCallback(() => finish(true)) : finish(true))
+    const timer = setTimeout(() => finish(false), ms)
+    // Filet : l'événement « playing » peut être manqué (élément caché, lecture déjà lancée)
+    const poll = setInterval(() => { if (el.readyState >= 2 && el.videoWidth && !el.paused) finish(true); else if (el.paused && el.srcObject) el.play().catch(() => {}) }, 250)
+    el.addEventListener('playing', onPlay)
+  })
+}
+async function switchTo(lvl) {
+  const id = pickStream(cam.value, lvl).id, el = spare.value, gen = rtcGen
+  if (!el || !pc || id === connectedStream) return false
+  closeTrial()
+  trying.value = lvl === 'high'
+  let p = null
+  try {
+    p = trialPc = await connectWebRTC(server.server, id, el, () => {
+      if (gen !== rtcGen || p !== pc) return
+      rtc.value = 'failed'
+      scheduleRetry()
+    })
+    const ok = gen === rtcGen && trialPc === p && await firstFrame(el, CFG.trialTimeoutMs)
+    if (!ok || gen !== rtcGen || trialPc !== p) { if (trialPc === p) closeTrial(); else if (p) { p.onconnectionstatechange = null; p.close() } return false }
+    const old = pc, oldEl = video.value
+    trialPc = null
+    trying.value = false
+    pc = p
+    connectedStream = id
+    level.value = lvl
+    cur.value = 1 - cur.value
+    lastRtcBytes = 0
+    prevRaw = null
+    if (old) { old.onconnectionstatechange = null; old.close() }
+    if (oldEl) oldEl.srcObject = null
+    return true
+  } catch {
+    if (trialPc === p) closeTrial()
+    return false
+  }
+}
+
+// Mesure périodique (mode adaptatif seulement) et décision
+let adaptTimer = null
+async function adaptTick() {
+  if (!adaptive.value || rtc.value !== 'playing' || !pc || trying.value || !aState) return
+  const raw = readReport(await pc.getStats())
+  const m = metrics(prevRaw, raw)
+  prevRaw = raw
+  if (m) lastM.value = m
+  const now = Date.now()
+  const { state, action } = step(aState, { now, m, focused: props.zoomable, tiles: props.tiles, lastTry: slot.lastTry })
+  aState = state
+  if (action === 'tryHigh') {
+    slot.lastTry = now
+    const ok = await switchTo('high')
+    if (aState) aState = trialDone(aState, ok, Date.now())
+  } else if (action === 'down') {
+    if (!(await switchTo('low')) && level.value === 'high' && wantVideo.value) startVideo()
+  }
+}
+watch(adaptive, (on) => {
+  clearInterval(adaptTimer); adaptTimer = null; prevRaw = null; lastM.value = null
+  if (on) { aState = null; adaptTimer = setInterval(adaptTick, CFG.sampleMs) }
+}, { immediate: true })
+// Agrandissement / nombre de cases : nouvelle chance immédiate pour la caméra agrandie
+watch(() => props.zoomable, (z) => { if (z && aState) aState = { ...aState, nextTry: 0, failures: 0 } })
+watch(() => props.camId, () => { aState = null; prevRaw = null; lastM.value = null })
+onBeforeUnmount(() => clearInterval(adaptTimer))
 function onPlaying() {
   rtc.value = 'playing'
   lastFrame.value = Date.now()
@@ -102,6 +241,10 @@ function onPlaying() {
 }
 
 watch(wantVideo, (v) => (v ? startVideo() : stopVideo()))
+// Changement de flux (HD ↔ SD) : on ferme l'ancienne connexion et on rouvre ; rien si le flux reste le même
+// (changement de caméra : déjà relancé par l'observateur de camId)
+// (bascule adaptative : déjà faite sans coupure, connectedStream est à jour)
+watch(() => [streamId.value, props.camId], ([id, c], [, oldCam]) => { if (c === oldCam && id !== connectedStream && wantVideo.value && pc) startVideo() })
 watch(() => props.camId, () => { imgSrc.value = ''; stopPlayback(); startSnapshots(); if (wantVideo.value) startVideo(); if (playback.value) syncPlayback() })
 
 /* ---- Relecture HLS ----
@@ -323,11 +466,12 @@ onBeforeUnmount(() => clearInterval(miniTimer))
 </script>
 
 <template>
-  <div ref="root" class="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#1b2636,#0b121c)]" @wheel="onWheel">
+  <div ref="root" class="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#1b2636,#0b121c)]" @wheel="onWheel" @contextmenu="openQMenu">
    <div class="absolute inset-0" :class="{ 'cursor-grab': zoomed && !panning, 'cursor-grabbing': panning }" :style="zoomStyle" @pointerdown="onPanDown" @pointermove="onPanMove" @pointerup="onPanUp" @pointercancel="onPanUp" @dblclick="zoomed && ($event.stopPropagation(), resetZoom())">
     <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
     <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
-    <video ref="video" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo }" autoplay :muted="muted" playsinline @playing="onPlaying" />
+    <video ref="vA" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo || cur !== 0 }" autoplay :muted="muted || cur !== 0" playsinline @playing="cur === 0 && onPlaying()" />
+    <video ref="vB" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo || cur !== 1 }" autoplay :muted="muted || cur !== 1" playsinline @playing="cur === 1 && onPlaying()" />
    </div>
 
     <!-- Zoom : niveau, réinitialisation et mini-carte -->
@@ -353,6 +497,14 @@ onBeforeUnmount(() => clearInterval(miniTimer))
       <span v-else class="badge" :title="wantVideo ? $t('cell.noVideoTitle') : $t('cell.snapshotTitle')">
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
+      <button v-if="hasSub && ui.liveMode === 'webrtc' && !playback" class="badge cursor-pointer hover:bg-accent" :class="{ '!bg-accent/80': override }"
+        :title="badgeTitle" @click.stop="toggleQuality" @dblclick.stop @contextmenu.stop="openQMenu">{{ trying ? 'HD…' : quality === 'low' ? 'SD' : 'HD' }}<i v-if="camPref" class="ml-1 !size-1.5 rounded-full bg-white" /></button>
+    </div>
+    <div v-if="qMenu" data-qmenu class="absolute z-[8] min-w-48 rounded-md border border-line-2 bg-modal py-1 text-xs shadow-xl" @click.stop @pointerdown.stop :style="{ left: qMenu.x + 'px', top: qMenu.y + 'px' }" @contextmenu.prevent>
+      <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-3">{{ $t('quality.camMenu') }}</div>
+      <button v-for="q in [null, ...QUALITIES]" :key="q || 'global'" class="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-raised" :class="{ 'font-semibold text-accent': camPref === q }" @click="pickCamQuality(q)">
+        <span class="w-3">{{ camPref === q ? '✓' : '' }}</span>{{ q ? $t('quality.' + q) : $t('quality.followGlobal', { mode: $t('quality.' + ui.quality) }) }}
+      </button>
     </div>
     <div v-if="ui.showStats && statLine" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
         {{ statLine }}

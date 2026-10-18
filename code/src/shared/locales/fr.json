@@ -324,7 +324,11 @@
     "changeServer": "Changer de serveur ou de mode",
     "noServer": "Aucun serveur configuré : renseignez-le sur l'écran de connexion.",
     "wallModeSame": "Comme la fenêtre principale",
-    "wallModeHint": "Images 1/s : bien moins de débit et de charge serveur, utile avec plusieurs murs"
+    "wallModeHint": "Images 1/s : bien moins de débit et de charge serveur, utile avec plusieurs murs",
+    "cacheTitle": "Cache",
+    "clearCache": "Vider le cache",
+    "clearCacheHint": "Images, vignettes et fichiers de l'app. Réglages et connexion conservés. L'app se recharge.",
+    "clearCacheGo": "Vider"
   },
   "help": {
     "panels": "Gabarits · Événements · Timeline",
@@ -708,5 +712,54 @@
     "similarTitle": "Événements où l'objet ressemble à celui-ci (recherche sémantique de Frigate)",
     "similarTo": "Semblables à :",
     "backToText": "Recherche par texte"
+  },
+  "quality": {
+    "setting": "Flux du direct",
+    "auto": "Auto",
+    "light": "Allégé",
+    "high": "Toujours HD",
+    "low": "Toujours SD",
+    "toHigh": "Passer en HD (flux principal)",
+    "toLow": "Passer en SD (sous-flux, plus léger)",
+    "desc": {
+      "auto": "Démarre en SD, passe en HD si le débit le permet, redescend s'il se dégrade. Caméras avec sous-flux seulement.",
+      "light": "SD dès 4 caméras affichées, HD en caméra agrandie, sans mesure du débit.",
+      "high": "Flux principal partout.",
+      "low": "Sous-flux partout, le plus léger."
+    },
+    "state": {
+      "low": "Auto : SD",
+      "high": "Auto : HD",
+      "trying": "Auto : essai HD en cours"
+    },
+    "why": {
+      "freeze": "image figée",
+      "loss": "pertes {pct} %",
+      "drop": "images perdues {pct} %",
+      "jitter": "gigue {ms} ms",
+      "ok": "réseau stable ({pct} % de pertes)"
+    },
+    "camMenu": "Flux de cette caméra",
+    "followGlobal": "Comme le réglage général ({mode})",
+    "camSet": "Réglage de cette caméra : {mode}",
+    "rightClick": "Clic droit : réglage de cette caméra",
+    "forcedHigh": "HD forcée",
+    "forcedLow": "SD forcée",
+    "clickHigh": "Clic : forcer la HD",
+    "clickLow": "Clic : forcer la SD",
+    "clickBack": "Clic : revenir en {mode}",
+    "help": {
+      "title": "Flux HD / SD",
+      "badge": "Badge HD/SD en haut à gauche de chaque caméra, à côté de « Live » (si elle a un sous-flux).",
+      "blue": "Badge bleu : HD ou SD forcée temporairement.",
+      "dot": "Point blanc : la caméra a son propre réglage, mémorisé.",
+      "left": "Clic sur le badge : HD forcée → SD forcée → retour au mode normal. Temporaire.",
+      "right": "Clic droit sur la caméra : réglage propre à cette caméra (Auto, Allégé, Toujours HD, Toujours SD). Mémorisé.",
+      "modes": "Auto : démarre en SD, passe en HD si le débit le permet. Allégé : SD dès 4 caméras, HD en agrandi.",
+      "fixedTitle": "Caméras avec un réglage propre",
+      "noneFixed": "Aucune : toutes suivent le réglage général.",
+      "reset": "Réinitialiser",
+      "resetAll": "Tout réinitialiser"
+    }
   }
 }

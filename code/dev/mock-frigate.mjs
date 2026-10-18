@@ -25,6 +25,8 @@ if (!existsSync(mediaDir + 'route.ts')) {
   for (const c of ['route', 'devant', 'devant_local', 'bureau_arriere', 'bureau_devant'])
     execSync(`ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=640x360:rate=15 -vf hue=h=${Math.floor(rnd(c) * 360)} -t 10 -c:v libx264 -pix_fmt yuv420p -g 15 -f mpegts "${mediaDir}${c}.ts"`)
 }
+// Sous-flux (live.streams) déclarés sur les 3 premières caméras seulement : les deux cas sont testables.
+// Le mock ne sert pas go2rtc/WebRTC : les cases restent en images fixes.
 const ZONES = { route: ['chaussee', 'trottoir'], devant: ['portail', 'allee'], devant_local: ['parking'], bureau_arriere: ['cour'], bureau_devant: ['entree'] }
 // Lecture des plaques (LPR, 0.16+) : plaques fictives tirées d'un petit lot pour qu'elles reviennent.
 // MOCK_NO_LPR=1 : lpr.enabled false et aucune plaque dans les événements
@@ -197,7 +199,7 @@ function handler(secure) {
   const pz = url.pathname.match(/^\/api\/(\w+)\/ptz\/info$/)
   if (pz) return send(200, 'application/json', JSON.stringify(pz[1] === 'devant' ? { name: 'devant', features: ['pt', 'zoom'], presets: ['portail', 'allee'] } : {}))
   if (url.pathname === '/api/version') return send(200, 'text/plain', '0.17.2-mock')
-  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, semantic_search: { enabled: SEMANTIC_ON, model: 'jinav1' }, lpr: { enabled: LPR_ON, known_plates: LPR_ON ? KNOWN_PLATES : {} }, cameras: Object.fromEntries(cams.map((c) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])) }])) }))
+  if (url.pathname === '/api/config') return send(200, 'application/json', JSON.stringify({ face_recognition: { enabled: FACES_ON }, semantic_search: { enabled: SEMANTIC_ON, model: 'jinav1' }, lpr: { enabled: LPR_ON, known_plates: LPR_ON ? KNOWN_PLATES : {} }, cameras: Object.fromEntries(cams.map((c, i) => [c, { enabled: true, zones: Object.fromEntries(ZONES[c].map((z) => [z, {}])), ...(i < 3 && { live: { streams: { Principal: c, 'Sous-flux': `${c}_sub` } } }) }])) }))
   if (url.pathname === '/api/stats') return send(200, 'application/json', JSON.stringify({ cameras: Object.fromEntries(cams.map((c) => [c, { camera_fps: offline.has(c) ? 0 : 15 }])) }))
   // Enregistrements : segments de 10 s, avec une coupure de 8 min toutes les 3 h
   let r = url.pathname.match(/^\/api\/([^/]+)\/recordings$/)

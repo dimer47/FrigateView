@@ -324,7 +324,11 @@
     "changeServer": "更换服务器或模式",
     "noServer": "未配置服务器：请在登录界面中填写。",
     "wallModeSame": "与主窗口相同",
-    "wallModeHint": "每秒 1 帧：大幅降低带宽和服务器负载，适合多个视频墙"
+    "wallModeHint": "每秒 1 帧：大幅降低带宽和服务器负载，适合多个视频墙",
+    "cacheTitle": "缓存",
+    "clearCache": "清除缓存",
+    "clearCacheHint": "图像、缩略图和应用文件。设置和登录将保留。应用将重新加载。",
+    "clearCacheGo": "清除"
   },
   "help": {
     "panels": "布局 · 事件 · 时间轴",
@@ -708,5 +712,54 @@
     "similarTitle": "物体与此相似的事件（Frigate 语义搜索）",
     "similarTo": "相似于：",
     "backToText": "文本搜索"
+  },
+  "quality": {
+    "setting": "直播流",
+    "auto": "自动",
+    "light": "轻量",
+    "high": "始终 HD",
+    "low": "始终 SD",
+    "toHigh": "切换到 HD（主码流）",
+    "toLow": "切换到 SD（子码流，更轻）",
+    "desc": {
+      "auto": "先以 SD 启动，带宽允许时切换到 HD，变差时降回 SD。仅限有子码流的摄像头。",
+      "light": "显示 4 个及以上摄像头时用 SD，放大时用 HD，不测量带宽。",
+      "high": "全部使用主码流。",
+      "low": "全部使用子码流，最省带宽。"
+    },
+    "state": {
+      "low": "自动：SD",
+      "high": "自动：HD",
+      "trying": "自动：正在尝试 HD"
+    },
+    "why": {
+      "freeze": "画面卡住",
+      "loss": "丢包 {pct}%",
+      "drop": "丢帧 {pct}%",
+      "jitter": "抖动 {ms} 毫秒",
+      "ok": "网络稳定（丢包 {pct}%）"
+    },
+    "camMenu": "此摄像头的流",
+    "followGlobal": "与常规设置相同（{mode}）",
+    "camSet": "此摄像头：{mode}",
+    "rightClick": "右键：此摄像头的设置",
+    "forcedHigh": "强制 HD",
+    "forcedLow": "强制 SD",
+    "clickHigh": "单击：强制 HD",
+    "clickLow": "单击：强制 SD",
+    "clickBack": "单击：恢复为{mode}",
+    "help": {
+      "title": "HD / SD 流",
+      "badge": "每个摄像头上的 HD/SD 徽标（有子码流时）。",
+      "blue": "蓝色徽标：临时强制 HD 或 SD。",
+      "dot": "白点：该摄像头有已保存的单独设置。",
+      "left": "单击徽标：强制 HD → 强制 SD → 恢复正常。临时。",
+      "right": "右键摄像头：此摄像头的设置（自动、轻量、始终 HD、始终 SD）。会保存。",
+      "modes": "自动：先 SD，带宽允许时切到 HD。轻量：4 个摄像头起用 SD，放大时 HD。",
+      "fixedTitle": "有单独设置的摄像头",
+      "noneFixed": "无：全部遵循常规设置。",
+      "reset": "重置",
+      "resetAll": "全部重置"
+    }
   }
 }

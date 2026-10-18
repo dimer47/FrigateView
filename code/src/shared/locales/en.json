@@ -324,7 +324,11 @@
     "changeServer": "Change server or mode",
     "noServer": "No server configured: enter it on the sign-in screen.",
     "wallModeSame": "Same as main window",
-    "wallModeHint": "1 frame/s: much less bandwidth and server load, useful with several walls"
+    "wallModeHint": "1 frame/s: much less bandwidth and server load, useful with several walls",
+    "cacheTitle": "Cache",
+    "clearCache": "Clear cache",
+    "clearCacheHint": "Images, thumbnails and app files. Settings and sign-in are kept. The app reloads.",
+    "clearCacheGo": "Clear"
   },
   "help": {
     "panels": "Layouts · Events · Timeline",
@@ -708,5 +712,54 @@
     "similarTitle": "Events whose object looks like this one (Frigate semantic search)",
     "similarTo": "Similar to:",
     "backToText": "Text search"
+  },
+  "quality": {
+    "setting": "Live stream",
+    "auto": "Auto",
+    "light": "Light",
+    "high": "Always HD",
+    "low": "Always SD",
+    "toHigh": "Switch to HD (main stream)",
+    "toLow": "Switch to SD (sub-stream, lighter)",
+    "desc": {
+      "auto": "Starts in SD, switches to HD when bandwidth allows, drops back if it degrades. Cameras with a sub-stream only.",
+      "light": "SD from 4 cameras shown, HD for an enlarged camera, no bandwidth measurement.",
+      "high": "Main stream everywhere.",
+      "low": "Sub-stream everywhere, the lightest."
+    },
+    "state": {
+      "low": "Auto: SD",
+      "high": "Auto: HD",
+      "trying": "Auto: trying HD"
+    },
+    "why": {
+      "freeze": "frozen image",
+      "loss": "loss {pct}%",
+      "drop": "dropped frames {pct}%",
+      "jitter": "jitter {ms} ms",
+      "ok": "stable network ({pct}% loss)"
+    },
+    "camMenu": "This camera's stream",
+    "followGlobal": "Same as general setting ({mode})",
+    "camSet": "This camera: {mode}",
+    "rightClick": "Right-click: this camera's setting",
+    "forcedHigh": "HD forced",
+    "forcedLow": "SD forced",
+    "clickHigh": "Click: force HD",
+    "clickLow": "Click: force SD",
+    "clickBack": "Click: back to {mode}",
+    "help": {
+      "title": "HD / SD stream",
+      "badge": "HD/SD badge at the top left of each camera, next to “Live” (when it has a substream).",
+      "blue": "Blue badge: HD or SD temporarily forced.",
+      "dot": "White dot: the camera has its own saved setting.",
+      "left": "Click the badge: force HD → force SD → back to normal. Temporary.",
+      "right": "Right-click the camera: setting for this camera (Auto, Light, Always HD, Always SD). Saved.",
+      "modes": "Auto: starts in SD, switches to HD when bandwidth allows. Light: SD from 4 cameras, HD when enlarged.",
+      "fixedTitle": "Cameras with their own setting",
+      "noneFixed": "None: all follow the general setting.",
+      "reset": "Reset",
+      "resetAll": "Reset all"
+    }
   }
 }

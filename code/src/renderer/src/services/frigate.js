@@ -70,7 +70,8 @@ export async function getCameras(server) {
     id,
     name: c.ui?.name || c.friendly_name || prettify(id),
     enabled: c.enabled !== false,
-    order: c.ui?.order ?? 0
+    order: c.ui?.order ?? 0,
+    streams: c.live?.streams || {} // { libellé: flux go2rtc } (Frigate ≥ 0.15), vide sinon
   })).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
 }
 

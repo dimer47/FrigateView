@@ -324,7 +324,11 @@
     "changeServer": "Cambiar de servidor o de modo",
     "noServer": "Ningún servidor configurado: indíquelo en la pantalla de conexión.",
     "wallModeSame": "Igual que la ventana principal",
-    "wallModeHint": "1 imagen/s: mucho menos ancho de banda y carga del servidor, útil con varios muros"
+    "wallModeHint": "1 imagen/s: mucho menos ancho de banda y carga del servidor, útil con varios muros",
+    "cacheTitle": "Caché",
+    "clearCache": "Vaciar la caché",
+    "clearCacheHint": "Imágenes, miniaturas y archivos de la app. Se conservan los ajustes y la sesión. La app se recarga.",
+    "clearCacheGo": "Vaciar"
   },
   "help": {
     "panels": "Mosaicos · Eventos · Línea de tiempo",
@@ -708,5 +712,54 @@
     "similarTitle": "Eventos cuyo objeto se parece a este (búsqueda semántica de Frigate)",
     "similarTo": "Similares a:",
     "backToText": "Búsqueda por texto"
+  },
+  "quality": {
+    "setting": "Flujo en directo",
+    "auto": "Auto",
+    "light": "Ligero",
+    "high": "Siempre HD",
+    "low": "Siempre SD",
+    "toHigh": "Pasar a HD (flujo principal)",
+    "toLow": "Pasar a SD (subflujo, más ligero)",
+    "desc": {
+      "auto": "Empieza en SD, pasa a HD si el ancho de banda lo permite y vuelve a SD si empeora. Solo cámaras con subflujo.",
+      "light": "SD a partir de 4 cámaras, HD en cámara ampliada, sin medir el ancho de banda.",
+      "high": "Flujo principal en todas.",
+      "low": "Subflujo en todas, lo más ligero."
+    },
+    "state": {
+      "low": "Auto: SD",
+      "high": "Auto: HD",
+      "trying": "Auto: probando HD"
+    },
+    "why": {
+      "freeze": "imagen congelada",
+      "loss": "pérdidas {pct} %",
+      "drop": "fotogramas perdidos {pct} %",
+      "jitter": "jitter {ms} ms",
+      "ok": "red estable ({pct} % de pérdidas)"
+    },
+    "camMenu": "Flujo de esta cámara",
+    "followGlobal": "Como el ajuste general ({mode})",
+    "camSet": "Esta cámara: {mode}",
+    "rightClick": "Clic derecho: ajuste de esta cámara",
+    "forcedHigh": "HD forzada",
+    "forcedLow": "SD forzada",
+    "clickHigh": "Clic: forzar HD",
+    "clickLow": "Clic: forzar SD",
+    "clickBack": "Clic: volver a {mode}",
+    "help": {
+      "title": "Flujo HD / SD",
+      "badge": "Insignia HD/SD en cada cámara (si tiene subflujo).",
+      "blue": "Insignia azul: HD o SD forzada temporalmente.",
+      "dot": "Punto blanco: la cámara tiene su propio ajuste guardado.",
+      "left": "Clic en la insignia: HD forzada → SD forzada → modo normal. Temporal.",
+      "right": "Clic derecho en la cámara: ajuste propio (Auto, Ligero, Siempre HD, Siempre SD). Guardado.",
+      "modes": "Auto: empieza en SD, pasa a HD si el caudal lo permite. Ligero: SD desde 4 cámaras, HD ampliada.",
+      "fixedTitle": "Cámaras con ajuste propio",
+      "noneFixed": "Ninguna: todas siguen el ajuste general.",
+      "reset": "Restablecer",
+      "resetAll": "Restablecer todo"
+    }
   }
 }

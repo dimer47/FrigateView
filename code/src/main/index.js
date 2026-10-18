@@ -97,7 +97,7 @@ ipcMain.handle('http', (_e, { url, method = 'GET', headers = {}, body, upload, t
     const host = new URL(url).hostname
     let settled = false
     const finish = (r) => { if (!settled) { settled = true; clearTimeout(timer); resolve(r) } }
-    const req = net.request({ url, method, useSessionCookies: true, redirect: 'manual' })
+    const req = net.request({ url, method, useSessionCookies: true, redirect: 'manual', cache: 'no-store' }) // API : toujours la réponse du serveur (sinon config périmée, ex. sous-flux ajoutés)
     for (const [k, v] of Object.entries(headers)) req.setHeader(k, v)
     const timer = setTimeout(() => { req.abort(); finish({ ok: false, status: 0, error: 'timeout' }) }, timeout)
     req.on('response', (res) => {
@@ -351,6 +351,15 @@ function identifyScreens() {
   })
 }
 ipcMain.handle('screens:identify', () => { identifyScreens(); return true })
+
+// Vider le cache (images, vignettes, fichiers de l'app) puis recharger les fenêtres.
+// Réglages, connexion, gabarits et cookies sont conservés.
+ipcMain.handle('cache:clear', async () => {
+  await session.defaultSession.clearCache()
+  await session.defaultSession.clearCodeCaches({}).catch(() => {})
+  for (const w of BrowserWindow.getAllWindows()) w.webContents.reloadIgnoringCache()
+  return true
+})
 
 /* ------------------------------------------------------------------
    Notifications Windows

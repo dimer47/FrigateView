@@ -324,7 +324,11 @@
     "changeServer": "Ganti server atau mode",
     "noServer": "Belum ada server yang dikonfigurasi: masukkan di layar masuk.",
     "wallModeSame": "Sama seperti jendela utama",
-    "wallModeHint": "1 gambar/dtk: bandwidth dan beban server jauh lebih kecil, berguna dengan beberapa dinding"
+    "wallModeHint": "1 gambar/dtk: bandwidth dan beban server jauh lebih kecil, berguna dengan beberapa dinding",
+    "cacheTitle": "Cache",
+    "clearCache": "Kosongkan cache",
+    "clearCacheHint": "Gambar, thumbnail, dan file aplikasi. Pengaturan dan login tetap tersimpan. Aplikasi dimuat ulang.",
+    "clearCacheGo": "Kosongkan"
   },
   "help": {
     "panels": "Tata letak · Peristiwa · Linimasa",
@@ -708,5 +712,54 @@
     "similarTitle": "Peristiwa dengan objek mirip ini (pencarian semantik Frigate)",
     "similarTo": "Serupa dengan:",
     "backToText": "Pencarian teks"
+  },
+  "quality": {
+    "setting": "Siaran langsung",
+    "auto": "Otomatis",
+    "light": "Ringan",
+    "high": "Selalu HD",
+    "low": "Selalu SD",
+    "toHigh": "Beralih ke HD (stream utama)",
+    "toLow": "Beralih ke SD (sub-stream, lebih ringan)",
+    "desc": {
+      "auto": "Mulai di SD, beralih ke HD jika bandwidth cukup, turun lagi jika memburuk. Hanya kamera dengan sub-stream.",
+      "light": "SD mulai 4 kamera, HD untuk kamera yang diperbesar, tanpa mengukur bandwidth.",
+      "high": "Stream utama di semua kamera.",
+      "low": "Sub-stream di semua kamera, paling ringan."
+    },
+    "state": {
+      "low": "Otomatis: SD",
+      "high": "Otomatis: HD",
+      "trying": "Otomatis: mencoba HD"
+    },
+    "why": {
+      "freeze": "gambar membeku",
+      "loss": "kehilangan {pct}%",
+      "drop": "frame hilang {pct}%",
+      "jitter": "jitter {ms} ms",
+      "ok": "jaringan stabil ({pct}% kehilangan)"
+    },
+    "camMenu": "Aliran kamera ini",
+    "followGlobal": "Sama dengan pengaturan umum ({mode})",
+    "camSet": "Kamera ini: {mode}",
+    "rightClick": "Klik kanan: pengaturan kamera ini",
+    "forcedHigh": "HD dipaksa",
+    "forcedLow": "SD dipaksa",
+    "clickHigh": "Klik: paksa HD",
+    "clickLow": "Klik: paksa SD",
+    "clickBack": "Klik: kembali ke {mode}",
+    "help": {
+      "title": "Aliran HD / SD",
+      "badge": "Lencana HD/SD di setiap kamera (jika ada sub-aliran).",
+      "blue": "Lencana biru: HD atau SD dipaksa sementara.",
+      "dot": "Titik putih: kamera punya pengaturan sendiri yang disimpan.",
+      "left": "Klik lencana: paksa HD → paksa SD → kembali normal. Sementara.",
+      "right": "Klik kanan kamera: pengaturan kamera ini (Otomatis, Ringan, Selalu HD, Selalu SD). Disimpan.",
+      "modes": "Otomatis: mulai SD, naik ke HD bila bandwidth cukup. Ringan: SD mulai 4 kamera, HD saat diperbesar.",
+      "fixedTitle": "Kamera dengan pengaturan sendiri",
+      "noneFixed": "Tidak ada: semua mengikuti pengaturan umum.",
+      "reset": "Atur ulang",
+      "resetAll": "Atur ulang semua"
+    }
   }
 }

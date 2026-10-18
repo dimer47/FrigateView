@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld('native', {
   chooseSave: (defaultName, kind) => ipcRenderer.invoke('file:chooseSave', { defaultName, kind }),
   chooseDir: () => ipcRenderer.invoke('file:chooseDir'),
   writeFile: (path, data) => ipcRenderer.invoke('file:write', { path, data }),
+  clearCache: () => ipcRenderer.invoke('cache:clear'),
   reveal: (path) => ipcRenderer.invoke('file:reveal', path),
   download: (id, url, path) => ipcRenderer.invoke('file:download', { id, url, path }),
   cancelDownload: (id) => ipcRenderer.invoke('file:cancel', id),
