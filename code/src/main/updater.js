@@ -12,7 +12,7 @@ const { autoUpdater } = electronUpdater
 const RELEASES = 'https://github.com/dimer47/FrigateView/releases/latest'
 const SIX_HOURS = 6 * 3600e3
 
-export function initUpdater({ tr, win }) {
+export function initUpdater({ tr, win, onQuit = () => {} }) {
   if (!app.isPackaged) return () => {}
   // fvAppleSigned : ajouté au package.json de l'app par la CI quand elle signe avec un certificat Apple
   let signed = false
@@ -27,9 +27,11 @@ export function initUpdater({ tr, win }) {
     const r = await dialog.showMessageBox(win(), { type: 'info', message: tr('main.updateAvailable', { version: info.version }), detail: tr('main.updateMacHint'), buttons: [tr('main.updateDownload'), tr('main.updateLater')], defaultId: 0, cancelId: 1 })
     if (r.response === 0 && /^https:\/\//.test(RELEASES)) shell.openExternal(RELEASES)
   })
+  autoUpdater.on('before-quit-for-update', () => onQuit())
   autoUpdater.on('update-downloaded', async (info) => {
     const r = await dialog.showMessageBox(win(), { type: 'info', message: tr('main.updateReady', { version: info.version }), buttons: [tr('main.updateRestart'), tr('main.updateLater')], defaultId: 0, cancelId: 1 })
-    if (r.response === 0) setImmediate(() => autoUpdater.quitAndInstall())
+    // onQuit : lève le « fermer dans la barre des menus », sinon les fenêtres refusent de se fermer et l'installation n'a jamais lieu
+    if (r.response === 0) setImmediate(() => { onQuit(); autoUpdater.quitAndInstall() })
   })
   autoUpdater.on('update-not-available', () => {
     if (manual) dialog.showMessageBox(win(), { type: 'info', message: tr('main.upToDate', { version: app.getVersion() }) })

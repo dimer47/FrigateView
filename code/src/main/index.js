@@ -610,7 +610,7 @@ app.whenReady().then(() => {
   screen.on('display-added', syncWalls)
   screen.on('display-removed', syncWalls)
   applySettings()
-  checkUpdates = initUpdater({ tr, win: () => mainWin })
+  checkUpdates = initUpdater({ tr, win: () => mainWin, onQuit: () => { quitting = true } })
   app.on('activate', showMain)
 })
 
