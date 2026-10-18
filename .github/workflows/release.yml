@@ -104,9 +104,11 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           for f in dist/*.dmg; do
-            xcrun notarytool submit "$f" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait --timeout 30m
+            # coupures réseau côté Apple : envoi réessayé jusqu'à 3 fois
+            ok=; for i in 1 2 3; do xcrun notarytool submit "$f" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait --timeout 30m && { ok=1; break; }; echo "notarisation $i échouée, nouvel essai dans 60 s"; sleep 60; done
+            [ -n "$ok" ] || exit 1
             for i in $(seq 1 20); do xcrun stapler staple "$f" && break; echo "agrafage $i échoué, nouvel essai dans 30 s"; sleep 30; done
-            xcrun stapler validate "$f"
+            for i in 1 2 3 4 5; do xcrun stapler validate "$f" && break; [ $i = 5 ] && exit 1; sleep 30; done
           done
 
       - name: Build macOS ad hoc
