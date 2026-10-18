@@ -738,6 +738,10 @@
       "drop": "丢帧 {pct}%",
       "jitter": "抖动 {ms} 毫秒",
       "ok": "网络稳定（丢包 {pct}%）"
-    }
+    },
+    "camMenu": "此摄像头的流",
+    "followGlobal": "与常规设置相同（{mode}）",
+    "camSet": "此摄像头：{mode}",
+    "rightClick": "右键：此摄像头的设置"
   }
 }

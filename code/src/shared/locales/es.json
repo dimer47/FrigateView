@@ -738,6 +738,10 @@
       "drop": "fotogramas perdidos {pct} %",
       "jitter": "jitter {ms} ms",
       "ok": "red estable ({pct} % de pérdidas)"
-    }
+    },
+    "camMenu": "Flujo de esta cámara",
+    "followGlobal": "Como el ajuste general ({mode})",
+    "camSet": "Esta cámara: {mode}",
+    "rightClick": "Clic derecho: ajuste de esta cámara"
   }
 }

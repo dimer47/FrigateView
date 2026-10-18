@@ -5,7 +5,7 @@ import { useUiStore } from '@/stores/ui'
 import Hls from 'hls.js'
 import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
-import { pickStream, hasSubStream, cellQuality } from '@/services/streams'
+import { pickStream, hasSubStream, cellQuality, QUALITIES } from '@/services/streams'
 import { CFG, readReport, metrics, step, trialDone, initState, reason, slot } from '@/services/adaptive'
 import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
@@ -47,14 +47,19 @@ const hasSub = computed(() => hasSubStream(cam.value))
 const override = ref(null) // choix manuel de la case : null = suivre le réglage
 // Auto = adaptatif : démarre en SD, tente la HD si le débit le permet (services/adaptive.js).
 // Choix manuel de la case ou Toujours HD / SD : flux verrouillé, aucune mesure.
-const adaptive = computed(() => hasSub.value && ui.liveMode === 'webrtc' && ui.quality === 'auto' && !override.value)
+// Réglage de cette caméra (clic droit) prioritaire sur le réglage global
+const camPref = computed(() => ui.camQuality[props.camId] || null)
+const pref = computed(() => camPref.value || ui.quality)
+const adaptive = computed(() => hasSub.value && ui.liveMode === 'webrtc' && pref.value === 'auto' && !override.value)
 const level = ref('low') // niveau courant en mode adaptatif
 const trying = ref(false) // essai HD en cours
 const lastM = ref(null) // dernière mesure, pour l'info-bulle
-const quality = computed(() => (adaptive.value ? level.value : cellQuality({ pref: ui.quality, override: override.value, tiles: props.tiles, focused: props.zoomable })))
+const quality = computed(() => (adaptive.value ? level.value : cellQuality({ pref: pref.value, override: override.value, tiles: props.tiles, focused: props.zoomable })))
 const streamId = computed(() => (cam.value ? pickStream(cam.value, quality.value).id : props.camId))
 function toggleQuality() { override.value = quality.value === 'low' ? 'high' : 'low' }
-watch(() => props.camId, () => (override.value = null))
+watch(() => props.camId, () => { override.value = null; qMenu.value = false })
+const qMenu = ref(false) // menu « flux de cette caméra » (clic droit sur le badge)
+function pickCamQuality(q) { ui.setCamQuality(props.camId, q); override.value = null; qMenu.value = false }
 const badgeTitle = computed(() => {
   const parts = []
   if (adaptive.value) {
@@ -62,7 +67,9 @@ const badgeTitle = computed(() => {
     const why = reason(lastM.value)
     if (why) parts.push(t('quality.why.' + why.key, why))
   }
+  if (camPref.value) parts.push(t('quality.camSet', { mode: t('quality.' + camPref.value) }))
   parts.push(t(quality.value === 'low' ? 'quality.toHigh' : 'quality.toLow'))
+  parts.push(t('quality.rightClick'))
   return parts.join(' · ')
 })
 
@@ -479,7 +486,13 @@ onBeforeUnmount(() => clearInterval(miniTimer))
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
       <button v-if="hasSub && ui.liveMode === 'webrtc' && !playback" class="badge cursor-pointer hover:bg-accent" :class="{ '!bg-accent/80': override }"
-        :title="badgeTitle" @click.stop="toggleQuality" @dblclick.stop>{{ trying ? 'HD…' : quality === 'low' ? 'SD' : 'HD' }}</button>
+        :title="badgeTitle" @click.stop="toggleQuality" @dblclick.stop @contextmenu.prevent.stop="qMenu = !qMenu">{{ trying ? 'HD…' : quality === 'low' ? 'SD' : 'HD' }}<i v-if="camPref" class="ml-1 !size-1.5 rounded-full bg-white" /></button>
+      <div v-if="qMenu" class="absolute bottom-7 right-1 z-[6] min-w-48 rounded-md border border-line-2 bg-modal py-1 text-xs shadow-xl" @click.stop @pointerdown.stop @mouseleave="qMenu = false">
+        <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-3">{{ $t('quality.camMenu') }}</div>
+        <button v-for="q in [null, ...QUALITIES]" :key="q || 'global'" class="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-raised" :class="{ 'font-semibold text-accent': camPref === q }" @click="pickCamQuality(q)">
+          <span class="w-3">{{ camPref === q ? '✓' : '' }}</span>{{ q ? $t('quality.' + q) : $t('quality.followGlobal', { mode: $t('quality.' + ui.quality) }) }}
+        </button>
+      </div>
     </div>
     <div v-if="ui.showStats && statLine" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
         {{ statLine }}

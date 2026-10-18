@@ -738,6 +738,10 @@
       "drop": "images perdues {pct} %",
       "jitter": "gigue {ms} ms",
       "ok": "réseau stable ({pct} % de pertes)"
-    }
+    },
+    "camMenu": "Flux de cette caméra",
+    "followGlobal": "Comme le réglage général ({mode})",
+    "camSet": "Réglage de cette caméra : {mode}",
+    "rightClick": "Clic droit : réglage de cette caméra"
   }
 }

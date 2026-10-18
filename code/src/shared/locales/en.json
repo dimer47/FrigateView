@@ -738,6 +738,10 @@
       "drop": "dropped frames {pct}%",
       "jitter": "jitter {ms} ms",
       "ok": "stable network ({pct}% loss)"
-    }
+    },
+    "camMenu": "This camera's stream",
+    "followGlobal": "Same as general setting ({mode})",
+    "camSet": "This camera: {mode}",
+    "rightClick": "Right-click: this camera's setting"
   }
 }

@@ -738,6 +738,10 @@
       "drop": "quadros perdidos {pct}%",
       "jitter": "jitter {ms} ms",
       "ok": "rede estável ({pct}% de perdas)"
-    }
+    },
+    "camMenu": "Fluxo desta câmera",
+    "followGlobal": "Igual à configuração geral ({mode})",
+    "camSet": "Esta câmera: {mode}",
+    "rightClick": "Clique direito: configuração desta câmera"
   }
 }
