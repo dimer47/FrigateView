@@ -49,6 +49,12 @@ describe('cellQuality', () => {
     expect(cellQuality({ tiles: 3 })).toBe('high')
     expect(cellQuality({ tiles: 9, focused: true })).toBe('high')
   })
+  it('Allégé : même règle fixe', () => {
+    expect(cellQuality({ pref: 'light', tiles: 4 })).toBe('low')
+    expect(cellQuality({ pref: 'light', tiles: 2 })).toBe('high')
+    expect(cellQuality({ pref: 'light', tiles: 16, focused: true })).toBe('high')
+    expect(cellQuality({ pref: 'light', tiles: 16, override: 'high' })).toBe('high')
+  })
   it('réglage global et choix de la case', () => {
     expect(cellQuality({ pref: 'high', tiles: 9 })).toBe('high')
     expect(cellQuality({ pref: 'low', focused: true })).toBe('low')

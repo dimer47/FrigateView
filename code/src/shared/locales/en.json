@@ -711,11 +711,29 @@
   },
   "quality": {
     "setting": "Live stream",
-    "settingHint": "Auto: SD from 4 cameras shown, HD for an enlarged camera. Only for cameras with a sub-stream.",
     "auto": "Auto",
+    "light": "Light",
     "high": "Always HD",
     "low": "Always SD",
     "toHigh": "Switch to HD (main stream)",
-    "toLow": "Switch to SD (sub-stream, lighter)"
+    "toLow": "Switch to SD (sub-stream, lighter)",
+    "desc": {
+      "auto": "Starts in SD, switches to HD when bandwidth allows, drops back if it degrades. Cameras with a sub-stream only.",
+      "light": "SD from 4 cameras shown, HD for an enlarged camera, no bandwidth measurement.",
+      "high": "Main stream everywhere.",
+      "low": "Sub-stream everywhere, the lightest."
+    },
+    "state": {
+      "low": "Auto: SD",
+      "high": "Auto: HD",
+      "trying": "Auto: trying HD"
+    },
+    "why": {
+      "freeze": "frozen image",
+      "loss": "loss {pct}%",
+      "drop": "dropped frames {pct}%",
+      "jitter": "jitter {ms} ms",
+      "ok": "stable network ({pct}% loss)"
+    }
   }
 }

@@ -711,11 +711,29 @@
   },
   "quality": {
     "setting": "Flujo en directo",
-    "settingHint": "Auto: SD a partir de 4 cámaras, HD en cámara ampliada. Solo para cámaras con subflujo.",
     "auto": "Auto",
+    "light": "Ligero",
     "high": "Siempre HD",
     "low": "Siempre SD",
     "toHigh": "Pasar a HD (flujo principal)",
-    "toLow": "Pasar a SD (subflujo, más ligero)"
+    "toLow": "Pasar a SD (subflujo, más ligero)",
+    "desc": {
+      "auto": "Empieza en SD, pasa a HD si el ancho de banda lo permite y vuelve a SD si empeora. Solo cámaras con subflujo.",
+      "light": "SD a partir de 4 cámaras, HD en cámara ampliada, sin medir el ancho de banda.",
+      "high": "Flujo principal en todas.",
+      "low": "Subflujo en todas, lo más ligero."
+    },
+    "state": {
+      "low": "Auto: SD",
+      "high": "Auto: HD",
+      "trying": "Auto: probando HD"
+    },
+    "why": {
+      "freeze": "imagen congelada",
+      "loss": "pérdidas {pct} %",
+      "drop": "fotogramas perdidos {pct} %",
+      "jitter": "jitter {ms} ms",
+      "ok": "red estable ({pct} % de pérdidas)"
+    }
   }
 }

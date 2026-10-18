@@ -6,6 +6,7 @@ import Hls from 'hls.js'
 import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
 import { pickStream, hasSubStream, cellQuality } from '@/services/streams'
+import { CFG, readReport, metrics, step, trialDone, initState, reason, slot } from '@/services/adaptive'
 import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
 import { useStatsStore, fmtRate, serverCamera } from '@/stores/stats'
@@ -23,7 +24,12 @@ const media = useMediaStore()
 const muted = computed(() => media.audioCam !== props.camId)
 
 const root = ref(null)
-const video = ref(null)
+// Deux éléments vidéo : le flux affiché et, pendant une bascule HD ↔ SD, le nouveau flux caché
+const vA = ref(null)
+const vB = ref(null)
+const cur = ref(0)
+const video = computed(() => (cur.value ? vB.value : vA.value))
+const spare = computed(() => (cur.value ? vA.value : vB.value))
 const imgSrc = ref('')
 const imgError = ref(false)
 const lastFrame = ref(0)
@@ -39,10 +45,26 @@ const showVideo = computed(() => wantVideo.value && rtc.value === 'playing')
 /* ---- Flux HD / SD (seulement si Frigate déclare un sous-flux dans live.streams) ---- */
 const hasSub = computed(() => hasSubStream(cam.value))
 const override = ref(null) // choix manuel de la case : null = suivre le réglage
-const quality = computed(() => cellQuality({ pref: ui.quality, override: override.value, tiles: props.tiles, focused: props.zoomable }))
+// Auto = adaptatif : démarre en SD, tente la HD si le débit le permet (services/adaptive.js).
+// Choix manuel de la case ou Toujours HD / SD : flux verrouillé, aucune mesure.
+const adaptive = computed(() => hasSub.value && ui.liveMode === 'webrtc' && ui.quality === 'auto' && !override.value)
+const level = ref('low') // niveau courant en mode adaptatif
+const trying = ref(false) // essai HD en cours
+const lastM = ref(null) // dernière mesure, pour l'info-bulle
+const quality = computed(() => (adaptive.value ? level.value : cellQuality({ pref: ui.quality, override: override.value, tiles: props.tiles, focused: props.zoomable })))
 const streamId = computed(() => (cam.value ? pickStream(cam.value, quality.value).id : props.camId))
 function toggleQuality() { override.value = quality.value === 'low' ? 'high' : 'low' }
 watch(() => props.camId, () => (override.value = null))
+const badgeTitle = computed(() => {
+  const parts = []
+  if (adaptive.value) {
+    parts.push(t(trying.value ? 'quality.state.trying' : 'quality.state.' + level.value))
+    const why = reason(lastM.value)
+    if (why) parts.push(t('quality.why.' + why.key, why))
+  }
+  parts.push(t(quality.value === 'low' ? 'quality.toHigh' : 'quality.toLow'))
+  return parts.join(' · ')
+})
 
 /* ---- Images fixes (mode Images, ou en attendant / à défaut de la vidéo) ---- */
 let snapTimer = null
@@ -82,9 +104,14 @@ async function startVideo() {
   const gen = rtcGen
   rtc.value = 'connecting'
   lastRtcBytes = 0
+  if (adaptive.value) { // nouvelle connexion : on repart en SD, en gardant l'historique d'échecs
+    level.value = 'low'
+    aState = { ...initState(Date.now()), failures: aState?.failures || 0, nextTry: aState?.nextTry || 0 }
+  }
+  connectedStream = streamId.value
   try {
-    const p = await connectWebRTC(server.server, streamId.value, video.value, () => {
-      if (gen !== rtcGen) return
+    const p = await connectWebRTC(server.server, connectedStream, video.value, () => {
+      if (gen !== rtcGen || p !== pc) return
       rtc.value = 'failed'
       scheduleRetry()
     })
@@ -101,9 +128,91 @@ function stopVideo() {
   rtcGen++
   clearTimeout(retryTimer)
   if (pc) { pc.onconnectionstatechange = null; pc.close(); pc = null }
-  if (video.value) video.value.srcObject = null
+  closeTrial()
+  for (const v of [vA.value, vB.value]) if (v) v.srcObject = null
+  connectedStream = null
   rtc.value = 'off'
 }
+
+/* ---- Bascule HD ↔ SD sans écran noir ----
+   Le nouveau flux s'ouvre dans l'élément caché ; on échange l'affichage à sa première image
+   décodée, puis on ferme l'ancienne connexion. Délai dépassé ou erreur : on garde l'ancien. */
+let connectedStream = null
+let trialPc = null
+let aState = null
+let prevRaw = null
+function closeTrial() {
+  trying.value = false
+  if (trialPc) { trialPc.onconnectionstatechange = null; trialPc.close(); trialPc = null }
+}
+function firstFrame(el, ms) {
+  return new Promise((resolve) => {
+    let done = false
+    const finish = (ok) => { if (done) return; done = true; clearTimeout(timer); el.removeEventListener('playing', onPlay); resolve(ok) }
+    const onPlay = () => (el.requestVideoFrameCallback ? el.requestVideoFrameCallback(() => finish(true)) : finish(true))
+    const timer = setTimeout(() => finish(false), ms)
+    el.addEventListener('playing', onPlay)
+  })
+}
+async function switchTo(lvl) {
+  const id = pickStream(cam.value, lvl).id, el = spare.value, gen = rtcGen
+  if (!el || !pc || id === connectedStream) return false
+  closeTrial()
+  trying.value = lvl === 'high'
+  let p = null
+  try {
+    p = trialPc = await connectWebRTC(server.server, id, el, () => {
+      if (gen !== rtcGen || p !== pc) return
+      rtc.value = 'failed'
+      scheduleRetry()
+    })
+    const ok = gen === rtcGen && trialPc === p && await firstFrame(el, CFG.trialTimeoutMs)
+    if (!ok || gen !== rtcGen || trialPc !== p) { if (trialPc === p) closeTrial(); else if (p) { p.onconnectionstatechange = null; p.close() } return false }
+    const old = pc, oldEl = video.value
+    trialPc = null
+    trying.value = false
+    pc = p
+    connectedStream = id
+    level.value = lvl
+    cur.value = 1 - cur.value
+    lastRtcBytes = 0
+    prevRaw = null
+    if (old) { old.onconnectionstatechange = null; old.close() }
+    if (oldEl) oldEl.srcObject = null
+    return true
+  } catch {
+    if (trialPc === p) closeTrial()
+    return false
+  }
+}
+
+// Mesure périodique (mode adaptatif seulement) et décision
+let adaptTimer = null
+async function adaptTick() {
+  if (!adaptive.value || rtc.value !== 'playing' || !pc || trying.value || !aState) return
+  const raw = readReport(await pc.getStats())
+  const m = metrics(prevRaw, raw)
+  prevRaw = raw
+  if (m) lastM.value = m
+  const now = Date.now()
+  const { state, action } = step(aState, { now, m, focused: props.zoomable, tiles: props.tiles, lastTry: slot.lastTry })
+  aState = state
+  if (action === 'tryHigh') {
+    slot.lastTry = now
+    const ok = await switchTo('high')
+    if (aState) aState = trialDone(aState, ok, Date.now())
+  } else if (action === 'down') {
+    if (!(await switchTo('low')) && level.value === 'high' && wantVideo.value) startVideo()
+  }
+}
+watch(adaptive, (on) => {
+  clearInterval(adaptTimer); adaptTimer = null; prevRaw = null; lastM.value = null
+  if (on) { aState = null; adaptTimer = setInterval(adaptTick, CFG.sampleMs) }
+}, { immediate: true })
+// Agrandissement / nombre de cases : nouvelle chance immédiate pour la caméra agrandie
+watch(() => props.zoomable, (z) => { if (z && aState) aState = { ...aState, nextTry: 0, failures: 0 } })
+watch(() => props.camId, () => { aState = null; prevRaw = null; lastM.value = null })
+onBeforeUnmount(() => clearInterval(adaptTimer))
 function onPlaying() {
   rtc.value = 'playing'
   lastFrame.value = Date.now()
@@ -113,7 +222,8 @@ function onPlaying() {
 watch(wantVideo, (v) => (v ? startVideo() : stopVideo()))
 // Changement de flux (HD ↔ SD) : on ferme l'ancienne connexion et on rouvre ; rien si le flux reste le même
 // (changement de caméra : déjà relancé par l'observateur de camId)
-watch(() => [streamId.value, props.camId], ([id, c], [old, oldCam]) => { if (c === oldCam && id !== old && wantVideo.value) startVideo() })
+// (bascule adaptative : déjà faite sans coupure, connectedStream est à jour)
+watch(() => [streamId.value, props.camId], ([id, c], [, oldCam]) => { if (c === oldCam && id !== connectedStream && wantVideo.value && pc) startVideo() })
 watch(() => props.camId, () => { imgSrc.value = ''; stopPlayback(); startSnapshots(); if (wantVideo.value) startVideo(); if (playback.value) syncPlayback() })
 
 /* ---- Relecture HLS ----
@@ -339,7 +449,8 @@ onBeforeUnmount(() => clearInterval(miniTimer))
    <div class="absolute inset-0" :class="{ 'cursor-grab': zoomed && !panning, 'cursor-grabbing': panning }" :style="zoomStyle" @pointerdown="onPanDown" @pointermove="onPanMove" @pointerup="onPanUp" @pointercancel="onPanUp" @dblclick="zoomed && ($event.stopPropagation(), resetZoom())">
     <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
     <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
-    <video ref="video" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo }" autoplay :muted="muted" playsinline @playing="onPlaying" />
+    <video ref="vA" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo || cur !== 0 }" autoplay :muted="muted || cur !== 0" playsinline @playing="cur === 0 && onPlaying()" />
+    <video ref="vB" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo || cur !== 1 }" autoplay :muted="muted || cur !== 1" playsinline @playing="cur === 1 && onPlaying()" />
    </div>
 
     <!-- Zoom : niveau, réinitialisation et mini-carte -->
@@ -366,7 +477,7 @@ onBeforeUnmount(() => clearInterval(miniTimer))
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
       <button v-if="hasSub && ui.liveMode === 'webrtc' && !playback" class="badge cursor-pointer hover:bg-accent" :class="{ '!bg-accent/80': override }"
-        :title="$t(quality === 'low' ? 'quality.toHigh' : 'quality.toLow')" @click.stop="toggleQuality" @dblclick.stop>{{ quality === 'low' ? 'SD' : 'HD' }}</button>
+        :title="badgeTitle" @click.stop="toggleQuality" @dblclick.stop>{{ trying ? 'HD…' : quality === 'low' ? 'SD' : 'HD' }}</button>
     </div>
     <div v-if="ui.showStats && statLine" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
         {{ statLine }}

@@ -711,11 +711,29 @@
   },
   "quality": {
     "setting": "Flux du direct",
-    "settingHint": "Auto : SD dès 4 caméras affichées, HD en caméra agrandie. Seulement pour les caméras avec un sous-flux.",
     "auto": "Auto",
+    "light": "Allégé",
     "high": "Toujours HD",
     "low": "Toujours SD",
     "toHigh": "Passer en HD (flux principal)",
-    "toLow": "Passer en SD (sous-flux, plus léger)"
+    "toLow": "Passer en SD (sous-flux, plus léger)",
+    "desc": {
+      "auto": "Démarre en SD, passe en HD si le débit le permet, redescend s'il se dégrade. Caméras avec sous-flux seulement.",
+      "light": "SD dès 4 caméras affichées, HD en caméra agrandie, sans mesure du débit.",
+      "high": "Flux principal partout.",
+      "low": "Sous-flux partout, le plus léger."
+    },
+    "state": {
+      "low": "Auto : SD",
+      "high": "Auto : HD",
+      "trying": "Auto : essai HD en cours"
+    },
+    "why": {
+      "freeze": "image figée",
+      "loss": "pertes {pct} %",
+      "drop": "images perdues {pct} %",
+      "jitter": "gigue {ms} ms",
+      "ok": "réseau stable ({pct} % de pertes)"
+    }
   }
 }

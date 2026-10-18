@@ -4,7 +4,8 @@
 
 const LOW = /sub|low|bas|sd|lq|mobile|small|petit/i
 
-export const QUALITIES = ['auto', 'high', 'low']
+// auto = adaptatif (services/adaptive.js) ; light = règle fixe (SD dès 4 cases, HD agrandie) ; high / low = verrouillé
+export const QUALITIES = ['auto', 'light', 'high', 'low']
 
 export function streamsOf(cam) {
   const list = Object.entries(cam?.streams || {}).filter(([, id]) => id).map(([label, id]) => ({ label, id }))
@@ -22,7 +23,7 @@ export function pickStream(cam, quality) {
 }
 
 // Qualité effective d'une case : choix manuel de la case > réglage global > auto
-// (auto = SD dès 4 cases affichées, HD en caméra agrandie ou en petite mosaïque).
+// (light, et auto hors adaptatif : SD dès 4 cases affichées, HD en caméra agrandie ou en petite mosaïque).
 export function cellQuality({ pref = 'auto', override = null, tiles = 1, focused = false } = {}) {
   if (override) return override
   if (pref === 'high' || pref === 'low') return pref
