@@ -708,5 +708,14 @@
     "similarTitle": "Eventos cujo objeto se parece com este (pesquisa semântica do Frigate)",
     "similarTo": "Semelhantes a:",
     "backToText": "Pesquisa por texto"
+  },
+  "quality": {
+    "setting": "Fluxo ao vivo",
+    "settingHint": "Auto: SD a partir de 4 câmeras, HD na câmera ampliada. Só para câmeras com subfluxo.",
+    "auto": "Auto",
+    "high": "Sempre HD",
+    "low": "Sempre SD",
+    "toHigh": "Mudar para HD (fluxo principal)",
+    "toLow": "Mudar para SD (subfluxo, mais leve)"
   }
 }

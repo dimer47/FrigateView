@@ -21,6 +21,8 @@ export const useUiStore = defineStore('ui', {
     showUser: load('fv-ui', {}).showUser ?? true,
     // Image dans la case : contain = entière, cover = remplir en rognant, fill = étirer
     fit: load('fv-ui', {}).fit ?? (load('fv-ui', {}).cover ? 'cover' : 'contain'),
+    // Flux du direct : auto (SD dès 4 cases) | high | low ; sans effet sur les caméras sans sous-flux
+    quality: load('fv-ui', {}).quality ?? 'auto',
     statFields: loadFields(),
     showBoxes: load('fv-ui', {}).showBoxes ?? true, // cadres de détection sur la meilleure image
     expand: false,
@@ -33,12 +35,13 @@ export const useUiStore = defineStore('ui', {
     toast: null
   }),
   actions: {
-    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, fit: this.fit, statFields: this.statFields, showBoxes: this.showBoxes }) },
+    persist() { save('fv-ui', { sidebar: this.sidebar, liveMode: this.liveMode, showStats: this.showStats, showUser: this.showUser, fit: this.fit, quality: this.quality, statFields: this.statFields, showBoxes: this.showBoxes }) },
     toggleSidebar() { this.sidebar = !this.sidebar; this.persist() },
     setLiveMode(m) { this.liveMode = m; this.persist() },
     setStatField(group, key, on) { this.statFields[group][key] = on; this.persist() },
     toggleUser() { this.showUser = !this.showUser; this.persist() },
     setFit(f) { this.fit = f; this.persist() },
+    setQuality(q) { this.quality = q; this.persist() },
     cycleFit() { this.setFit(FITS[(FITS.indexOf(this.fit) + 1) % FITS.length]) },
     toggleStats() { this.showStats = !this.showStats; this.persist() },
     notify(text, action) {

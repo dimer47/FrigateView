@@ -708,5 +708,14 @@
     "similarTitle": "Events whose object looks like this one (Frigate semantic search)",
     "similarTo": "Similar to:",
     "backToText": "Text search"
+  },
+  "quality": {
+    "setting": "Live stream",
+    "settingHint": "Auto: SD from 4 cameras shown, HD for an enlarged camera. Only for cameras with a sub-stream.",
+    "auto": "Auto",
+    "high": "Always HD",
+    "low": "Always SD",
+    "toHigh": "Switch to HD (main stream)",
+    "toLow": "Switch to SD (sub-stream, lighter)"
   }
 }

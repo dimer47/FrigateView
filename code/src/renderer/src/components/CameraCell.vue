@@ -5,13 +5,14 @@ import { useUiStore } from '@/stores/ui'
 import Hls from 'hls.js'
 import { snapshotUrl, getRecordings, vodUrl } from '@/services/frigate'
 import { connectWebRTC } from '@/services/webrtc'
+import { pickStream, hasSubStream, cellQuality } from '@/services/streams'
 import { useTimelineStore } from '@/stores/timeline'
 import { loc } from '@/i18n'
 import { useStatsStore, fmtRate, serverCamera } from '@/stores/stats'
 import { t } from '@/i18n'
 import { useMediaStore } from '@/stores/media'
 
-const props = defineProps({ camId: { type: String, required: true }, zoomable: { type: Boolean, default: false } })
+const props = defineProps({ camId: { type: String, required: true }, zoomable: { type: Boolean, default: false }, tiles: { type: Number, default: 1 } })
 const server = useServerStore()
 const ui = useUiStore()
 const tl = useTimelineStore()
@@ -34,6 +35,14 @@ const offline = computed(() => server.online[props.camId] === false)
 const frozen = computed(() => server.status === 'lost')
 const wantVideo = computed(() => ui.liveMode === 'webrtc' && !frozen.value && !offline.value && !playback.value)
 const showVideo = computed(() => wantVideo.value && rtc.value === 'playing')
+
+/* ---- Flux HD / SD (seulement si Frigate déclare un sous-flux dans live.streams) ---- */
+const hasSub = computed(() => hasSubStream(cam.value))
+const override = ref(null) // choix manuel de la case : null = suivre le réglage
+const quality = computed(() => cellQuality({ pref: ui.quality, override: override.value, tiles: props.tiles, focused: props.zoomable }))
+const streamId = computed(() => (cam.value ? pickStream(cam.value, quality.value).id : props.camId))
+function toggleQuality() { override.value = quality.value === 'low' ? 'high' : 'low' }
+watch(() => props.camId, () => (override.value = null))
 
 /* ---- Images fixes (mode Images, ou en attendant / à défaut de la vidéo) ---- */
 let snapTimer = null
@@ -74,7 +83,7 @@ async function startVideo() {
   rtc.value = 'connecting'
   lastRtcBytes = 0
   try {
-    const p = await connectWebRTC(server.server, props.camId, video.value, () => {
+    const p = await connectWebRTC(server.server, streamId.value, video.value, () => {
       if (gen !== rtcGen) return
       rtc.value = 'failed'
       scheduleRetry()
@@ -102,6 +111,9 @@ function onPlaying() {
 }
 
 watch(wantVideo, (v) => (v ? startVideo() : stopVideo()))
+// Changement de flux (HD ↔ SD) : on ferme l'ancienne connexion et on rouvre ; rien si le flux reste le même
+// (changement de caméra : déjà relancé par l'observateur de camId)
+watch(() => [streamId.value, props.camId], ([id, c], [old, oldCam]) => { if (c === oldCam && id !== old && wantVideo.value) startVideo() })
 watch(() => props.camId, () => { imgSrc.value = ''; stopPlayback(); startSnapshots(); if (wantVideo.value) startVideo(); if (playback.value) syncPlayback() })
 
 /* ---- Relecture HLS ----
@@ -353,6 +365,8 @@ onBeforeUnmount(() => clearInterval(miniTimer))
       <span v-else class="badge" :title="wantVideo ? $t('cell.noVideoTitle') : $t('cell.snapshotTitle')">
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
+      <button v-if="hasSub && ui.liveMode === 'webrtc' && !playback" class="badge cursor-pointer hover:bg-accent" :class="{ '!bg-accent/80': override }"
+        :title="$t(quality === 'low' ? 'quality.toHigh' : 'quality.toLow')" @click.stop="toggleQuality" @dblclick.stop>{{ quality === 'low' ? 'SD' : 'HD' }}</button>
     </div>
     <div v-if="ui.showStats && statLine" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
         {{ statLine }}

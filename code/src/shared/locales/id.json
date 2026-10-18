@@ -708,5 +708,14 @@
     "similarTitle": "Peristiwa dengan objek mirip ini (pencarian semantik Frigate)",
     "similarTo": "Serupa dengan:",
     "backToText": "Pencarian teks"
+  },
+  "quality": {
+    "setting": "Siaran langsung",
+    "settingHint": "Otomatis: SD mulai 4 kamera, HD untuk kamera yang diperbesar. Hanya untuk kamera dengan sub-stream.",
+    "auto": "Otomatis",
+    "high": "Selalu HD",
+    "low": "Selalu SD",
+    "toHigh": "Beralih ke HD (stream utama)",
+    "toLow": "Beralih ke SD (sub-stream, lebih ringan)"
   }
 }

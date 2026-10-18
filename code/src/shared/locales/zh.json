@@ -708,5 +708,14 @@
     "similarTitle": "物体与此相似的事件（Frigate 语义搜索）",
     "similarTo": "相似于：",
     "backToText": "文本搜索"
+  },
+  "quality": {
+    "setting": "直播流",
+    "settingHint": "自动：显示 4 个及以上摄像头时用 SD，放大摄像头时用 HD。仅适用于有子码流的摄像头。",
+    "auto": "自动",
+    "high": "始终 HD",
+    "low": "始终 SD",
+    "toHigh": "切换到 HD（主码流）",
+    "toLow": "切换到 SD（子码流，更轻）"
   }
 }

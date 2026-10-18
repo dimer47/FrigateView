@@ -4,6 +4,7 @@ import { useAppSettings } from '@/stores/appSettings'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
 import { useUiStore, STAT_FIELDS, FITS } from '@/stores/ui'
+import { QUALITIES, hasSubStream } from '@/services/streams'
 import { TYPE_KEYS, typeLabel } from '@/stores/events'
 import { t, loc, LANGS } from '@/i18n'
 import { isInternal, getJson } from '@/services/frigate'
@@ -86,6 +87,8 @@ const close = () => (app.open = false)
             </label>
             <h3 class="mb-1.5 mt-5 font-semibold">{{ $t('stats.settingsTitle') }}</h3>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('fit.setting') }}<small class="block text-xs text-ink-3">{{ $t('fit.settingHint') }}</small></span><select class="input !w-44" :value="ui.fit" @change="ui.setFit($event.target.value)"><option v-for="f in FITS" :key="f" :value="f">{{ $t('fit.' + f) }}</option></select></label>
+            <!-- Flux HD / SD : visible seulement si au moins une caméra a un sous-flux -->
+            <label v-if="server.cameras.some(hasSubStream)" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('quality.setting') }}<small class="block text-xs text-ink-3">{{ $t('quality.settingHint') }}</small></span><select class="input !w-44" :value="ui.quality" @change="ui.setQuality($event.target.value)"><option v-for="q in QUALITIES" :key="q" :value="q">{{ $t('quality.' + q) }}</option></select></label>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('stats.toggle') }}<small class="block text-xs text-ink-3">{{ $t('stats.settingsHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.showStats" @change="ui.toggleStats()"></label>
             <div class="grid grid-cols-2 gap-x-6 pt-2" :class="{ 'pointer-events-none opacity-40': !ui.showStats }">
               <div v-for="g in ['global', 'camera']" :key="g">

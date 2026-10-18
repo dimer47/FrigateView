@@ -71,7 +71,7 @@ function autoLayout() {
         @dragstart="(e) => { e.dataTransfer.setData('application/x-fv-cell', String(i)); e.dataTransfer.effectAllowed = 'move' }"
         @dragover="onDragOver($event, i)" @dragleave="dropTarget = null" @drop.prevent="onDrop($event, i)">
         <template v-if="layout.cells[i]">
-          <CameraCell :cam-id="layout.cells[i]" :zoomable="!!focused" />
+          <CameraCell :cam-id="layout.cells[i]" :zoomable="!!focused" :tiles="indices.length" />
           <div class="absolute right-1.5 top-1.5 z-[4] flex gap-1 opacity-0 transition-opacity group-hover:opacity-100" :class="{ '!opacity-100': media.audioCam === layout.cells[i] }">
             <button v-if="media.hasAudio[layout.cells[i]] || !tl.live" class="flex size-[26px] items-center justify-center rounded-[5px] bg-black/65 text-white hover:bg-accent" :class="{ '!bg-accent': media.audioCam === layout.cells[i] }"
               :title="media.audioCam === layout.cells[i] ? $t('media.mute') : $t('media.unmute')" @click.stop="media.toggleAudio(layout.cells[i])">
