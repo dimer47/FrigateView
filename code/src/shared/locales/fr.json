@@ -747,6 +747,19 @@
     "forcedLow": "SD forcée",
     "clickHigh": "Clic : forcer la HD",
     "clickLow": "Clic : forcer la SD",
-    "clickBack": "Clic : revenir en {mode}"
+    "clickBack": "Clic : revenir en {mode}",
+    "help": {
+      "title": "Flux HD / SD",
+      "badge": "Badge HD/SD en haut à gauche de chaque caméra, à côté de « Live » (si elle a un sous-flux).",
+      "blue": "Badge bleu : HD ou SD forcée temporairement.",
+      "dot": "Point blanc : la caméra a son propre réglage, mémorisé.",
+      "left": "Clic sur le badge : HD forcée → SD forcée → retour au mode normal. Temporaire.",
+      "right": "Clic droit sur la caméra : réglage propre à cette caméra (Auto, Allégé, Toujours HD, Toujours SD). Mémorisé.",
+      "modes": "Auto : démarre en SD, passe en HD si le débit le permet. Allégé : SD dès 4 caméras, HD en agrandi.",
+      "fixedTitle": "Caméras avec un réglage propre",
+      "noneFixed": "Aucune : toutes suivent le réglage général.",
+      "reset": "Réinitialiser",
+      "resetAll": "Tout réinitialiser"
+    }
   }
 }

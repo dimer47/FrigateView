@@ -747,6 +747,19 @@
     "forcedLow": "SD forçada",
     "clickHigh": "Clique: forçar HD",
     "clickLow": "Clique: forçar SD",
-    "clickBack": "Clique: voltar para {mode}"
+    "clickBack": "Clique: voltar para {mode}",
+    "help": {
+      "title": "Fluxo HD / SD",
+      "badge": "Selo HD/SD em cada câmera (se tiver subfluxo).",
+      "blue": "Selo azul: HD ou SD forçada temporariamente.",
+      "dot": "Ponto branco: a câmera tem configuração própria salva.",
+      "left": "Clique no selo: HD forçada → SD forçada → modo normal. Temporário.",
+      "right": "Clique direito na câmera: configuração própria (Auto, Leve, Sempre HD, Sempre SD). Salva.",
+      "modes": "Auto: começa em SD, passa para HD se a banda permitir. Leve: SD a partir de 4 câmeras, HD ampliada.",
+      "fixedTitle": "Câmeras com configuração própria",
+      "noneFixed": "Nenhuma: todas seguem a configuração geral.",
+      "reset": "Redefinir",
+      "resetAll": "Redefinir tudo"
+    }
   }
 }

@@ -11,6 +11,7 @@ import { isInternal, getJson } from '@/services/frigate'
 import { getFaces, faceRecognitionEnabled } from '@/services/faces'
 import { lprEnabled, knownPlates } from '@/services/plates'
 import { useEventsStore } from '@/stores/events'
+import FixedCams from './FixedCams.vue'
 const native = window.native
 import { toggleIn, normPlate } from '@/services/watch'
 
@@ -90,6 +91,7 @@ const close = () => (app.open = false)
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('fit.setting') }}<small class="block text-xs text-ink-3">{{ $t('fit.settingHint') }}</small></span><select class="input !w-44" :value="ui.fit" @change="ui.setFit($event.target.value)"><option v-for="f in FITS" :key="f" :value="f">{{ $t('fit.' + f) }}</option></select></label>
             <!-- Flux HD / SD : visible seulement si au moins une caméra a un sous-flux -->
             <label v-if="server.cameras.some(hasSubStream)" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('quality.setting') }}<small class="block text-xs text-ink-3">{{ $t('quality.desc.' + ui.quality) }}</small></span><select class="input !w-44" :value="ui.quality" @change="ui.setQuality($event.target.value)"><option v-for="q in QUALITIES" :key="q" :value="q" :title="$t('quality.desc.' + q)">{{ $t('quality.' + q) }}</option></select></label>
+            <div v-if="Object.keys(ui.camQuality).length" class="border-b border-line py-2.5"><div class="mb-1 text-xs text-ink-3">{{ $t('quality.help.fixedTitle') }}</div><FixedCams /></div>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('stats.toggle') }}<small class="block text-xs text-ink-3">{{ $t('stats.settingsHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="ui.showStats" @change="ui.toggleStats()"></label>
             <div class="grid grid-cols-2 gap-x-6 pt-2" :class="{ 'pointer-events-none opacity-40': !ui.showStats }">
               <div v-for="g in ['global', 'camera']" :key="g">

@@ -747,6 +747,19 @@
     "forcedLow": "SD dipaksa",
     "clickHigh": "Klik: paksa HD",
     "clickLow": "Klik: paksa SD",
-    "clickBack": "Klik: kembali ke {mode}"
+    "clickBack": "Klik: kembali ke {mode}",
+    "help": {
+      "title": "Aliran HD / SD",
+      "badge": "Lencana HD/SD di setiap kamera (jika ada sub-aliran).",
+      "blue": "Lencana biru: HD atau SD dipaksa sementara.",
+      "dot": "Titik putih: kamera punya pengaturan sendiri yang disimpan.",
+      "left": "Klik lencana: paksa HD → paksa SD → kembali normal. Sementara.",
+      "right": "Klik kanan kamera: pengaturan kamera ini (Otomatis, Ringan, Selalu HD, Selalu SD). Disimpan.",
+      "modes": "Otomatis: mulai SD, naik ke HD bila bandwidth cukup. Ringan: SD mulai 4 kamera, HD saat diperbesar.",
+      "fixedTitle": "Kamera dengan pengaturan sendiri",
+      "noneFixed": "Tidak ada: semua mengikuti pengaturan umum.",
+      "reset": "Atur ulang",
+      "resetAll": "Atur ulang semua"
+    }
   }
 }

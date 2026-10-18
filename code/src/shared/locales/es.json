@@ -747,6 +747,19 @@
     "forcedLow": "SD forzada",
     "clickHigh": "Clic: forzar HD",
     "clickLow": "Clic: forzar SD",
-    "clickBack": "Clic: volver a {mode}"
+    "clickBack": "Clic: volver a {mode}",
+    "help": {
+      "title": "Flujo HD / SD",
+      "badge": "Insignia HD/SD en cada cámara (si tiene subflujo).",
+      "blue": "Insignia azul: HD o SD forzada temporalmente.",
+      "dot": "Punto blanco: la cámara tiene su propio ajuste guardado.",
+      "left": "Clic en la insignia: HD forzada → SD forzada → modo normal. Temporal.",
+      "right": "Clic derecho en la cámara: ajuste propio (Auto, Ligero, Siempre HD, Siempre SD). Guardado.",
+      "modes": "Auto: empieza en SD, pasa a HD si el caudal lo permite. Ligero: SD desde 4 cámaras, HD ampliada.",
+      "fixedTitle": "Cámaras con ajuste propio",
+      "noneFixed": "Ninguna: todas siguen el ajuste general.",
+      "reset": "Restablecer",
+      "resetAll": "Restablecer todo"
+    }
   }
 }

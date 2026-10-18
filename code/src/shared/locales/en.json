@@ -747,6 +747,19 @@
     "forcedLow": "SD forced",
     "clickHigh": "Click: force HD",
     "clickLow": "Click: force SD",
-    "clickBack": "Click: back to {mode}"
+    "clickBack": "Click: back to {mode}",
+    "help": {
+      "title": "HD / SD stream",
+      "badge": "HD/SD badge at the top left of each camera, next to “Live” (when it has a substream).",
+      "blue": "Blue badge: HD or SD temporarily forced.",
+      "dot": "White dot: the camera has its own saved setting.",
+      "left": "Click the badge: force HD → force SD → back to normal. Temporary.",
+      "right": "Right-click the camera: setting for this camera (Auto, Light, Always HD, Always SD). Saved.",
+      "modes": "Auto: starts in SD, switches to HD when bandwidth allows. Light: SD from 4 cameras, HD when enlarged.",
+      "fixedTitle": "Cameras with their own setting",
+      "noneFixed": "None: all follow the general setting.",
+      "reset": "Reset",
+      "resetAll": "Reset all"
+    }
   }
 }

@@ -747,6 +747,19 @@
     "forcedLow": "强制 SD",
     "clickHigh": "单击：强制 HD",
     "clickLow": "单击：强制 SD",
-    "clickBack": "单击：恢复为{mode}"
+    "clickBack": "单击：恢复为{mode}",
+    "help": {
+      "title": "HD / SD 流",
+      "badge": "每个摄像头上的 HD/SD 徽标（有子码流时）。",
+      "blue": "蓝色徽标：临时强制 HD 或 SD。",
+      "dot": "白点：该摄像头有已保存的单独设置。",
+      "left": "单击徽标：强制 HD → 强制 SD → 恢复正常。临时。",
+      "right": "右键摄像头：此摄像头的设置（自动、轻量、始终 HD、始终 SD）。会保存。",
+      "modes": "自动：先 SD，带宽允许时切到 HD。轻量：4 个摄像头起用 SD，放大时 HD。",
+      "fixedTitle": "有单独设置的摄像头",
+      "noneFixed": "无：全部遵循常规设置。",
+      "reset": "重置",
+      "resetAll": "全部重置"
+    }
   }
 }
