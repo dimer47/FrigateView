@@ -148,9 +148,11 @@ function closeTrial() {
 function firstFrame(el, ms) {
   return new Promise((resolve) => {
     let done = false
-    const finish = (ok) => { if (done) return; done = true; clearTimeout(timer); el.removeEventListener('playing', onPlay); resolve(ok) }
+    const finish = (ok) => { if (done) return; done = true; clearTimeout(timer); clearInterval(poll); el.removeEventListener('playing', onPlay); resolve(ok) }
     const onPlay = () => (el.requestVideoFrameCallback ? el.requestVideoFrameCallback(() => finish(true)) : finish(true))
     const timer = setTimeout(() => finish(false), ms)
+    // Filet : l'événement « playing » peut être manqué (élément caché, lecture déjà lancée)
+    const poll = setInterval(() => { if (el.readyState >= 2 && el.videoWidth && !el.paused) finish(true); else if (el.paused && el.srcObject) el.play().catch(() => {}) }, 250)
     el.addEventListener('playing', onPlay)
   })
 }

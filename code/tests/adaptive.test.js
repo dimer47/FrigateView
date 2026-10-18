@@ -22,7 +22,9 @@ describe('mesures', () => {
     expect(isExcellent(good)).toBe(true)
     expect(isExcellent({ ...good, freezes: 1, freezeMs: 200 })).toBe(false)
     expect(isBad({ ...good, freezes: 1, freezeMs: 300, ms: 1500 })).toBe(false) // gel bref isolé
-    expect(isBad({ ...good, freezes: 1, freezeMs: 1000, ms: 1500 })).toBe(true)
+    expect(isBad({ ...good, freezes: 1, freezeMs: 1300, ms: 1500 })).toBe(true)
+    expect(isBad({ ...good, freezes: 2, freezeMs: 900, ms: 1500, decFps: 13 })).toBe(false) // 4K par à-coups
+    expect(isBad({ ...good, decFps: 1 })).toBe(true)
     expect(isBad({ ...good, jitterMs: 700 })).toBe(false)
   })
   it('readReport', () => {
@@ -44,18 +46,19 @@ describe('décisions', () => {
   it('caméra agrandie : essai plus tôt', () => {
     expect(step(initState(0), { now: CFG.firstTryFocusedMs, m: good, focused: true }).action).toBe('tryHigh')
   })
-  it('descente après 2 mesures dégradées seulement (hystérésis)', () => {
+  it('descente après 3 mesures dégradées seulement (hystérésis)', () => {
     let s = { ...initState(0), level: 'high', highSince: -1e9 }
     let r = step(s, { now: 1000, m: bad }); expect(r.action).toBe('none')
     r = step(r.state, { now: 2500, m: good }); expect(r.action).toBe('none') // une mesure isolée ne suffit pas
-    r = step(r.state, { now: 4000, m: bad }); r = step(r.state, { now: 5500, m: bad })
+    r = step(r.state, { now: 4000, m: bad }); r = step(r.state, { now: 5500, m: bad }); expect(r.action).toBe('none')
+    r = step(r.state, { now: 7000, m: bad })
     expect(r.action).toBe('down')
     expect(r.state.level).toBe('low')
   })
   it('pas de descente pendant la mise en route de la HD', () => {
     let r = { state: { ...initState(0), level: 'high', highSince: 0 } }
     for (let t = 1500; t < CFG.settleMs; t += 1500) { r = step(r.state, { now: t, m: bad }); expect(r.action).toBe('none') }
-    r = step(r.state, { now: CFG.settleMs, m: bad }); r = step(r.state, { now: CFG.settleMs + 1500, m: bad })
+    for (let i = 0; i < CFG.badSamples; i++) r = step(r.state, { now: CFG.settleMs + i * 1500, m: bad })
     expect(r.action).toBe('down')
   })
   it('backoff exponentiel après chaque échec', () => {

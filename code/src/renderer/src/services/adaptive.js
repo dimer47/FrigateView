@@ -5,13 +5,14 @@
 
 export const CFG = {
   sampleMs: 1500, // période de mesure
-  badSamples: 2, // mesures dégradées consécutives avant redescente (~3 s)
+  badSamples: 3, // mesures dégradées consécutives avant redescente (~4,5 s)
   firstTryMs: 4000, // lecture SD stable avant le premier essai HD
   firstTryFocusedMs: 1500, // caméra agrandie : essai HD presque immédiat
   stableMs: 20000, // lecture stable exigée avant une nouvelle remontée après un échec
   trialTimeoutMs: 8000,
   settleMs: 6000, // juste après la bascule HD : à-coups normaux (image clé, tampon), non comptés
-  freezeShare: 0.5, // gel > 50 % de l'intervalle = dégradé (un gel bref isolé est normal en HD)
+  freezeShare: 0.8, // gel > 80 % de l'intervalle = dégradé (les flux 4K arrivent par à-coups : « gels » courts normaux)
+  minFps: 2, // images réellement décodées par seconde en dessous desquelles le flux est jugé bloqué
   maxJitterMs: 1000, // la HD doit afficher une image dans ce délai, sinon abandon
   backoffBase: 30000, // délai après le 1er échec, doublé à chaque échec suivant
   backoffMax: 10 * 60000,
@@ -50,11 +51,12 @@ export function metrics(prev, cur) {
     freezes: d('freezeCount'),
     freezeMs: d('totalFreezesDuration') * 1000,
     kbpsAvail: cur.availableIncomingBitrate ? cur.availableIncomingBitrate / 1000 : null,
+    decFps: d('framesDecoded') / (((cur.t && prev.t ? cur.t - prev.t : CFG.sampleMs) || CFG.sampleMs) / 1000),
     stalled: d('framesDecoded') === 0
   }
 }
 
-export const isBad = (m) => !!m && (m.stalled || m.loss > 0.03 || m.drop > 0.1 || m.freezeMs > CFG.freezeShare * (m.ms || CFG.sampleMs) || m.jitterMs > CFG.maxJitterMs || (m.fps != null && m.fps > 0 && m.fps < 4))
+export const isBad = (m) => !!m && (m.stalled || m.loss > 0.03 || m.drop > 0.1 || m.freezeMs > CFG.freezeShare * (m.ms || CFG.sampleMs) || m.jitterMs > CFG.maxJitterMs || (m.decFps != null && m.decFps < CFG.minFps))
 export const isExcellent = (m) => !!m && !isBad(m) && !m.freezes && m.loss < 0.005 && m.drop < 0.02 && m.jitterMs < 150
 
 // Raison lisible (clé i18n + valeurs) pour l'info-bulle
