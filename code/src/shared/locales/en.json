@@ -324,7 +324,11 @@
     "changeServer": "Change server or mode",
     "noServer": "No server configured: enter it on the sign-in screen.",
     "wallModeSame": "Same as main window",
-    "wallModeHint": "1 frame/s: much less bandwidth and server load, useful with several walls"
+    "wallModeHint": "1 frame/s: much less bandwidth and server load, useful with several walls",
+    "cacheTitle": "Cache",
+    "clearCache": "Clear cache",
+    "clearCacheHint": "Images, thumbnails and app files. Settings and sign-in are kept. The app reloads.",
+    "clearCacheGo": "Clear"
   },
   "help": {
     "panels": "Layouts · Events · Timeline",

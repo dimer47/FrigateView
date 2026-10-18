@@ -324,7 +324,11 @@
     "changeServer": "Ganti server atau mode",
     "noServer": "Belum ada server yang dikonfigurasi: masukkan di layar masuk.",
     "wallModeSame": "Sama seperti jendela utama",
-    "wallModeHint": "1 gambar/dtk: bandwidth dan beban server jauh lebih kecil, berguna dengan beberapa dinding"
+    "wallModeHint": "1 gambar/dtk: bandwidth dan beban server jauh lebih kecil, berguna dengan beberapa dinding",
+    "cacheTitle": "Cache",
+    "clearCache": "Kosongkan cache",
+    "clearCacheHint": "Gambar, thumbnail, dan file aplikasi. Pengaturan dan login tetap tersimpan. Aplikasi dimuat ulang.",
+    "clearCacheGo": "Kosongkan"
   },
   "help": {
     "panels": "Tata letak · Peristiwa · Linimasa",

@@ -352,6 +352,15 @@ function identifyScreens() {
 }
 ipcMain.handle('screens:identify', () => { identifyScreens(); return true })
 
+// Vider le cache (images, vignettes, fichiers de l'app) puis recharger les fenêtres.
+// Réglages, connexion, gabarits et cookies sont conservés.
+ipcMain.handle('cache:clear', async () => {
+  await session.defaultSession.clearCache()
+  await session.defaultSession.clearCodeCaches({}).catch(() => {})
+  for (const w of BrowserWindow.getAllWindows()) w.webContents.reloadIgnoringCache()
+  return true
+})
+
 /* ------------------------------------------------------------------
    Notifications Windows
    ------------------------------------------------------------------ */

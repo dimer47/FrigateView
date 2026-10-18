@@ -11,6 +11,7 @@ import { isInternal, getJson } from '@/services/frigate'
 import { getFaces, faceRecognitionEnabled } from '@/services/faces'
 import { lprEnabled, knownPlates } from '@/services/plates'
 import { useEventsStore } from '@/stores/events'
+const native = window.native
 import { toggleIn, normPlate } from '@/services/watch'
 
 const app = useAppSettings()
@@ -173,6 +174,8 @@ const close = () => (app.open = false)
             <div v-if="server.profile.username" class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.account') }}<small class="block text-xs text-ink-3">{{ $t('settings.accountHint') }}</small></span><span>{{ server.profile.username }} · {{ server.profile.role }}</span></div>
             <div class="mt-4 flex gap-2"><button class="btn" @click="close(); server.signOut()">{{ $t('settings.signOut') }}</button><button class="btn" @click="close(); server.changeServer()">{{ $t('settings.changeServer') }}</button></div>
             </template>
+            <h3 class="mb-1.5 mt-6 font-semibold">{{ $t('settings.cacheTitle') }}</h3>
+            <div class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.clearCache') }}<small class="block text-xs text-ink-3">{{ $t('settings.clearCacheHint') }}</small></span><button class="btn shrink-0" @click="native.clearCache()">{{ $t('settings.clearCacheGo') }}</button></div>
           </template>
         </div>
       </div>

@@ -324,7 +324,11 @@
     "changeServer": "Cambiar de servidor o de modo",
     "noServer": "Ningún servidor configurado: indíquelo en la pantalla de conexión.",
     "wallModeSame": "Igual que la ventana principal",
-    "wallModeHint": "1 imagen/s: mucho menos ancho de banda y carga del servidor, útil con varios muros"
+    "wallModeHint": "1 imagen/s: mucho menos ancho de banda y carga del servidor, útil con varios muros",
+    "cacheTitle": "Caché",
+    "clearCache": "Vaciar la caché",
+    "clearCacheHint": "Imágenes, miniaturas y archivos de la app. Se conservan los ajustes y la sesión. La app se recarga.",
+    "clearCacheGo": "Vaciar"
   },
   "help": {
     "panels": "Mosaicos · Eventos · Línea de tiempo",

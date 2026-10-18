@@ -324,7 +324,11 @@
     "changeServer": "Changer de serveur ou de mode",
     "noServer": "Aucun serveur configuré : renseignez-le sur l'écran de connexion.",
     "wallModeSame": "Comme la fenêtre principale",
-    "wallModeHint": "Images 1/s : bien moins de débit et de charge serveur, utile avec plusieurs murs"
+    "wallModeHint": "Images 1/s : bien moins de débit et de charge serveur, utile avec plusieurs murs",
+    "cacheTitle": "Cache",
+    "clearCache": "Vider le cache",
+    "clearCacheHint": "Images, vignettes et fichiers de l'app. Réglages et connexion conservés. L'app se recharge.",
+    "clearCacheGo": "Vider"
   },
   "help": {
     "panels": "Gabarits · Événements · Timeline",

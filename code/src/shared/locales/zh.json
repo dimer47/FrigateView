@@ -324,7 +324,11 @@
     "changeServer": "更换服务器或模式",
     "noServer": "未配置服务器：请在登录界面中填写。",
     "wallModeSame": "与主窗口相同",
-    "wallModeHint": "每秒 1 帧：大幅降低带宽和服务器负载，适合多个视频墙"
+    "wallModeHint": "每秒 1 帧：大幅降低带宽和服务器负载，适合多个视频墙",
+    "cacheTitle": "缓存",
+    "clearCache": "清除缓存",
+    "clearCacheHint": "图像、缩略图和应用文件。设置和登录将保留。应用将重新加载。",
+    "clearCacheGo": "清除"
   },
   "help": {
     "panels": "布局 · 事件 · 时间轴",
