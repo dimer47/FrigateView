@@ -742,6 +742,11 @@
     "camMenu": "इस कैमरे की स्ट्रीम",
     "followGlobal": "सामान्य सेटिंग जैसा ({mode})",
     "camSet": "यह कैमरा: {mode}",
-    "rightClick": "राइट-क्लिक: इस कैमरे की सेटिंग"
+    "rightClick": "राइट-क्लिक: इस कैमरे की सेटिंग",
+    "forcedHigh": "HD ज़बरदस्ती",
+    "forcedLow": "SD ज़बरदस्ती",
+    "clickHigh": "क्लिक: HD लागू करें",
+    "clickLow": "क्लिक: SD लागू करें",
+    "clickBack": "क्लिक: {mode} पर लौटें"
   }
 }

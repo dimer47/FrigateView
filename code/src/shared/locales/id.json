@@ -742,6 +742,11 @@
     "camMenu": "Aliran kamera ini",
     "followGlobal": "Sama dengan pengaturan umum ({mode})",
     "camSet": "Kamera ini: {mode}",
-    "rightClick": "Klik kanan: pengaturan kamera ini"
+    "rightClick": "Klik kanan: pengaturan kamera ini",
+    "forcedHigh": "HD dipaksa",
+    "forcedLow": "SD dipaksa",
+    "clickHigh": "Klik: paksa HD",
+    "clickLow": "Klik: paksa SD",
+    "clickBack": "Klik: kembali ke {mode}"
   }
 }

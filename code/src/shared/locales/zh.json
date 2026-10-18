@@ -742,6 +742,11 @@
     "camMenu": "此摄像头的流",
     "followGlobal": "与常规设置相同（{mode}）",
     "camSet": "此摄像头：{mode}",
-    "rightClick": "右键：此摄像头的设置"
+    "rightClick": "右键：此摄像头的设置",
+    "forcedHigh": "强制 HD",
+    "forcedLow": "强制 SD",
+    "clickHigh": "单击：强制 HD",
+    "clickLow": "单击：强制 SD",
+    "clickBack": "单击：恢复为{mode}"
   }
 }

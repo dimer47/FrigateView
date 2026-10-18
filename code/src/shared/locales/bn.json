@@ -742,6 +742,11 @@
     "camMenu": "এই ক্যামেরার স্ট্রিম",
     "followGlobal": "সাধারণ সেটিংয়ের মতো ({mode})",
     "camSet": "এই ক্যামেরা: {mode}",
-    "rightClick": "রাইট-ক্লিক: এই ক্যামেরার সেটিং"
+    "rightClick": "রাইট-ক্লিক: এই ক্যামেরার সেটিং",
+    "forcedHigh": "HD জোরপূর্বক",
+    "forcedLow": "SD জোরপূর্বক",
+    "clickHigh": "ক্লিক: HD চালু",
+    "clickLow": "ক্লিক: SD চালু",
+    "clickBack": "ক্লিক: {mode}-এ ফিরুন"
   }
 }

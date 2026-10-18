@@ -742,6 +742,11 @@
     "camMenu": "This camera's stream",
     "followGlobal": "Same as general setting ({mode})",
     "camSet": "This camera: {mode}",
-    "rightClick": "Right-click: this camera's setting"
+    "rightClick": "Right-click: this camera's setting",
+    "forcedHigh": "HD forced",
+    "forcedLow": "SD forced",
+    "clickHigh": "Click: force HD",
+    "clickLow": "Click: force SD",
+    "clickBack": "Click: back to {mode}"
   }
 }

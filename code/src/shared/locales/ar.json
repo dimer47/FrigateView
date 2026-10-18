@@ -742,6 +742,11 @@
     "camMenu": "بث هذه الكاميرا",
     "followGlobal": "مثل الإعداد العام ({mode})",
     "camSet": "هذه الكاميرا: {mode}",
-    "rightClick": "نقرة يمنى: إعداد هذه الكاميرا"
+    "rightClick": "نقرة يمنى: إعداد هذه الكاميرا",
+    "forcedHigh": "HD إجباري",
+    "forcedLow": "SD إجباري",
+    "clickHigh": "نقرة: فرض HD",
+    "clickLow": "نقرة: فرض SD",
+    "clickBack": "نقرة: العودة إلى {mode}"
   }
 }

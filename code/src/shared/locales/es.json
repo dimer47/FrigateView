@@ -742,6 +742,11 @@
     "camMenu": "Flujo de esta cámara",
     "followGlobal": "Como el ajuste general ({mode})",
     "camSet": "Esta cámara: {mode}",
-    "rightClick": "Clic derecho: ajuste de esta cámara"
+    "rightClick": "Clic derecho: ajuste de esta cámara",
+    "forcedHigh": "HD forzada",
+    "forcedLow": "SD forzada",
+    "clickHigh": "Clic: forzar HD",
+    "clickLow": "Clic: forzar SD",
+    "clickBack": "Clic: volver a {mode}"
   }
 }

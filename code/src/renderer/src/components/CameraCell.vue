@@ -56,10 +56,21 @@ const trying = ref(false) // essai HD en cours
 const lastM = ref(null) // dernière mesure, pour l'info-bulle
 const quality = computed(() => (adaptive.value ? level.value : cellQuality({ pref: pref.value, override: override.value, tiles: props.tiles, focused: props.zoomable })))
 const streamId = computed(() => (cam.value ? pickStream(cam.value, quality.value).id : props.camId))
-function toggleQuality() { override.value = quality.value === 'low' ? 'high' : 'low' }
-watch(() => props.camId, () => { override.value = null; qMenu.value = false })
-const qMenu = ref(false) // menu « flux de cette caméra » (clic droit sur le badge)
-function pickCamQuality(q) { ui.setCamQuality(props.camId, q); override.value = null; qMenu.value = false }
+// Clic sur le badge : HD forcé → SD forcé → retour au mode normal (réglage de la caméra ou général)
+function toggleQuality() { override.value = override.value === null ? 'high' : override.value === 'high' ? 'low' : null }
+watch(() => props.camId, () => { override.value = null; qMenu.value = null })
+// Menu « flux de cette caméra » : clic droit n'importe où sur la case, placé sous le curseur
+const qMenu = ref(null) // { x, y } dans la case, ou null
+function openQMenu(e) {
+  if (!hasSub.value || ui.liveMode !== 'webrtc' || playback.value) return
+  e.preventDefault()
+  const r = root.value.getBoundingClientRect()
+  qMenu.value = { x: Math.max(4, Math.min(e.clientX - r.left, r.width - 200)), y: Math.max(4, Math.min(e.clientY - r.top, r.height - 190)) }
+}
+function pickCamQuality(q) { ui.setCamQuality(props.camId, q); override.value = null; qMenu.value = null }
+const closeQMenu = (e) => { if (qMenu.value && !(e.target.closest && e.target.closest('[data-qmenu]'))) qMenu.value = null }
+onMounted(() => { document.addEventListener('pointerdown', closeQMenu, true); window.addEventListener('blur', closeQMenu) })
+onBeforeUnmount(() => { document.removeEventListener('pointerdown', closeQMenu, true); window.removeEventListener('blur', closeQMenu) })
 const badgeTitle = computed(() => {
   const parts = []
   if (adaptive.value) {
@@ -68,7 +79,8 @@ const badgeTitle = computed(() => {
     if (why) parts.push(t('quality.why.' + why.key, why))
   }
   if (camPref.value) parts.push(t('quality.camSet', { mode: t('quality.' + camPref.value) }))
-  parts.push(t(quality.value === 'low' ? 'quality.toHigh' : 'quality.toLow'))
+  if (override.value) parts.push(t(override.value === 'high' ? 'quality.forcedHigh' : 'quality.forcedLow'))
+  parts.push(t(override.value === null ? 'quality.clickHigh' : override.value === 'high' ? 'quality.clickLow' : 'quality.clickBack', { mode: t('quality.' + pref.value) }))
   parts.push(t('quality.rightClick'))
   return parts.join(' · ')
 })
@@ -454,7 +466,7 @@ onBeforeUnmount(() => clearInterval(miniTimer))
 </script>
 
 <template>
-  <div ref="root" class="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#1b2636,#0b121c)]" @wheel="onWheel">
+  <div ref="root" class="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#1b2636,#0b121c)]" @wheel="onWheel" @contextmenu="openQMenu">
    <div class="absolute inset-0" :class="{ 'cursor-grab': zoomed && !panning, 'cursor-grabbing': panning }" :style="zoomStyle" @pointerdown="onPanDown" @pointermove="onPanMove" @pointerup="onPanUp" @pointercancel="onPanUp" @dblclick="zoomed && ($event.stopPropagation(), resetZoom())">
     <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
     <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
@@ -486,13 +498,13 @@ onBeforeUnmount(() => clearInterval(miniTimer))
         <i class="bg-warn" />{{ wantVideo && rtc === 'connecting' ? $t('cell.connecting') : $t('cell.snapshot') }}
       </span>
       <button v-if="hasSub && ui.liveMode === 'webrtc' && !playback" class="badge cursor-pointer hover:bg-accent" :class="{ '!bg-accent/80': override }"
-        :title="badgeTitle" @click.stop="toggleQuality" @dblclick.stop @contextmenu.prevent.stop="qMenu = !qMenu">{{ trying ? 'HD…' : quality === 'low' ? 'SD' : 'HD' }}<i v-if="camPref" class="ml-1 !size-1.5 rounded-full bg-white" /></button>
-      <div v-if="qMenu" class="absolute bottom-7 right-1 z-[6] min-w-48 rounded-md border border-line-2 bg-modal py-1 text-xs shadow-xl" @click.stop @pointerdown.stop @mouseleave="qMenu = false">
-        <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-3">{{ $t('quality.camMenu') }}</div>
-        <button v-for="q in [null, ...QUALITIES]" :key="q || 'global'" class="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-raised" :class="{ 'font-semibold text-accent': camPref === q }" @click="pickCamQuality(q)">
-          <span class="w-3">{{ camPref === q ? '✓' : '' }}</span>{{ q ? $t('quality.' + q) : $t('quality.followGlobal', { mode: $t('quality.' + ui.quality) }) }}
-        </button>
-      </div>
+        :title="badgeTitle" @click.stop="toggleQuality" @dblclick.stop @contextmenu.stop="openQMenu">{{ trying ? 'HD…' : quality === 'low' ? 'SD' : 'HD' }}<i v-if="camPref" class="ml-1 !size-1.5 rounded-full bg-white" /></button>
+    </div>
+    <div v-if="qMenu" data-qmenu class="absolute z-[8] min-w-48 rounded-md border border-line-2 bg-modal py-1 text-xs shadow-xl" @click.stop @pointerdown.stop :style="{ left: qMenu.x + 'px', top: qMenu.y + 'px' }" @contextmenu.prevent>
+      <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-3">{{ $t('quality.camMenu') }}</div>
+      <button v-for="q in [null, ...QUALITIES]" :key="q || 'global'" class="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-raised" :class="{ 'font-semibold text-accent': camPref === q }" @click="pickCamQuality(q)">
+        <span class="w-3">{{ camPref === q ? '✓' : '' }}</span>{{ q ? $t('quality.' + q) : $t('quality.followGlobal', { mode: $t('quality.' + ui.quality) }) }}
+      </button>
     </div>
     <div v-if="ui.showStats && statLine" class="absolute bottom-8 left-1.5 z-[3] max-w-[calc(100%-12px)] truncate rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white/90" :title="$t('stats.cellTitle')">
         {{ statLine }}

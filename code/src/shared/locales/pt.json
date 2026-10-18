@@ -742,6 +742,11 @@
     "camMenu": "Fluxo desta câmera",
     "followGlobal": "Igual à configuração geral ({mode})",
     "camSet": "Esta câmera: {mode}",
-    "rightClick": "Clique direito: configuração desta câmera"
+    "rightClick": "Clique direito: configuração desta câmera",
+    "forcedHigh": "HD forçada",
+    "forcedLow": "SD forçada",
+    "clickHigh": "Clique: forçar HD",
+    "clickLow": "Clique: forçar SD",
+    "clickBack": "Clique: voltar para {mode}"
   }
 }
