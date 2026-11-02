@@ -76,7 +76,7 @@ const rows = computed(() => {
       id,
       name: server.camById(id)?.name || id,
       offline: server.online[id] === false,
-      rec: d.rec.filter(inView).map((r) => bar(r.s, Math.min(r.e, now.value))),
+      rec: !tl.filters.rec ? [] : d.rec.filter(inView).map((r) => bar(r.s, Math.min(r.e, now.value))),
       motion: tl.filters.motion ? d.motion.filter(inView).map((r) => bar(r.s, r.e)) : [],
       reviews: d.reviews.filter((r) => inView(r) && tl.filters[r.type]).map((r) => ({ ...bar(r.s, r.e), type: r.type }))
     }
@@ -124,7 +124,25 @@ function onUp(e) {
   drag = null
   if (d.moved) return
   if (d.cam) { const i = layouts.active.cells.indexOf(d.cam); if (i >= 0) layouts.selected = i }
-  tl.seek(timeAt(e.clientX), d.cam || null)
+  tl.seek(snap(timeAt(e.clientX), d.cam), d.cam || null)
+}
+
+// Magnétisme : un clic à quelques pixels d'un élément affiché (filtres appliqués) se cale sur son début.
+// Dans un élément, le clic reste où il est. Les enregistrements n'aimantent que s'ils sont affichés.
+const SNAP_PX = 10
+function snap(t, cam) {
+  const tol = (SNAP_PX / (ruler.value?.clientWidth || 800)) * (tl.view.end - tl.view.start)
+  let best = null, bestDist = tol
+  for (const id of cam ? [cam] : cams.value) {
+    const d = tl.rangesFor(id)
+    const list = [...d.reviews.filter((r) => tl.filters[r.type]), ...(tl.filters.motion ? d.motion : []), ...(tl.filters.rec ? d.rec : [])]
+    for (const r of list) {
+      if (t >= r.s && t <= r.e) return t
+      const dist = Math.abs(t - r.s)
+      if (dist <= bestDist) { best = r.s; bestDist = dist }
+    }
+  }
+  return best ?? t
 }
 function onWheel(e) {
   if (!e.target.closest('[data-track]')) return
@@ -168,8 +186,8 @@ onMounted(() => {
 })
 onBeforeUnmount(() => { clearInterval(loop); clearInterval(dataLoop); ro?.disconnect(); removeEventListener('mousemove', onMove); removeEventListener('mouseup', onUp) })
 
-const COLORS = { person: 'var(--color-bad)', car: 'var(--color-warn)', animal: 'var(--color-ok)', other: '#a78bfa' }
-const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'), animal: t('types.animal'), other: t('types.other'), motion: t('timeline.motion') }))
+const COLORS = { person: 'var(--color-bad)', car: 'var(--color-warn)', animal: 'var(--color-ok)', other: '#a78bfa', rec: '#1e3a5f' }
+const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'), animal: t('types.animal'), other: t('types.other'), motion: t('timeline.motion'), rec: t('timeline.recording') }))
 </script>
 
 <template>

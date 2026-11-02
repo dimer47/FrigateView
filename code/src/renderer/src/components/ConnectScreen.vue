@@ -60,7 +60,8 @@ async function trust() {
 }
 
 async function changeServer() {
-  await server.changeServer()
+  // L'écran bascule quoi qu'il arrive : la saisie d'un autre serveur ne dépend pas de la déconnexion
+  try { await server.changeServer() } catch (e) { console.warn('changeServer', e) }
   reconnecting.value = false
   state.value = 'idle'
   host.value = ''

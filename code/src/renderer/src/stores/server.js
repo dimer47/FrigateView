@@ -81,15 +81,16 @@ export const useServerStore = defineStore('server', {
       this.authReason = reason
     },
 
+    // Chaque étape est indépendante : un échec (cookie, fichier, IPC) n'empêche jamais la déconnexion
     async signOut() {
       clearInterval(this._timer)
-      await logout(this.server)
-      await window.native.clearSecret()
+      try { if (this.server) await logout(this.server) } catch (e) { console.warn('logout', e) }
+      try { await window.native.clearSecret() } catch (e) { console.warn('clearSecret', e) }
       this.askLogin('')
     },
 
     async changeServer() {
-      await this.signOut()
+      try { await this.signOut() } catch (e) { console.warn('signOut', e) }
       this.server = null
       this.cameras = []
       save('fv-server', null)

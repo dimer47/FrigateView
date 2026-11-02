@@ -179,9 +179,11 @@ ipcMain.handle('file:cancel', (_e, id) => { downloads.get(id)?.abort() })
 
 ipcMain.handle('auth:logout', async (_e, { origin }) => {
   currentServer = null // changement de serveur possible ensuite
-  const cookies = await session.defaultSession.cookies.get({ url: origin })
-  await Promise.all(cookies.map((c) => session.defaultSession.cookies.remove(origin, c.name)))
-  await session.defaultSession.cookies.flushStore()
+  try {
+    const cookies = await session.defaultSession.cookies.get({ url: origin })
+    await Promise.all(cookies.map((c) => session.defaultSession.cookies.remove(origin, c.name).catch(() => {})))
+    await session.defaultSession.cookies.flushStore()
+  } catch (e) { console.warn('auth:logout', e) }
   return true
 })
 

@@ -40,7 +40,7 @@ export const useTimelineStore = defineStore('timeline', {
     speedIdx: 1,
     sync: load('fv-tl', {}).sync ?? true,
     playbackCams: null, // null = toutes les caméras du layout ; sinon [id]
-    filters: { person: true, car: true, animal: true, other: true, motion: true },
+    filters: { person: true, car: true, animal: true, other: true, motion: true, rec: true },
     height: load('fv-tl', {}).height ?? 250,
     visible: load('fv-tl', {}).visible ?? true,
     chunks: {}, // `${cam}:${heure}` → { rec, motion, reviews, at }
