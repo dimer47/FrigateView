@@ -643,7 +643,10 @@
     "seenRecent": "Dikenali dalam 30 hari terakhir",
     "seenNoMatch": "Tidak ada orang yang cocok.",
     "seenNone": "Tidak ada yang dikenali dalam 30 hari terakhir.",
-    "seenHint": "Hanya baca: pustaka wajah khusus akun admin."
+    "seenHint": "Hanya baca: pustaka wajah khusus akun admin.",
+    "context": "Lihat gambar penuh",
+    "replayMoment": "Putar ulang momen ini",
+    "noRecording": "Rekaman wajah ini tidak ditemukan (peristiwa dihapus atau kedaluwarsa)"
   },
   "plates": {
     "title": "Pelat",
@@ -673,7 +676,8 @@
     "removed": "Pelat {plate} dihapus dari pelat dikenal",
     "restartHint": "Frigate 0.17: mulai ulang Frigate agar nama berlaku untuk lintasan berikutnya.",
     "saveFailed": "Gagal menyimpan: {msg}",
-    "editHint": "Buka pelat yang terlihat untuk memberi nama; × menghapus pelat dari sebuah nama."
+    "editHint": "Buka pelat yang terlihat untuk memberi nama; × menghapus pelat dari sebuah nama.",
+    "variants": "juga terbaca: {list}"
   },
   "watch": {
     "title": "Orang dan pelat nomor",

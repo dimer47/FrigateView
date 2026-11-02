@@ -643,7 +643,10 @@
     "seenRecent": "Reconocidos en los últimos 30 días",
     "seenNoMatch": "Ninguna persona coincide.",
     "seenNone": "Nadie reconocido en los últimos 30 días.",
-    "seenHint": "Solo lectura: la biblioteca de rostros es solo para cuentas de administrador."
+    "seenHint": "Solo lectura: la biblioteca de rostros es solo para cuentas de administrador.",
+    "context": "Ver la imagen completa",
+    "replayMoment": "Volver a ver este momento",
+    "noRecording": "No se encontró la grabación de este rostro (evento eliminado o caducado)"
   },
   "plates": {
     "title": "Matrículas",
@@ -673,7 +676,8 @@
     "removed": "Matrícula {plate} quitada de las conocidas",
     "restartHint": "Frigate 0.17: reinicie Frigate para que el nombre se aplique a los próximos pasos.",
     "saveFailed": "Error al guardar: {msg}",
-    "editHint": "Abra una matrícula vista para nombrarla; × quita una matrícula de un nombre."
+    "editHint": "Abra una matrícula vista para nombrarla; × quita una matrícula de un nombre.",
+    "variants": "también leída como: {list}"
   },
   "watch": {
     "title": "Personas y matrículas",

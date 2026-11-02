@@ -138,6 +138,9 @@ export const useServerStore = defineStore('server', {
         // Coupure seulement après 3 échecs de suite : un lien saturé par la vidéo
         // (plusieurs murs, flux 4K) ralentit les réponses sans que le serveur soit arrêté
         if (this.status !== 'lost' && (this._fails = (this._fails || 0) + 1) < 3) return
+        // /api/stats peut dépasser son délai sur un lien chargé (réponse lourde) : avant de déclarer le serveur perdu,
+        // /api/version (quelques octets) confirme s'il répond encore. Il répond → lent, pas perdu.
+        if (this.status !== 'lost') { try { await getVersion(this.server); this._fails = 0; return } catch { /* vraiment injoignable */ } }
         if (this.status !== 'lost') { this.status = 'lost'; this.lostAt = Date.now() }
         this.publish()
       }

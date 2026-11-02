@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { lprEnabled, knownPlates, matchKnown, aggregatePlates, filterPlates, ANY_PLATE, canEditKnown, hotReloadKnown, validPlateName, namePlate } from '@/services/plates'
+import { lprEnabled, knownPlates, matchKnown, aggregatePlates, filterPlates, ANY_PLATE, canEditKnown, hotReloadKnown, validPlateName, namePlate, plateRegex, knownKey, knownLabel, displayPlate } from '@/services/plates'
 
 const ev = (id, plate, t, camera = 'route', sub = null) => ({ id, camera, start_time: t, sub_label: sub, data: { recognized_license_plate: plate } })
 
@@ -66,9 +66,31 @@ describe('nommage des plaques', () => {
     expect(validPlateName('x'.repeat(51))).toBe(false)
   })
   it('ajout, déplacement, retrait', () => {
-    expect(namePlate(known, 'ZZ-000-ZZ', 'Paul').map).toEqual({ Marie: ['AB-123-CD', 'EF-456-GH'], Paul: ['IJ-789-KL', 'ZZ-000-ZZ'] })
-    expect(namePlate(known, 'IJ-789-KL', 'Marie')).toEqual({ map: { Marie: ['AB-123-CD', 'EF-456-GH', 'IJ-789-KL'] }, emptied: ['Paul'] })
+    expect(namePlate(known, 'ZZ-000-ZZ', 'Paul').map).toEqual({ Marie: ['AB-123-CD', 'EF-456-GH'], Paul: ['IJ-789-KL', 'ZZ[- ]?000[- ]?ZZ'] })
+    expect(namePlate(known, 'IJ789KL', 'Marie')).toEqual({ map: { Marie: ['AB-123-CD', 'EF-456-GH', 'IJ[- ]?789[- ]?KL'] }, emptied: ['Paul'] })
     expect(namePlate(known, 'AB-123-CD', '')).toEqual({ map: { Marie: ['EF-456-GH'], Paul: ['IJ-789-KL'] }, emptied: [] })
     expect(namePlate(known, 'IJ-789-KL', 'Paul').emptied).toEqual([])
+  })
+})
+
+describe('variantes de tirets et d\'espaces', () => {
+  it('motif enregistré et relecture', () => {
+    expect(plateRegex('CV-419HJ')).toBe('CV[- ]?419[- ]?HJ')
+    expect(new RegExp('^' + plateRegex('CV-419HJ') + '$').test('CV419HJ')).toBe(true)
+    expect(new RegExp('^' + plateRegex('CV419HJ') + '$').test('CV-419-HJ')).toBe(true)
+    expect(knownKey('CV[- ]?419[- ]?HJ')).toBe('CV419HJ')
+    expect(knownLabel('CV[- ]?419[- ]?HJ')).toBe('CV-419-HJ')
+    expect(knownLabel('AB-1\\d\\d-CD')).toBe('AB-1\\d\\d-CD')
+    expect(displayPlate('AB12345', new Map([['AB 12345', 2], ['AB12345', 1]]))).toBe('AB 12345')
+  })
+  it('regroupe les lectures', () => {
+    const p = aggregatePlates([ev('a', 'CV419HJ', 30), ev('b', 'CV-419HJ', 20), ev('c', 'CV-419-HJ', 10, 'devant'), ev('d', 'HG-765GZ', 5)])
+    expect(p.map((x) => x.plate)).toEqual(['CV-419-HJ', 'HG-765-GZ'])
+    expect(p[0]).toMatchObject({ key: 'CV419HJ', count: 3, cams: ['route', 'devant'] })
+    expect(p[0].variants).toEqual(['CV419HJ', 'CV-419HJ', 'CV-419-HJ'])
+  })
+  it('nom connu quelle que soit l\'écriture', () => {
+    const known = knownPlates({ lpr: { known_plates: { Marie: ['CV[- ]?419[- ]?HJ'] } } })
+    expect(aggregatePlates([ev('a', 'CV419HJ', 30)], known)[0].name).toBe('Marie')
   })
 })

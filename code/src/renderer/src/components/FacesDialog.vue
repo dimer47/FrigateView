@@ -4,7 +4,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
-import { getJson, getPath, eventThumbUrl } from '@/services/frigate'
+import { getJson, getPath, eventThumbUrl, eventSnapshotUrl } from '@/services/frigate'
 import { TRAIN, getFaces, faceImageUrl, faceRecognitionEnabled, validName, folderName, rangeSelect, imageTime,
   createFace, classifyFace, deleteFaceImages, renameFace, registerFace } from '@/services/faces'
 import { fromEvent } from '@/stores/eventFilters'
@@ -21,6 +21,21 @@ const admin = computed(() => server.isAdmin)
 const state = ref('loading') // loading | ok | disabled | forbidden | error
 const errorText = ref('')
 const seen = ref(null)
+// Photo complète de l'événement d'un visage récent : Frigate découpe au ras du visage (aucun réglage de marge,
+// data_processing/real_time/face.py), l'image entière aide à reconnaître la personne.
+// L'heure des images de la bibliothèque est celle de leur classement, pas de la prise de vue : pas de lien vers l'événement.
+const context = ref(null) // { src, name, ts }
+const showTrain = (f) => { context.value = { src: eventSnapshotUrl(srv(), f.eventId), name: f.name, ts: f.ts, eventId: f.eventId } }
+// Relire l'enregistrement au moment du visage (quelques secondes avant), sur la caméra de l'événement
+async function replayFace(f) {
+  try {
+    const ev = await getJson(srv(), `/api/events/${encodeURIComponent(f.eventId)}`)
+    const e = fromEvent(ev, eventThumbUrl(srv(), ev.id))
+    if (f.ts) e.s = f.ts
+    context.value = null
+    replay(e)
+  } catch { ui.notify(t('faces.noRecording')) }
+}
 const people = ref([])
 const train = ref([])
 const current = ref(TRAIN) // TRAIN ou nom d'une personne
@@ -169,7 +184,7 @@ const when = (ms) => (ms ? new Date(ms).toLocaleString(loc(), { day: 'numeric', 
 const pct = (s) => (s == null ? '' : `${Math.round(s * 100)} %`)
 const camName = (id) => server.camById(id)?.name || id
 
-const onKey = (e) => { if (e.key === 'Escape' && !e.target.matches?.('input, select')) close() }
+const onKey = (e) => { if (e.key === 'Escape' && !e.target.matches?.('input, select')) { if (context.value) context.value = null; else close() } }
 onMounted(() => addEventListener('keydown', onKey))
 onBeforeUnmount(() => removeEventListener('keydown', onKey))
 </script>
@@ -279,6 +294,9 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
               <div class="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-3">
                 <button v-for="f in train" :key="f.file" class="group relative overflow-hidden rounded-lg border-2 bg-panel text-left" :class="selected.has(f.file) ? 'border-accent' : 'border-line hover:border-line-2'" :title="f.file" @click="pick(f.file, $event)">
                   <img :src="img(TRAIN, f.file)" alt="" loading="lazy" class="aspect-square w-full bg-raised object-cover" draggable="false">
+                  <span v-if="f.eventId" role="button" class="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded bg-black/60 text-white opacity-0 hover:bg-accent group-hover:opacity-100" :title="$t('faces.context')" @click.stop="showTrain(f)">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" /></svg>
+                  </span>
                   <span v-if="admin" class="absolute left-1.5 top-1.5 flex size-5 items-center justify-center rounded border border-white/40 bg-black/50 text-[11px] text-white" :class="{ 'bg-accent': selected.has(f.file) }">{{ selected.has(f.file) ? '✓' : '' }}</span>
                   <span class="block px-2 py-1.5 text-[11px] leading-tight">
                     <span class="flex justify-between gap-1"><b class="truncate">{{ f.name ? label(f.name) : $t('faces.unknown') }}</b><span v-if="f.score != null" class="font-mono" :class="f.score >= 0.8 ? 'text-ok' : f.score >= 0.6 ? 'text-warn' : 'text-ink-3'">{{ pct(f.score) }}</span></span>
@@ -310,6 +328,17 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
           </div>
         </section>
       </div>
+    </div>
+    <div v-if="context" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-8" @mousedown.self="context = null" @keydown.esc.stop="context = null">
+      <figure class="flex max-h-full max-w-full flex-col overflow-hidden rounded-xl border border-line-2 bg-modal shadow-2xl">
+        <img :src="context.src" alt="" class="min-h-0 max-w-[min(1400px,calc(100vw-64px))] flex-1 object-contain" style="max-height: calc(100vh - 140px)" draggable="false">
+        <figcaption class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+          <b>{{ context.name ? label(context.name) : $t('faces.unknown') }}</b>
+          <span class="text-ink-3">{{ context.cam ? camName(context.cam) + ' · ' : '' }}{{ when(context.ts) }}</span>
+          <button class="btn btn-primary ml-auto py-1" @click="replayFace(context)">{{ $t('faces.replayMoment') }}</button>
+          <button class="btn py-1" @click="context = null">{{ $t('common.close') }}</button>
+        </figcaption>
+      </figure>
     </div>
   </div>
 </template>

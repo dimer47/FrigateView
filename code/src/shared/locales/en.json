@@ -643,7 +643,10 @@
     "seenRecent": "Recognized in the last 30 days",
     "seenNoMatch": "No matching person.",
     "seenNone": "No one recognized in the last 30 days.",
-    "seenHint": "Read-only: the face library is for admin accounts only."
+    "seenHint": "Read-only: the face library is for admin accounts only.",
+    "context": "View the full picture",
+    "replayMoment": "Replay this moment",
+    "noRecording": "No recording found for this face (event deleted or expired)"
   },
   "plates": {
     "title": "Plates",
@@ -673,7 +676,8 @@
     "removed": "Plate {plate} removed from known plates",
     "restartHint": "Frigate 0.17: restart Frigate so the name applies to upcoming sightings.",
     "saveFailed": "Save failed: {msg}",
-    "editHint": "Open a seen plate to name it; × removes a plate from a name."
+    "editHint": "Open a seen plate to name it; × removes a plate from a name.",
+    "variants": "also read as: {list}"
   },
   "watch": {
     "title": "People and plates",

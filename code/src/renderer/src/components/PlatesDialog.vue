@@ -5,7 +5,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
 import { getJson, eventThumbUrl } from '@/services/frigate'
-import { lprEnabled, knownPlates, aggregatePlates, filterPlates, getPlateEvents, canEditKnown, hotReloadKnown, validPlateName, namePlate, saveKnownPlates } from '@/services/plates'
+import { lprEnabled, knownPlates, aggregatePlates, filterPlates, getPlateEvents, canEditKnown, hotReloadKnown, validPlateName, namePlate, saveKnownPlates, plateKey, knownKey, knownLabel } from '@/services/plates'
 import { fromEvent } from '@/stores/eventFilters'
 import { playEvent } from '@/stores/playEvent'
 import WatchBell from './WatchBell.vue'
@@ -25,7 +25,8 @@ const query = ref('')
 const close = () => (ui.platesOpen = false)
 const camName = (id) => server.camById(id)?.name || id
 const shown = computed(() => filterPlates(plates.value, query.value, camName))
-const plate = computed(() => plates.value.find((p) => p.plate === current.value) || null)
+const plate = computed(() => plates.value.find((p) => p.key === current.value) || null)
+const otherVariants = computed(() => (plate.value?.variants || []).filter((v) => v !== plate.value.plate))
 const passages = computed(() => (plate.value?.events || []).map((r) => fromEvent(r, eventThumbUrl(srv(), r.id))))
 
 async function load() {
@@ -50,8 +51,8 @@ const editable = computed(() => server.isAdmin && canEditKnown(server.version))
 const editing = ref(false)
 const nameInput = ref('')
 const busy = ref(false)
-// Nom posé exactement sur cette plaque dans known_plates (une regex qui la couvre ne compte pas)
-const exactName = (plate) => known.value.find((k) => k.plates.includes(plate))?.name || null
+// Nom posé sur cette plaque dans known_plates, tirets et espaces ignorés (une regex qui la couvre ne compte pas)
+const exactName = (plate) => known.value.find((k) => k.plates.some((p) => knownKey(p) === plateKey(plate)))?.name || null
 function startEdit() { nameInput.value = exactName(plate.value.plate) || plate.value.name || ''; editing.value = true }
 async function applyName(plateText, name) {
   if (busy.value) return
@@ -112,7 +113,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
             </button>
             <div class="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('plates.recent') }}</div>
             <p v-if="!shown.length" class="px-2 py-2 text-xs text-ink-3">{{ query ? $t('plates.noMatch') : $t('plates.noPlates') }}</p>
-            <button v-for="p in shown" :key="p.plate" class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px]" :class="current === p.plate ? 'bg-accent/15 text-accent' : 'text-ink-2 hover:bg-raised'" @click="current = p.plate">
+            <button v-for="p in shown" :key="p.key" class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px]" :class="current === p.key ? 'bg-accent/15 text-accent' : 'text-ink-2 hover:bg-raised'" :title="p.variants.some((v) => v !== p.plate) ? $t('plates.variants', { list: p.variants.filter((v) => v !== p.plate).join(' · ') }) : ''" @click="current = p.key">
               <img :src="eventThumbUrl(srv(), p.lastEvent.id)" alt="" loading="lazy" class="h-9 w-14 shrink-0 rounded-md bg-raised object-cover" draggable="false">
               <span class="min-w-0 flex-1">
                 <span class="flex items-center gap-1.5"><b class="truncate font-mono">{{ p.plate }}</b><span v-if="p.name" class="truncate rounded bg-ok/15 px-1 text-[10px] text-ok">{{ p.name }}</span></span>
@@ -127,7 +128,6 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
           <div class="flex min-h-[52px] shrink-0 flex-wrap items-center gap-2 border-b border-line px-4 py-2 text-[13px]">
             <template v-if="plate">
               <b class="rounded border border-line-2 bg-bg px-2 py-0.5 font-mono text-[15px] tracking-wider">{{ plate.plate }}</b>
-              <WatchBell kind="plate" :value="plate.plate" />
               <template v-if="editing">
                 <input v-model="nameInput" class="input w-48 py-1" list="fv-plate-names" maxlength="50" :placeholder="$t('plates.namePlaceholder')" autofocus @keydown.enter="saveName" @keydown.esc.stop="editing = false">
                 <datalist id="fv-plate-names"><option v-for="k in known" :key="k.name" :value="k.name" /></datalist>
@@ -136,11 +136,13 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
               </template>
               <template v-else>
                 <span v-if="plate.name" class="rounded bg-ok/15 px-1.5 py-0.5 text-xs text-ok">{{ plate.name }}</span>
-                <WatchBell v-if="plate.name" kind="plate" :value="plate.name" />
+                <!-- Une seule cloche : le nom connu s'il existe (toutes ses plaques), sinon la plaque elle-même -->
+                <WatchBell kind="plate" :value="plate.name || plate.plate" />
                 <button v-if="editable" class="btn py-1 text-xs" :disabled="busy" @click="startEdit">{{ plate.name ? $t('plates.rename') : $t('plates.name') }}</button>
                 <button v-if="editable && exactName(plate.plate)" class="btn py-1 text-xs" :disabled="busy" @click="applyName(plate.plate, '')">{{ $t('plates.removeName') }}</button>
               </template>
               <span class="text-xs text-ink-3">{{ $t('plates.passages', { n: plate.count }, plate.count) }} · {{ plate.cams.map(camName).join(', ') }}</span>
+              <span v-if="otherVariants.length" class="text-xs text-ink-3">· {{ $t('plates.variants', { list: otherVariants.join(' · ') }) }}</span>
             </template>
             <template v-else>
               <b class="text-[14px]">{{ $t('plates.known') }}</b>
@@ -163,11 +165,11 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
                 <div v-for="k in known" :key="k.name" class="rounded-lg border border-line bg-panel p-3">
                   <div class="flex items-center gap-1"><b class="block min-w-0 flex-1 truncate text-[13px]">{{ k.name }}</b><WatchBell kind="plate" :value="k.name" /></div>
                   <div class="mt-2 flex flex-wrap gap-1.5">
-                    <code v-for="p in k.plates" :key="p" class="flex items-center gap-1 rounded border border-line-2 bg-bg px-1.5 py-0.5 font-mono text-xs">{{ p }}<button v-if="editable" class="text-ink-3 hover:text-bad" :disabled="busy" :title="$t('plates.removeName')" @click="applyName(p, '')">×</button></code>
+                    <code v-for="p in k.plates" :key="p" class="flex items-center gap-1 rounded border border-line-2 bg-bg px-1.5 py-0.5 font-mono text-xs" :title="p">{{ knownLabel(p) }}<button v-if="editable" class="text-ink-3 hover:text-bad" :disabled="busy" :title="$t('plates.removeName')" @click="applyName(p, '')">×</button></code>
                   </div>
                   <div class="mt-2 flex flex-wrap gap-1.5 text-[11px] text-ink-3">
                     <template v-if="seenFor(k.name).length">
-                      <button v-for="s in seenFor(k.name)" :key="s.plate" class="rounded px-1 hover:bg-raised hover:text-ink" @click="current = s.plate">{{ s.plate }} · {{ when(s.last) }}</button>
+                      <button v-for="s in seenFor(k.name)" :key="s.key" class="rounded px-1 hover:bg-raised hover:text-ink" @click="current = s.key">{{ s.plate }} · {{ when(s.last) }}</button>
                     </template>
                     <span v-else>{{ $t('plates.notSeen') }}</span>
                   </div>

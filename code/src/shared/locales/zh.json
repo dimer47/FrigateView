@@ -643,7 +643,10 @@
     "seenRecent": "最近 30 天内识别",
     "seenNoMatch": "没有匹配的人员。",
     "seenNone": "最近 30 天内未识别到任何人。",
-    "seenHint": "只读：人脸库仅限管理员账户使用。"
+    "seenHint": "只读：人脸库仅限管理员账户使用。",
+    "context": "查看完整画面",
+    "replayMoment": "回放此刻",
+    "noRecording": "未找到此人脸的录像（事件已删除或过期）"
   },
   "plates": {
     "title": "车牌",
@@ -673,7 +676,8 @@
     "removed": "车牌 {plate} 已从已知车牌中移除",
     "restartHint": "Frigate 0.17：请重启 Frigate，名称才会应用到之后的经过记录。",
     "saveFailed": "保存失败：{msg}",
-    "editHint": "打开一个已识别的车牌即可命名；× 可将车牌从名称中移除。"
+    "editHint": "打开一个已识别的车牌即可命名；× 可将车牌从名称中移除。",
+    "variants": "也识别为：{list}"
   },
   "watch": {
     "title": "人员和车牌",

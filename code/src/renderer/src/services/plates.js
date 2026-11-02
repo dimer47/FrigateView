@@ -18,6 +18,25 @@ import { getJson, sendJson } from './frigate'
 export const ANY_PLATE = '^.+'
 
 const normalize = (s) => String(s || '').toUpperCase().replace(/[\s-]/g, '')
+export const plateKey = normalize
+
+// Motif enregistré dans known_plates : Frigate compare au caractère près (re.match ^…$ ou Levenshtein ≤ match_distance,
+// data_processing/common/license_plate/mixin.py), « CV-419-HJ » ne reconnaîtrait pas « CV419HJ ».
+// D'où « CV[- ]?419[- ]?HJ » : tiret ou espace facultatif entre les groupes de lettres et de chiffres.
+const SEP = '[- ]?'
+export const plateRegex = (plate) => (normalize(plate).match(/[A-Z]+|\d+|[^A-Z\d]+/g) || []).join(SEP)
+// Clé d'une entrée de known_plates (motif ci-dessus ou plaque saisie à la main)
+export const knownKey = (p) => normalize(String(p).split(SEP).join(''))
+// Affichage d'une entrée : motif généré → plaque lisible, autre regex → telle quelle
+export const knownLabel = (p) => (/^[A-Z0-9]+(\[- \]\?[A-Z0-9]+)*$/.test(p) ? displayPlate(knownKey(p), new Map([[p, 1]])) : p)
+
+// Forme affichée d'un groupe de variantes (« CV419HJ », « CV-419HJ »…) :
+// format SIV français AA-123-AA si la plaque s'y prête, sinon la variante la plus vue (la plus récente à égalité)
+export function displayPlate(key, counts) {
+  const m = key.match(/^([A-Z]{2})(\d{3})([A-Z]{2})$/)
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || key
+}
 
 // LPR actif sur le serveur : réglage global ou au moins une caméra
 export function lprEnabled(config) {
@@ -39,32 +58,42 @@ export function matchKnown(plate, known) {
   if (!plate) return null
   for (const k of known) {
     for (const p of k.plates) {
-      try { if (new RegExp(`^${p}$`).test(plate)) return k.name } catch { if (normalize(p) === normalize(plate)) return k.name }
+      if (knownKey(p) === normalize(plate)) return k.name // tirets et espaces ignorés
+      try { if (new RegExp(`^${p}$`).test(plate)) return k.name } catch { /* regex invalide : ignorée */ }
     }
   }
   return null
 }
 
-// Événements Frigate → plaques agrégées, la plus récemment vue d'abord
+// Événements Frigate → plaques agrégées, la plus récemment vue d'abord.
+// Les lectures qui ne diffèrent que par les tirets ou les espaces sont réunies (clé = plateKey) ;
+// `variants` garde les écritures exactes lues par Frigate.
 export function aggregatePlates(events, known = []) {
   const names = new Set(known.map((k) => k.name))
   const map = new Map()
   for (const ev of events || []) {
-    const plate = ev?.data?.recognized_license_plate
-    if (!plate) continue
+    const raw = ev?.data?.recognized_license_plate
+    if (!raw) continue
+    const key = normalize(raw)
     const sub = ev.sub_label ? String(Array.isArray(ev.sub_label) ? ev.sub_label[0] : ev.sub_label).trim() : ''
-    const name = (names.has(sub) && sub) || matchKnown(plate, known)
+    const name = (names.has(sub) && sub) || matchKnown(raw, known)
     const s = (ev.start_time || 0) * 1000
-    let p = map.get(plate)
-    if (!p) map.set(plate, (p = { plate, name: null, cams: [], last: 0, count: 0, events: [] }))
+    let p = map.get(key)
+    if (!p) map.set(key, (p = { key, plate: raw, name: null, cams: [], last: 0, count: 0, events: [], counts: new Map() }))
     p.count++
+    p.counts.set(raw, (p.counts.get(raw) || 0) + 1)
     p.events.push(ev)
     if (name) p.name = name
     if (ev.camera && !p.cams.includes(ev.camera)) p.cams.push(ev.camera)
     if (s > p.last) { p.last = s; p.lastEvent = ev }
   }
   const out = [...map.values()]
-  for (const p of out) p.events.sort((a, b) => b.start_time - a.start_time)
+  for (const p of out) {
+    p.events.sort((a, b) => b.start_time - a.start_time)
+    p.variants = [...p.counts.keys()]
+    p.plate = displayPlate(p.key, p.counts)
+    delete p.counts
+  }
   return out.sort((a, b) => b.last - a.last)
 }
 
@@ -84,17 +113,17 @@ export const hotReloadKnown = (version) => atLeast(version, [0, 18, 0])
 // Nom de plaque connue : non vide, 50 caractères, sans point (le point sépare les niveaux dans config_data)
 export const validPlateName = (s) => { const n = String(s || '').trim(); return n.length > 0 && n.length <= 50 && !n.includes('.') }
 
-// Nouvelle table known_plates : la plaque retirée de tous les noms (égalité exacte), puis rangée sous `name`
+// Nouvelle table known_plates : la plaque (et ses variantes de tirets/espaces) retirée de tous les noms, puis rangée sous `name`
 // (name vide = simple retrait). Les noms vidés sont listés à part (vides à envoyer en 0.17).
 export function namePlate(known, plate, name) {
   const map = {}, emptied = []
   for (const k of known) {
-    const rest = k.plates.filter((p) => p !== plate)
+    const rest = k.plates.filter((p) => knownKey(p) !== normalize(plate)) // toutes les variantes de la plaque
     if (rest.length) map[k.name] = rest
     else emptied.push(k.name)
   }
   const n = String(name || '').trim()
-  if (n) { map[n] = [...(map[n] || []), plate]; const i = emptied.indexOf(n); if (i >= 0) emptied.splice(i, 1) }
+  if (n) { map[n] = [...(map[n] || []), plateRegex(plate)]; const i = emptied.indexOf(n); if (i >= 0) emptied.splice(i, 1) }
   return { map, emptied }
 }
 
