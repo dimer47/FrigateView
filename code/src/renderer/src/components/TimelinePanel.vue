@@ -46,7 +46,26 @@ const hm = (t) => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.
 const pct = (t) => ((t - tl.view.start) / (tl.view.end - tl.view.start)) * 100
 const spanLabel = computed(() => { const ms = tl.view.end - tl.view.start; return ms >= HOUR ? t('timeline.hours', { n: (Math.round((ms / HOUR) * 10) / 10).toLocaleString(loc()) }) : t('timeline.minutes', { n: Math.round(ms / MIN) }) })
 
-const cams = computed(() => layouts.cams)
+// Caméras du gabarit, dans l'ordre choisi (barre latérale ou glisser-déposer ici)
+const cams = computed(() => {
+  const rank = new Map(server.cameras.map((c, i) => [c.id, i]))
+  return [...layouts.cams].sort((a, b) => (rank.get(a) ?? 1e9) - (rank.get(b) ?? 1e9))
+})
+const dragId = ref(null)
+const dropAt = ref(null) // { id, after }
+function onRowOver(e, id) {
+  if (!dragId.value || dragId.value === id) { dropAt.value = null; return }
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move'
+  const r = e.currentTarget.getBoundingClientRect()
+  dropAt.value = { id, after: e.clientY > r.top + r.height / 2 }
+}
+function onRowDrop(e, id) {
+  if (!dragId.value || !dropAt.value) return
+  e.preventDefault()
+  server.moveCamera(dragId.value, id, dropAt.value.after)
+  rowDragEnd()
+}
+function rowDragEnd() { dragId.value = null; dropAt.value = null }
 const selectedCam = computed(() => layouts.active?.cells[layouts.selected])
 const cursorTime = computed(() => (tl.live ? now.value : tl.time))
 
@@ -255,7 +274,9 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
         <div class="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
           <p v-if="!cams.length" class="p-5 text-center text-[13px] text-ink-3">{{ $t('timeline.noCamera') }}</p>
           <div v-for="r in rows" :key="r.id" class="group flex h-[26px] border-b border-[#121a26]" :data-cam="r.id">
-            <button class="flex w-[120px] shrink-0 items-center gap-1.5 truncate border-l-2 border-r border-r-[#1e2a3a] px-2.5 text-left text-xs"
+            <button draggable="true" class="flex w-[120px] shrink-0 cursor-grab items-center gap-1.5 truncate border-l-2 border-r border-r-[#1e2a3a] px-2.5 text-left text-xs"
+              :style="dropAt?.id === r.id ? { boxShadow: dropAt.after ? 'inset 0 -2px 0 var(--color-accent)' : 'inset 0 2px 0 var(--color-accent)' } : null"
+              @dragstart="dragId = r.id; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', r.id)" @dragover="onRowOver($event, r.id)" @drop="onRowDrop($event, r.id)" @dragend="rowDragEnd"
               :class="r.id === selectedCam ? 'border-l-accent bg-accent/5 font-semibold text-accent' : 'border-l-transparent text-ink-2 hover:text-ink'" @click="selectCam(r.id)">
               <span class="size-1.5 shrink-0 rounded-full" :class="r.offline ? 'bg-bad' : 'bg-ok'" /><span class="truncate">{{ r.name }}</span>
             </button>

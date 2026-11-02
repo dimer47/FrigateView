@@ -2,12 +2,15 @@ import { defineStore } from 'pinia'
 import { getVersion, getCameras, getStats, onlineFromStats, getProfile, login, logout, isInternal, checkCert } from '@/services/frigate'
 import { resetWebRTCEndpoint } from '@/services/webrtc'
 import { load, save } from './storage'
+import { applyOrder, moveId } from '@/services/camOrder'
 
 const POLL_MS = 10000
 // État de /api/stats publié par la fenêtre principale, relu par les murs (même origine → localStorage partagé)
 const SHARED_KEY = 'fv-srv-state'
 const SHARED_MAX_AGE = 25000 // au-delà, la fenêtre principale ne relève plus : le mur interroge lui-même
 const isWall = new URLSearchParams(location.search).get('wall') === '1'
+// Ordre des caméras choisi par glisser-déposer, propre à chaque serveur
+const orderKey = (srv) => `fv-cam-order:${srv?.host}:${srv?.port}`
 
 export const useServerStore = defineStore('server', {
   state: () => ({
@@ -35,7 +38,7 @@ export const useServerStore = defineStore('server', {
       const [version, cameras, profile] = await Promise.all([getVersion(server), getCameras(server), getProfile(server)])
       let online = {}
       try { this.stats = await getStats(server); online = onlineFromStats(this.stats) } catch { /* statistiques facultatives */ }
-      Object.assign(this, { server, version, cameras, profile, online, status: 'ok', authReason: '' })
+      Object.assign(this, { server, version, cameras: applyOrder(cameras, load(orderKey(server), null)), profile, online, status: 'ok', authReason: '' })
       save('fv-server', server)
       resetWebRTCEndpoint()
       this.publish()
@@ -148,10 +151,17 @@ export const useServerStore = defineStore('server', {
         this.publish()
       }
     },
+    // Glisser-déposer : `id` placé avant (ou après) `target` ; vaut pour la barre latérale et la timeline
+    moveCamera(id, target, after = false) {
+      if (id === target) return
+      const ids = moveId(this.cameras.map((c) => c.id), id, target, after)
+      this.cameras = applyOrder(this.cameras, ids)
+      save(orderKey(this.server), ids)
+    },
     // Retour du serveur : flux relancés tout de suite, liste des caméras rafraîchie sans bloquer
     _recover() {
       this.status = 'ok'
-      getCameras(this.server).then((c) => { this.cameras = c }).catch(() => { /* liste précédente gardée */ })
+      getCameras(this.server).then((c) => { this.cameras = applyOrder(c, load(orderKey(this.server), null)) }).catch(() => { /* liste précédente gardée */ })
     },
     // Fenêtre principale : partage le dernier relevé avec les murs
     publish() {

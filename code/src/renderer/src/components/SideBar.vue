@@ -11,7 +11,24 @@ const store = useLayoutStore()
 const ui = useUiStore()
 const dragLayout = ref(null)
 
-function onCamDragStart(e, id) { e.dataTransfer.setData('application/x-fv-cam', id); e.dataTransfer.effectAllowed = 'copy' }
+function onCamDragStart(e, id) { e.dataTransfer.setData('application/x-fv-cam', id); e.dataTransfer.effectAllowed = 'copyMove'; dragId.value = id }
+
+// Réordonner : glisser une caméra sur une autre de la liste (moitié haute = avant, moitié basse = après)
+const dragId = ref(null)
+const dropAt = ref(null) // { id, after }
+function onCamOver(e, id) {
+  if (!dragId.value || dragId.value === id) { dropAt.value = null; return }
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move'
+  const r = e.currentTarget.getBoundingClientRect()
+  dropAt.value = { id, after: e.clientY > r.top + r.height / 2 }
+}
+function onCamDrop(e, id) {
+  if (!dragId.value || !dropAt.value) return
+  e.preventDefault()
+  server.moveCamera(dragId.value, id, dropAt.value.after)
+  dragEnd()
+}
+function dragEnd() { dragId.value = null; dropAt.value = null }
 
 // Double-clic : case sélectionnée si elle est vide, sinon première case vide
 function quickPlace(id) {
@@ -60,7 +77,8 @@ function onLayoutDrop(targetId) { if (dragLayout.value && dragLayout.value !== t
           class="mb-0.5 flex cursor-grab items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] hover:bg-raised"
           :class="store.cams.includes(c.id) ? 'text-ink' : 'text-ink-2'"
           :title="store.cams.includes(c.id) ? $t('sidebar.inLayout') : $t('sidebar.notInLayout')"
-          @dragstart="onCamDragStart($event, c.id)" @dblclick="quickPlace(c.id)">
+          :style="dropAt?.id === c.id ? { boxShadow: dropAt.after ? 'inset 0 -2px 0 var(--color-accent)' : 'inset 0 2px 0 var(--color-accent)' } : null"
+          @dragstart="onCamDragStart($event, c.id)" @dragover="onCamOver($event, c.id)" @dragleave="dropAt?.id === c.id && (dropAt = null)" @drop="onCamDrop($event, c.id)" @dragend="dragEnd" @dblclick="quickPlace(c.id)">
           <span class="size-2 shrink-0 rounded-full" :class="server.online[c.id] === false ? 'bg-bad' : 'bg-ok'" />
           <span class="flex-1 truncate font-medium" :class="{ 'text-ink-3': server.online[c.id] === false }">{{ c.name }}</span>
           <span v-if="server.online[c.id] === false" class="rounded-lg border border-bad/40 px-1.5 text-[10px] font-bold text-bad" :title="$t('common.offline')">{{ $t('sidebar.offlineShort') }}</span>
