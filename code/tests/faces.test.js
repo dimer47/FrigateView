@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 vi.mock('@/i18n', () => ({ t: (k) => k }))
-import { parseFaces, parseTrainFile, imageTime, faceImageUrl, validName, folderName, faceRecognitionEnabled, rangeSelect } from '@/services/faces'
+import { parseFaces, parseTrainFile, imageTime, faceImageUrl, validName, folderName, faceRecognitionEnabled, rangeSelect, aggregatePeople } from '@/services/faces'
 
 describe('parseTrainFile', () => {
   it('découpe id événement, horodatage, nom, score (format de FaceLibrary.tsx)', () => {
@@ -51,5 +51,20 @@ describe('utilitaires', () => {
     const l = ['a', 'b', 'c', 'd']
     expect([...rangeSelect(l, new Set(), 'd', 'b')].sort()).toEqual(['b', 'c', 'd'])
     expect([...rangeSelect(l, new Set(['a']), 'z', 'c')].sort()).toEqual(['a', 'c'])
+  })
+})
+
+describe('aggregatePeople', () => {
+  it('regroupe par sous-libellé, ignore les inconnus', () => {
+    const evs = [
+      { id: 'a', camera: 'devant', start_time: 10, sub_label: 'Marie' },
+      { id: 'b', camera: 'route', start_time: 30, sub_label: ['Marie', 0.9] },
+      { id: 'c', camera: 'route', start_time: 20, sub_label: 'Paul' },
+      { id: 'd', camera: 'route', start_time: 40, sub_label: null }
+    ]
+    const p = aggregatePeople(evs)
+    expect(p.map((x) => x.name)).toEqual(['Marie', 'Paul'])
+    expect(p[0]).toMatchObject({ count: 2, cams: ['devant', 'route'], last: 30000 })
+    expect(p[0].events.map((e) => e.id)).toEqual(['b', 'a'])
   })
 })

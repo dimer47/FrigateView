@@ -6,9 +6,13 @@
 //  · frigate/api/app.py : GET /api/recognized_license_plates (liste triée des plaques vues)
 //  · frigate/data_processing/common/license_plate/mixin.py : plaque connue (re.match(^regex$) ou distance de Levenshtein
 //    ≤ match_distance) → sub_label = nom connu
-// Édition de known_plates : PUT /api/config/set existe, mais le corps config_data n'existe pas en 0.16 (paramètres
-// d'URL seulement) et un redémarrage est requis → lecture seule ici, édition dans l'interface de Frigate.
-import { getJson } from './frigate'
+// Édition de known_plates (compte admin, Frigate 0.17+) : PUT /api/config/set avec config_data (absent en 0.16).
+//  · 0.18 : même appel que l'interface de Frigate (web/src/pages/Settings.tsx, utils/configUtil.ts) :
+//    requires_restart 0 + update_topic « config/lpr » → pris en compte sans redémarrage ;
+//    replace_paths réécrit la liste entière (sinon les clés sont fusionnées et un nom retiré resterait).
+//  · 0.17 : replace_paths inconnu → fusion ; un nom vidé est envoyé avec une liste vide.
+//    Prise en compte à chaud non garantie : redémarrage de Frigate conseillé.
+import { getJson, sendJson } from './frigate'
 
 // Toute plaque non vide (regex : seule forme acceptée par Frigate pour « plaque présente »)
 export const ANY_PLATE = '^.+'
@@ -71,6 +75,40 @@ export function filterPlates(list, q, camName = (c) => c) {
   return list.filter((p) => normalize(p.plate).includes(n) || (p.name && p.name.toLowerCase().includes(l)) || p.cams.some((c) => String(camName(c)).toLowerCase().includes(l)))
 }
 
+// Version « 0.17.2-abc » → [0, 17, 2]
+const ver = (v) => String(v || '').split(/[.-]/).slice(0, 3).map((n) => Number.parseInt(n, 10) || 0)
+const atLeast = (v, min) => { const a = ver(v); for (let i = 0; i < 3; i++) if (a[i] !== min[i]) return a[i] > min[i]; return true }
+export const canEditKnown = (version) => atLeast(version, [0, 17, 0])
+export const hotReloadKnown = (version) => atLeast(version, [0, 18, 0])
+
+// Nom de plaque connue : non vide, 50 caractères, sans point (le point sépare les niveaux dans config_data)
+export const validPlateName = (s) => { const n = String(s || '').trim(); return n.length > 0 && n.length <= 50 && !n.includes('.') }
+
+// Nouvelle table known_plates : la plaque retirée de tous les noms (égalité exacte), puis rangée sous `name`
+// (name vide = simple retrait). Les noms vidés sont listés à part (vides à envoyer en 0.17).
+export function namePlate(known, plate, name) {
+  const map = {}, emptied = []
+  for (const k of known) {
+    const rest = k.plates.filter((p) => p !== plate)
+    if (rest.length) map[k.name] = rest
+    else emptied.push(k.name)
+  }
+  const n = String(name || '').trim()
+  if (n) { map[n] = [...(map[n] || []), plate]; const i = emptied.indexOf(n); if (i >= 0) emptied.splice(i, 1) }
+  return { map, emptied }
+}
+
 /* ---- API ---- */
+export async function saveKnownPlates(server, version, { map, emptied }) {
+  const hot = hotReloadKnown(version)
+  const known = hot ? map : { ...map, ...Object.fromEntries(emptied.map((n) => [n, []])) }
+  await sendJson(server, '/api/config/set', 'PUT', {
+    requires_restart: 0,
+    update_topic: 'config/lpr',
+    config_data: { lpr: { known_plates: known } },
+    ...(hot && { replace_paths: ['lpr.known_plates'] })
+  })
+}
+
 export const getPlateEvents = (server, { after, limit = 500 } = {}) =>
   getJson(server, `/api/events?recognized_license_plate=${encodeURIComponent(ANY_PLATE)}&limit=${limit}${after ? `&after=${Math.floor(after)}` : ''}`, { timeout: 20000 })

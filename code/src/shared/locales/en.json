@@ -638,7 +638,12 @@
     "assigned": "{n} face assigned to {name} | {n} faces assigned to {name}",
     "deleted": "{n} image deleted | {n} images deleted",
     "uploaded": "{n} image added | {n} images added",
-    "personDeleted": "{name} deleted"
+    "personDeleted": "{name} deleted",
+    "seenFilter": "Filter: name, camera",
+    "seenRecent": "Recognized in the last 30 days",
+    "seenNoMatch": "No matching person.",
+    "seenNone": "No one recognized in the last 30 days.",
+    "seenHint": "Read-only: the face library is for admin accounts only."
   },
   "plates": {
     "title": "Plates",
@@ -658,7 +663,17 @@
     "readOnlyHint": "Read only: known plates are edited in the Frigate configuration (lpr.known_plates).",
     "noKnown": "No known plates in the configuration.",
     "notSeen": "Not seen in the last 30 days",
-    "replay": "Play back this pass"
+    "replay": "Play back this pass",
+    "name": "Name",
+    "rename": "Rename",
+    "removeName": "Remove from known plates",
+    "namePlaceholder": "Name (e.g. Marie's car)",
+    "saveName": "Save",
+    "saved": "Plate {plate} saved as “{name}”",
+    "removed": "Plate {plate} removed from known plates",
+    "restartHint": "Frigate 0.17: restart Frigate so the name applies to upcoming sightings.",
+    "saveFailed": "Save failed: {msg}",
+    "editHint": "Open a seen plate to name it; × removes a plate from a name."
   },
   "watch": {
     "title": "People and plates",

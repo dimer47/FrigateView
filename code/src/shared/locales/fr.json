@@ -638,7 +638,12 @@
     "assigned": "{n} visage attribué à {name} | {n} visages attribués à {name}",
     "deleted": "{n} image supprimée | {n} images supprimées",
     "uploaded": "{n} image ajoutée | {n} images ajoutées",
-    "personDeleted": "{name} supprimé(e)"
+    "personDeleted": "{name} supprimé(e)",
+    "seenFilter": "Filtrer : nom, caméra",
+    "seenRecent": "Reconnus ces 30 derniers jours",
+    "seenNoMatch": "Aucune personne ne correspond.",
+    "seenNone": "Aucune personne reconnue ces 30 derniers jours.",
+    "seenHint": "Lecture seule : la bibliothèque de visages est réservée aux comptes admin."
   },
   "plates": {
     "title": "Plaques",
@@ -658,7 +663,17 @@
     "readOnlyHint": "Lecture seule : les plaques connues se modifient dans la configuration de Frigate (lpr.known_plates).",
     "noKnown": "Aucune plaque connue dans la configuration.",
     "notSeen": "Pas vue ces 30 derniers jours",
-    "replay": "Relire ce passage"
+    "replay": "Relire ce passage",
+    "name": "Nommer",
+    "rename": "Renommer",
+    "removeName": "Retirer des plaques connues",
+    "namePlaceholder": "Nom (ex. : Voiture de Marie)",
+    "saveName": "Enregistrer",
+    "saved": "Plaque {plate} enregistrée sous « {name} »",
+    "removed": "Plaque {plate} retirée des plaques connues",
+    "restartHint": "Frigate 0.17 : redémarrez Frigate pour que le nom s'applique aux prochains passages.",
+    "saveFailed": "Échec de l'enregistrement : {msg}",
+    "editHint": "Ouvrez une plaque vue pour la nommer ; × retire une plaque d'un nom."
   },
   "watch": {
     "title": "Personnes et plaques",

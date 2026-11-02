@@ -638,7 +638,12 @@
     "assigned": "{n} rostro asignado a {name} | {n} rostros asignados a {name}",
     "deleted": "{n} imagen eliminada | {n} imágenes eliminadas",
     "uploaded": "{n} imagen añadida | {n} imágenes añadidas",
-    "personDeleted": "{name} eliminado/a"
+    "personDeleted": "{name} eliminado/a",
+    "seenFilter": "Filtrar: nombre, cámara",
+    "seenRecent": "Reconocidos en los últimos 30 días",
+    "seenNoMatch": "Ninguna persona coincide.",
+    "seenNone": "Nadie reconocido en los últimos 30 días.",
+    "seenHint": "Solo lectura: la biblioteca de rostros es solo para cuentas de administrador."
   },
   "plates": {
     "title": "Matrículas",
@@ -658,7 +663,17 @@
     "readOnlyHint": "Solo lectura: las matrículas conocidas se editan en la configuración de Frigate (lpr.known_plates).",
     "noKnown": "No hay matrículas conocidas en la configuración.",
     "notSeen": "No vista en los últimos 30 días",
-    "replay": "Reproducir este paso"
+    "replay": "Reproducir este paso",
+    "name": "Nombrar",
+    "rename": "Renombrar",
+    "removeName": "Quitar de matrículas conocidas",
+    "namePlaceholder": "Nombre (p. ej.: coche de Marie)",
+    "saveName": "Guardar",
+    "saved": "Matrícula {plate} guardada como «{name}»",
+    "removed": "Matrícula {plate} quitada de las conocidas",
+    "restartHint": "Frigate 0.17: reinicie Frigate para que el nombre se aplique a los próximos pasos.",
+    "saveFailed": "Error al guardar: {msg}",
+    "editHint": "Abra una matrícula vista para nombrarla; × quita una matrícula de un nombre."
   },
   "watch": {
     "title": "Personas y matrículas",

@@ -1,11 +1,11 @@
 <script setup>
 // Galerie des plaques : plaques vues récemment (agrégées depuis les événements), passages d'une plaque, plaques connues.
-// Plaques connues en lecture seule (voir services/plates.js).
+// Plaques connues : modifiables par un compte admin sur Frigate 0.17+ (voir services/plates.js), sinon lecture seule.
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
 import { getJson, eventThumbUrl } from '@/services/frigate'
-import { lprEnabled, knownPlates, aggregatePlates, filterPlates, getPlateEvents } from '@/services/plates'
+import { lprEnabled, knownPlates, aggregatePlates, filterPlates, getPlateEvents, canEditKnown, hotReloadKnown, validPlateName, namePlate, saveKnownPlates } from '@/services/plates'
 import { fromEvent } from '@/stores/eventFilters'
 import { playEvent } from '@/stores/playEvent'
 import WatchBell from './WatchBell.vue'
@@ -44,6 +44,29 @@ async function load() {
 onMounted(load)
 
 function replay(e) { playEvent(e); close() }
+
+/* ---------- Nommer une plaque (admin, Frigate 0.17+) ---------- */
+const editable = computed(() => server.isAdmin && canEditKnown(server.version))
+const editing = ref(false)
+const nameInput = ref('')
+const busy = ref(false)
+// Nom posé exactement sur cette plaque dans known_plates (une regex qui la couvre ne compte pas)
+const exactName = (plate) => known.value.find((k) => k.plates.includes(plate))?.name || null
+function startEdit() { nameInput.value = exactName(plate.value.plate) || plate.value.name || ''; editing.value = true }
+async function applyName(plateText, name) {
+  if (busy.value) return
+  busy.value = true
+  try {
+    await saveKnownPlates(srv(), server.version, namePlate(known.value, plateText, name))
+    ui.notify(name ? t('plates.saved', { plate: plateText, name }) : t('plates.removed', { plate: plateText }))
+    if (!hotReloadKnown(server.version)) ui.notify(t('plates.restartHint'))
+    editing.value = false
+    await load()
+  } catch (e) {
+    ui.notify(t('plates.saveFailed', { msg: e?.message || String(e) }))
+  } finally { busy.value = false }
+}
+const saveName = () => validPlateName(nameInput.value) && applyName(plate.value.plate, nameInput.value.trim())
 const when = (ms) => (ms ? new Date(ms).toLocaleString(loc(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '')
 const seenFor = (name) => plates.value.filter((p) => p.name === name)
 
@@ -105,13 +128,23 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
             <template v-if="plate">
               <b class="rounded border border-line-2 bg-bg px-2 py-0.5 font-mono text-[15px] tracking-wider">{{ plate.plate }}</b>
               <WatchBell kind="plate" :value="plate.plate" />
-              <span v-if="plate.name" class="rounded bg-ok/15 px-1.5 py-0.5 text-xs text-ok">{{ plate.name }}</span>
-              <WatchBell v-if="plate.name" kind="plate" :value="plate.name" />
+              <template v-if="editing">
+                <input v-model="nameInput" class="input w-48 py-1" list="fv-plate-names" maxlength="50" :placeholder="$t('plates.namePlaceholder')" autofocus @keydown.enter="saveName" @keydown.esc.stop="editing = false">
+                <datalist id="fv-plate-names"><option v-for="k in known" :key="k.name" :value="k.name" /></datalist>
+                <button class="btn btn-primary py-1" :disabled="busy || !validPlateName(nameInput)" @click="saveName">{{ $t('plates.saveName') }}</button>
+                <button class="btn py-1" :disabled="busy" @click="editing = false">{{ $t('common.cancel') }}</button>
+              </template>
+              <template v-else>
+                <span v-if="plate.name" class="rounded bg-ok/15 px-1.5 py-0.5 text-xs text-ok">{{ plate.name }}</span>
+                <WatchBell v-if="plate.name" kind="plate" :value="plate.name" />
+                <button v-if="editable" class="btn py-1 text-xs" :disabled="busy" @click="startEdit">{{ plate.name ? $t('plates.rename') : $t('plates.name') }}</button>
+                <button v-if="editable && exactName(plate.plate)" class="btn py-1 text-xs" :disabled="busy" @click="applyName(plate.plate, '')">{{ $t('plates.removeName') }}</button>
+              </template>
               <span class="text-xs text-ink-3">{{ $t('plates.passages', { n: plate.count }, plate.count) }} · {{ plate.cams.map(camName).join(', ') }}</span>
             </template>
             <template v-else>
               <b class="text-[14px]">{{ $t('plates.known') }}</b>
-              <span class="text-xs text-ink-3">{{ $t('plates.readOnlyHint') }}</span>
+              <span class="text-xs text-ink-3">{{ editable ? $t('plates.editHint') : $t('plates.readOnlyHint') }}</span>
             </template>
           </div>
 
@@ -130,7 +163,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
                 <div v-for="k in known" :key="k.name" class="rounded-lg border border-line bg-panel p-3">
                   <div class="flex items-center gap-1"><b class="block min-w-0 flex-1 truncate text-[13px]">{{ k.name }}</b><WatchBell kind="plate" :value="k.name" /></div>
                   <div class="mt-2 flex flex-wrap gap-1.5">
-                    <code v-for="p in k.plates" :key="p" class="rounded border border-line-2 bg-bg px-1.5 py-0.5 font-mono text-xs">{{ p }}</code>
+                    <code v-for="p in k.plates" :key="p" class="flex items-center gap-1 rounded border border-line-2 bg-bg px-1.5 py-0.5 font-mono text-xs">{{ p }}<button v-if="editable" class="text-ink-3 hover:text-bad" :disabled="busy" :title="$t('plates.removeName')" @click="applyName(p, '')">×</button></code>
                   </div>
                   <div class="mt-2 flex flex-wrap gap-1.5 text-[11px] text-ink-3">
                     <template v-if="seenFor(k.name).length">

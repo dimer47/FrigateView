@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { lprEnabled, knownPlates, matchKnown, aggregatePlates, filterPlates, ANY_PLATE } from '@/services/plates'
+import { lprEnabled, knownPlates, matchKnown, aggregatePlates, filterPlates, ANY_PLATE, canEditKnown, hotReloadKnown, validPlateName, namePlate } from '@/services/plates'
 
 const ev = (id, plate, t, camera = 'route', sub = null) => ({ id, camera, start_time: t, sub_label: sub, data: { recognized_license_plate: plate } })
 
@@ -48,4 +48,27 @@ describe('aggregatePlates', () => {
     expect(filterPlates(list, '  ')).toBe(list)
   })
   it('requête « plaque présente » = regex', () => expect(ANY_PLATE).toBe('^.+'))
+})
+
+describe('nommage des plaques', () => {
+  const known = [{ name: 'Marie', plates: ['AB-123-CD', 'EF-456-GH'] }, { name: 'Paul', plates: ['IJ-789-KL'] }]
+  it('versions', () => {
+    expect(canEditKnown('0.16.2')).toBe(false)
+    expect(canEditKnown('0.17.0-abc')).toBe(true)
+    expect(hotReloadKnown('0.17.2')).toBe(false)
+    expect(hotReloadKnown('0.18.2-xyz')).toBe(true)
+    expect(canEditKnown('')).toBe(false)
+  })
+  it('nom valide', () => {
+    expect(validPlateName(' Marie ')).toBe(true)
+    expect(validPlateName('')).toBe(false)
+    expect(validPlateName('a.b')).toBe(false)
+    expect(validPlateName('x'.repeat(51))).toBe(false)
+  })
+  it('ajout, déplacement, retrait', () => {
+    expect(namePlate(known, 'ZZ-000-ZZ', 'Paul').map).toEqual({ Marie: ['AB-123-CD', 'EF-456-GH'], Paul: ['IJ-789-KL', 'ZZ-000-ZZ'] })
+    expect(namePlate(known, 'IJ-789-KL', 'Marie')).toEqual({ map: { Marie: ['AB-123-CD', 'EF-456-GH', 'IJ-789-KL'] }, emptied: ['Paul'] })
+    expect(namePlate(known, 'AB-123-CD', '')).toEqual({ map: { Marie: ['EF-456-GH'], Paul: ['IJ-789-KL'] }, emptied: [] })
+    expect(namePlate(known, 'IJ-789-KL', 'Paul').emptied).toEqual([])
+  })
 })

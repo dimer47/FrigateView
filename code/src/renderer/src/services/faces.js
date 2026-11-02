@@ -75,3 +75,36 @@ export const classifyFace = (server, file, name) => sendJson(server, `/api/faces
 export const deleteFaceImages = (server, name, ids) => sendJson(server, `/api/faces/${enc(name)}/delete`, 'POST', { ids })
 export const renameFace = (server, oldName, newName) => sendJson(server, `/api/faces/${enc(oldName)}/rename`, 'PUT', { new_name: newName.trim() })
 export const registerFace = (server, name, img) => uploadImage(server, `/api/faces/${enc(name)}/register`, img)
+
+/* ---- Lecture seule (compte non admin) ----
+   Depuis Frigate 0.17, /api/faces est réservé aux admins (frigate/api/auth.py : hors EXEMPT_PATHS),
+   mais /api/sub_labels et /api/events restent ouverts à tout compte connecté.
+   On reconstitue donc les personnes reconnues à partir des événements « person » portant un sous-libellé. */
+const subOf = (ev) => (ev?.sub_label ? String(Array.isArray(ev.sub_label) ? ev.sub_label[0] : ev.sub_label).trim() : '')
+
+// Événements → personnes, la plus récemment vue d'abord
+export function aggregatePeople(events) {
+  const map = new Map()
+  for (const ev of events || []) {
+    const name = subOf(ev)
+    if (!name) continue
+    const s = (ev.start_time || 0) * 1000
+    let p = map.get(name)
+    if (!p) map.set(name, (p = { name, cams: [], last: 0, count: 0, events: [] }))
+    p.count++
+    p.events.push(ev)
+    if (ev.camera && !p.cams.includes(ev.camera)) p.cams.push(ev.camera)
+    if (s > p.last) { p.last = s; p.lastEvent = ev }
+  }
+  const out = [...map.values()]
+  for (const p of out) p.events.sort((a, b) => b.start_time - a.start_time)
+  return out.sort((a, b) => b.last - a.last)
+}
+
+export async function getPeopleEvents(server, { after, limit = 500 } = {}) {
+  const names = await getJson(server, '/api/sub_labels').catch(() => [])
+  if (!Array.isArray(names) || !names.length) return []
+  const q = `labels=person&sub_labels=${encodeURIComponent(names.join(','))}&limit=${limit}${after ? `&after=${Math.floor(after)}` : ''}`
+  const list = await getJson(server, `/api/events?${q}`, { timeout: 20000 })
+  return Array.isArray(list) ? list : []
+}

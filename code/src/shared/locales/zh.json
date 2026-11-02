@@ -638,7 +638,12 @@
     "assigned": "已将 {n} 张人脸分配给 {name} | 已将 {n} 张人脸分配给 {name}",
     "deleted": "已删除 {n} 张图片 | 已删除 {n} 张图片",
     "uploaded": "已添加 {n} 张图片 | 已添加 {n} 张图片",
-    "personDeleted": "已删除 {name}"
+    "personDeleted": "已删除 {name}",
+    "seenFilter": "筛选：姓名、摄像头",
+    "seenRecent": "最近 30 天内识别",
+    "seenNoMatch": "没有匹配的人员。",
+    "seenNone": "最近 30 天内未识别到任何人。",
+    "seenHint": "只读：人脸库仅限管理员账户使用。"
   },
   "plates": {
     "title": "车牌",
@@ -658,7 +663,17 @@
     "readOnlyHint": "只读：已知车牌需在 Frigate 配置中修改（lpr.known_plates）。",
     "noKnown": "配置中没有已知车牌。",
     "notSeen": "最近 30 天未出现",
-    "replay": "回放这次经过"
+    "replay": "回放这次经过",
+    "name": "命名",
+    "rename": "重命名",
+    "removeName": "从已知车牌中移除",
+    "namePlaceholder": "名称（例如：玛丽的车）",
+    "saveName": "保存",
+    "saved": "车牌 {plate} 已保存为“{name}”",
+    "removed": "车牌 {plate} 已从已知车牌中移除",
+    "restartHint": "Frigate 0.17：请重启 Frigate，名称才会应用到之后的经过记录。",
+    "saveFailed": "保存失败：{msg}",
+    "editHint": "打开一个已识别的车牌即可命名；× 可将车牌从名称中移除。"
   },
   "watch": {
     "title": "人员和车牌",

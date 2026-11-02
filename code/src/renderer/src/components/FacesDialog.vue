@@ -10,6 +10,7 @@ import { TRAIN, getFaces, faceImageUrl, faceRecognitionEnabled, validName, folde
 import { fromEvent } from '@/stores/eventFilters'
 import { playEvent } from '@/stores/playEvent'
 import WatchBell from './WatchBell.vue'
+import PeopleSeen from './PeopleSeen.vue'
 import { t, loc } from '@/i18n'
 
 const server = useServerStore()
@@ -17,8 +18,9 @@ const ui = useUiStore()
 const srv = () => server.server
 const admin = computed(() => server.isAdmin)
 
-const state = ref('loading') // loading | ok | disabled | error
+const state = ref('loading') // loading | ok | disabled | forbidden | error
 const errorText = ref('')
+const seen = ref(null)
 const people = ref([])
 const train = ref([])
 const current = ref(TRAIN) // TRAIN ou nom d'une personne
@@ -31,6 +33,7 @@ const fail = (e) => ui.notify(t('faces.failed', { msg: e?.message || String(e) }
 const label = (name) => name.replace(/_/g, ' ')
 
 async function load() {
+  if (state.value === 'forbidden') return seen.value?.load()
   try {
     const config = await getJson(srv(), '/api/config')
     if (!faceRecognitionEnabled(config)) { state.value = 'disabled'; return }
@@ -43,6 +46,8 @@ async function load() {
   } catch (e) {
     // 404 : Frigate antérieur à 0.16 ; 400 : reconnaissance coupée
     if (e.status === 404 || e.status === 400) state.value = 'disabled'
+    // 403 : depuis Frigate 0.17, /api/faces est réservé aux comptes admin (auth.py, hors EXEMPT_PATHS)
+    else if (e.status === 403 || (e.status === 401 && !admin.value)) state.value = 'forbidden'
     else { state.value = 'error'; errorText.value = e.message }
   }
 }
@@ -191,6 +196,9 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
         <code v-if="state === 'disabled'" class="rounded-md border border-line bg-bg px-3 py-2 text-left font-mono text-xs text-ink-2">face_recognition:<br>&nbsp;&nbsp;enabled: true</code>
         <button class="btn mt-2" @click="state = 'loading'; load()">{{ $t('faces.retry') }}</button>
       </div>
+
+      <!-- Compte non admin sur Frigate 0.17+ : personnes reconnues d'après les événements, en lecture seule -->
+      <PeopleSeen v-else-if="state === 'forbidden'" ref="seen" @replay="replay" />
 
       <div v-else class="flex min-h-0 flex-1">
         <!-- Colonne gauche : visages récents puis personnes -->

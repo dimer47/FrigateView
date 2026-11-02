@@ -299,7 +299,7 @@ const LABELS = computed(() => ({ person: t('types.person'), car: t('types.car'),
 
     <!-- Légende -->
     <div class="flex h-6 shrink-0 items-center gap-4 overflow-hidden border-t border-[#1e2a3a] px-3 text-[11px] text-ink-3">
-      <span v-for="(c, k) in COLORS" :key="k" class="flex items-center gap-1.5 whitespace-nowrap"><span class="h-1.5 w-3 rounded-sm" :style="{ background: c }" />{{ LABELS[k] }}</span>
+      <span v-for="(c, k) in COLORS" v-show="k !== 'rec'" :key="k" class="flex items-center gap-1.5 whitespace-nowrap"><span class="h-1.5 w-3 rounded-sm" :style="{ background: c }" />{{ LABELS[k] }}</span>
       <span class="flex items-center gap-1.5"><span class="h-1.5 w-3 rounded-sm bg-motion opacity-55" />{{ $t('timeline.motion') }}</span>
       <span class="flex items-center gap-1.5"><span class="h-1 w-3 bg-[#1e3a5f]" />{{ $t('timeline.recording') }}</span>
       <span class="ml-auto whitespace-nowrap">{{ $t('timeline.help') }}</span>

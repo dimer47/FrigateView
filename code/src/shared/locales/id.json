@@ -638,7 +638,12 @@
     "assigned": "{n} wajah ditetapkan ke {name} | {n} wajah ditetapkan ke {name}",
     "deleted": "{n} gambar dihapus | {n} gambar dihapus",
     "uploaded": "{n} gambar ditambahkan | {n} gambar ditambahkan",
-    "personDeleted": "{name} dihapus"
+    "personDeleted": "{name} dihapus",
+    "seenFilter": "Saring: nama, kamera",
+    "seenRecent": "Dikenali dalam 30 hari terakhir",
+    "seenNoMatch": "Tidak ada orang yang cocok.",
+    "seenNone": "Tidak ada yang dikenali dalam 30 hari terakhir.",
+    "seenHint": "Hanya baca: pustaka wajah khusus akun admin."
   },
   "plates": {
     "title": "Pelat",
@@ -658,7 +663,17 @@
     "readOnlyHint": "Hanya baca: pelat yang dikenal diubah di konfigurasi Frigate (lpr.known_plates).",
     "noKnown": "Tidak ada pelat yang dikenal di konfigurasi.",
     "notSeen": "Tidak terlihat 30 hari terakhir",
-    "replay": "Putar ulang lintasan ini"
+    "replay": "Putar ulang lintasan ini",
+    "name": "Beri nama",
+    "rename": "Ganti nama",
+    "removeName": "Hapus dari pelat dikenal",
+    "namePlaceholder": "Nama (mis.: mobil Marie)",
+    "saveName": "Simpan",
+    "saved": "Pelat {plate} disimpan sebagai “{name}”",
+    "removed": "Pelat {plate} dihapus dari pelat dikenal",
+    "restartHint": "Frigate 0.17: mulai ulang Frigate agar nama berlaku untuk lintasan berikutnya.",
+    "saveFailed": "Gagal menyimpan: {msg}",
+    "editHint": "Buka pelat yang terlihat untuk memberi nama; × menghapus pelat dari sebuah nama."
   },
   "watch": {
     "title": "Orang dan pelat nomor",

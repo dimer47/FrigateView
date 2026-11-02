@@ -638,7 +638,12 @@
     "assigned": "{n} rosto atribuído a {name} | {n} rostos atribuídos a {name}",
     "deleted": "{n} imagem excluída | {n} imagens excluídas",
     "uploaded": "{n} imagem adicionada | {n} imagens adicionadas",
-    "personDeleted": "{name} excluído(a)"
+    "personDeleted": "{name} excluído(a)",
+    "seenFilter": "Filtrar: nome, câmera",
+    "seenRecent": "Reconhecidos nos últimos 30 dias",
+    "seenNoMatch": "Nenhuma pessoa corresponde.",
+    "seenNone": "Ninguém reconhecido nos últimos 30 dias.",
+    "seenHint": "Somente leitura: a biblioteca de rostos é exclusiva para contas de administrador."
   },
   "plates": {
     "title": "Matrículas",
@@ -658,7 +663,17 @@
     "readOnlyHint": "Só leitura: as matrículas conhecidas editam-se na configuração do Frigate (lpr.known_plates).",
     "noKnown": "Nenhuma matrícula conhecida na configuração.",
     "notSeen": "Não vista nos últimos 30 dias",
-    "replay": "Reproduzir esta passagem"
+    "replay": "Reproduzir esta passagem",
+    "name": "Nomear",
+    "rename": "Renomear",
+    "removeName": "Remover das placas conhecidas",
+    "namePlaceholder": "Nome (ex.: carro da Marie)",
+    "saveName": "Salvar",
+    "saved": "Placa {plate} salva como “{name}”",
+    "removed": "Placa {plate} removida das conhecidas",
+    "restartHint": "Frigate 0.17: reinicie o Frigate para que o nome valha para as próximas passagens.",
+    "saveFailed": "Falha ao salvar: {msg}",
+    "editHint": "Abra uma placa vista para nomeá-la; × remove uma placa de um nome."
   },
   "watch": {
     "title": "Pessoas e matrículas",
