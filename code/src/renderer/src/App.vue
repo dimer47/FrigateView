@@ -76,6 +76,12 @@ if (wall) {
   }, 5000)
 }
 
+// Mode « agrandir » (grille seule) : gardé d'un lancement à l'autre, hors mur vidéo
+if (!wall) {
+  ui.expand = !!load('fv-expand', false)
+  watch(() => ui.expand, (on) => save('fv-expand', on))
+}
+
 onMounted(async () => {
   await appSettings.init()
   setLocale(resolveLang(appSettings.s.lang, appSettings.s.systemLocale))

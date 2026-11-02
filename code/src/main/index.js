@@ -279,9 +279,46 @@ function harden(win) {
   return win
 }
 
+// Position, taille, fenêtre agrandie ou plein écran : enregistrées à chaque changement,
+// reprises au lancement (après une mise à jour ou une coupure de courant)
+function windowState() {
+  const st = readJson('window.json', {})
+  const b = st.bounds
+  // Écrans libres : ceux qui n'affichent pas un mur vidéo (sinon le mur cacherait la fenêtre)
+  const all = screen.getAllDisplays()
+  const free = all.filter((d) => !settings.screens?.[String(d.id)]?.enabled)
+  const usable = free.length ? free : all
+  // Écran qui contient le centre de l'ancienne fenêtre, s'il est encore branché et libre
+  const d = b && usable.find(({ workArea: w }) => {
+    const cx = b.x + b.width / 2, cy = b.y + b.height / 2
+    return cx >= w.x && cx < w.x + w.width && cy >= w.y && cy < w.y + w.height
+  })
+  const target = d || usable.find((x) => x.id === screen.getPrimaryDisplay().id) || usable[0]
+  const w = target.workArea
+  // Taille ramenée à l'écran (résolution plus petite qu'avant), position gardée dans l'écran
+  const width = Math.min(d ? b.width : 1600, w.width), height = Math.min(d ? b.height : 950, w.height)
+  const x = d ? Math.min(Math.max(b.x, w.x), w.x + w.width - width) : w.x + Math.round((w.width - width) / 2)
+  const y = d ? Math.min(Math.max(b.y, w.y), w.y + w.height - height) : w.y + Math.round((w.height - height) / 2)
+  return { bounds: { x, y, width, height }, maximized: !!st.maximized, fullscreen: !!st.fullscreen }
+}
+function trackWindowState(win) {
+  let t
+  const save = () => {
+    if (win.isDestroyed() || win.isMinimized()) return
+    try { writeJson('window.json', { bounds: win.getNormalBounds(), maximized: win.isMaximized(), fullscreen: win.isFullScreen() }) } catch {}
+  }
+  const later = () => { clearTimeout(t); t = setTimeout(save, 500) }
+  for (const ev of ['resize', 'move', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen']) win.on(ev, later)
+  win.on('close', () => { clearTimeout(t); save() })
+}
+
 function createWindow() {
-  const win = harden(new BrowserWindow({ ...baseOptions(), width: 1600, height: 950, minWidth: 1000, minHeight: 640, show: !process.argv.includes('--hidden') }))
+  const st = windowState()
+  const win = harden(new BrowserWindow({ ...baseOptions(), ...st.bounds, minWidth: 1000, minHeight: 640, show: !process.argv.includes('--hidden') }))
   mainWin = win
+  if (st.maximized) win.maximize()
+  if (st.fullscreen) win.setFullScreen(true)
+  trackWindowState(win)
 
 
   // Fermer = réduire dans la zone de notification (les alertes continuent d'arriver)
@@ -339,8 +376,18 @@ function syncWalls() {
       w.on('close', (e) => { if (!quitting) { e.preventDefault(); settings.screens[id] = { ...settings.screens[id], enabled: false }; saveSettings(); syncWalls(); applySettings() } })
       walls.set(id, w)
       loadRenderer(w, { wall: '1', layout: conf.layout, mode: conf.mode || '' })
-    } else w.webContents.send('wall:layout', { layout: conf.layout, mode: conf.mode || '' })
+    } else {
+      w.webContents.send('wall:layout', { layout: conf.layout, mode: conf.mode || '' })
+      fitWall(w, d)
+    }
   }
+}
+// Résolution, orientation ou échelle de l'écran changée : le mur reprend toute la surface
+function fitWall(w, d) {
+  const b = w.getBounds(), t = d.bounds
+  if (b.x === t.x && b.y === t.y && b.width === t.width && b.height === t.height) return
+  if (process.platform === 'darwin') { w.setSimpleFullScreen(false); w.setBounds(t); w.setSimpleFullScreen(true) }
+  else { w.setFullScreen(false); w.setBounds(t); w.setFullScreen(true) }
 }
 // applySettings : la fenêtre des réglages reçoit la nouvelle configuration (sinon elle rouvre l'ancienne)
 ipcMain.handle('screens:apply', (_e, screensConf) => { settings = { ...settings, screens: screensConf }; saveSettings(); syncWalls(); applySettings(); return true })
@@ -611,6 +658,7 @@ app.whenReady().then(() => {
   syncWalls()
   screen.on('display-added', syncWalls)
   screen.on('display-removed', syncWalls)
+  screen.on('display-metrics-changed', syncWalls)
   applySettings()
   checkUpdates = initUpdater({ tr, win: () => mainWin, onQuit: () => { quitting = true } })
   app.on('activate', showMain)

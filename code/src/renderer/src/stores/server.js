@@ -118,7 +118,7 @@ export const useServerStore = defineStore('server', {
         this.stats = sh.stats
         this.online = sh.online
         this._fails = 0
-        if (this.status === 'lost') { this.cameras = await getCameras(this.server); this.status = 'ok' }
+        if (this.status === 'lost') this._recover()
       } else if (sh.status === 'lost' && this.status !== 'lost') { this.status = 'lost'; this.lostAt = sh.lostAt || Date.now() }
       return true
     },
@@ -131,7 +131,7 @@ export const useServerStore = defineStore('server', {
         this.stats = await getStats(this.server)
         this._fails = 0
         this.online = onlineFromStats(this.stats)
-        if (this.status === 'lost') { this.cameras = await getCameras(this.server); this.status = 'ok' }
+        if (this.status === 'lost') this._recover()
         this.publish()
       } catch (e) {
         if (e.code === 'auth') { if (!(await this.relogin())) this.askLogin('connect.sessionExpired'); return }
@@ -142,8 +142,16 @@ export const useServerStore = defineStore('server', {
         // /api/version (quelques octets) confirme s'il répond encore. Il répond → lent, pas perdu.
         if (this.status !== 'lost') { try { await getVersion(this.server); this._fails = 0; return } catch { /* vraiment injoignable */ } }
         if (this.status !== 'lost') { this.status = 'lost'; this.lostAt = Date.now() }
+        // Déjà perdu : /api/stats peut encore dépasser son délai sur un Wi-Fi lent alors que
+        // le serveur répond. /api/version répond → on reprend, sans rester bloqué sur « Flux interrompu »
+        else { try { await getVersion(this.server); this._fails = 0; this._recover(); return } catch { /* toujours injoignable */ } }
         this.publish()
       }
+    },
+    // Retour du serveur : flux relancés tout de suite, liste des caméras rafraîchie sans bloquer
+    _recover() {
+      this.status = 'ok'
+      getCameras(this.server).then((c) => { this.cameras = c }).catch(() => { /* liste précédente gardée */ })
     },
     // Fenêtre principale : partage le dernier relevé avec les murs
     publish() {
