@@ -251,7 +251,12 @@
     "deleteTitle": "Supprime l'événement et l'enregistrement vidéo de cette période (définitif)",
     "deleteConfirm": "Confirmer : la vidéo sera effacée aussi",
     "deleted": "Événement supprimé",
-    "actionFailed": "Action impossible : {msg}"
+    "actionFailed": "Action impossible : {msg}",
+    "track": "Parcours",
+    "trackEmpty": "Aucune étape enregistrée",
+    "trackHint": "Clic : revoir ce moment",
+    "path": "Trajet",
+    "pathTitle": "Afficher le trajet de l’objet sur l’image"
   },
   "timeline": {
     "hours": "{n} h",
@@ -830,5 +835,20 @@
     "mb": "{n} Mo",
     "gb": "{n} Go",
     "tb": "{n} To"
+  },
+  "track": {
+    "steps": {
+      "visible": "{obj} détecté",
+      "entered_zone": "Entre dans {zones}",
+      "active": "Se met en mouvement",
+      "stationary": "S’immobilise",
+      "attribute": "{attr} détecté",
+      "gone": "Disparaît",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "Visage",
+      "license_plate": "Plaque"
+    }
   }
 }

@@ -251,7 +251,12 @@
     "deleteTitle": "ঘটনা এবং এই সময়ের ভিডিও রেকর্ডিং মুছে ফেলে (স্থায়ী)",
     "deleteConfirm": "নিশ্চিত করুন: ভিডিও-ও মুছে যাবে",
     "deleted": "ঘটনা মুছে ফেলা হয়েছে",
-    "actionFailed": "কাজ ব্যর্থ: {msg}"
+    "actionFailed": "কাজ ব্যর্থ: {msg}",
+    "track": "গতিপথ",
+    "trackEmpty": "কোনো ধাপ রেকর্ড হয়নি",
+    "trackHint": "ক্লিক: এই মুহূর্ত আবার দেখুন",
+    "path": "পথ",
+    "pathTitle": "ছবিতে বস্তুর পথ দেখান"
   },
   "timeline": {
     "hours": "{n} ঘ",
@@ -830,5 +835,20 @@
     "mb": "{n} MB",
     "gb": "{n} GB",
     "tb": "{n} TB"
+  },
+  "track": {
+    "steps": {
+      "visible": "{obj} শনাক্ত",
+      "entered_zone": "{zones}-এ প্রবেশ",
+      "active": "চলতে শুরু করে",
+      "stationary": "থেমে যায়",
+      "attribute": "{attr} শনাক্ত",
+      "gone": "চলে যায়",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "মুখ",
+      "license_plate": "নম্বর প্লেট"
+    }
   }
 }

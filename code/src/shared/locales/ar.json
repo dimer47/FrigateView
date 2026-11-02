@@ -251,7 +251,12 @@
     "deleteTitle": "يحذف الحدث وتسجيل الفيديو لهذه الفترة (نهائي)",
     "deleteConfirm": "تأكيد: سيُمحى الفيديو أيضًا",
     "deleted": "تم حذف الحدث",
-    "actionFailed": "تعذّر تنفيذ الإجراء: {msg}"
+    "actionFailed": "تعذّر تنفيذ الإجراء: {msg}",
+    "track": "المسار",
+    "trackEmpty": "لا توجد مراحل مسجلة",
+    "trackHint": "انقر: إعادة مشاهدة هذه اللحظة",
+    "path": "المسار على الصورة",
+    "pathTitle": "عرض مسار الكائن على الصورة"
   },
   "timeline": {
     "hours": "{n} س",
@@ -830,5 +835,20 @@
     "mb": "{n} م.ب",
     "gb": "{n} ج.ب",
     "tb": "{n} ت.ب"
+  },
+  "track": {
+    "steps": {
+      "visible": "تم اكتشاف {obj}",
+      "entered_zone": "يدخل {zones}",
+      "active": "يبدأ بالتحرك",
+      "stationary": "يتوقف",
+      "attribute": "تم اكتشاف {attr}",
+      "gone": "يختفي",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "وجه",
+      "license_plate": "لوحة"
+    }
   }
 }

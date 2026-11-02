@@ -9,6 +9,7 @@ import { useTimelineStore } from '@/stores/timeline'
 import { vodUrl, getEvent, getJson, eventSnapshotUrl } from '@/services/frigate'
 import { plusEnabled, validSubLabel, setSubLabel, sendToPlus, deleteReviews } from '@/services/eventActions'
 import { eventBoxes, boxCaption, pickEvent } from '@/services/boxes'
+import { pathPoints, pathString, trackSteps } from '@/services/track'
 import { useUiStore } from '@/stores/ui'
 import { useMediaStore } from '@/stores/media'
 
@@ -71,7 +72,7 @@ const caption = (b) => boxCaption(b, objLabel)
 async function loadSnap() {
   const x = e.value
   snapFailed.value = false
-  if (!x || view.value !== 'snap') return
+  if (!x) return
   const ids = (x.detections || []).slice(0, 6), key = x.id
   if (snapFor === key) return
   snapFor = key; snapEvents.value = []; snapId.value = null
@@ -83,10 +84,44 @@ async function loadSnap() {
 function onSnapLoad(img) { if (img.naturalWidth && img.naturalHeight) snapRatio.value = img.naturalWidth / img.naturalHeight }
 function toggleBoxes() { ui.showBoxes = !ui.showBoxes; ui.persist() }
 
+/* ---- Parcours : trajet sur l'image et chronologie des étapes ---- */
+const showPath = ref(true)
+const path = computed(() => (snapEvent.value ? pathPoints(snapEvent.value) : []))
+const steps = ref([])
+let stepsFor = null
+async function loadSteps() {
+  const id = snapId.value
+  if (!id || stepsFor === id) return
+  stepsFor = id; steps.value = []
+  try {
+    const list = trackSteps(await getJson(server.server, `/api/timeline?source_id=${encodeURIComponent(id)}`))
+    if (stepsFor === id) steps.value = list
+  } catch { /* chronologie indisponible (Frigate ancien) */ }
+}
+watch(snapId, loadSteps)
+const zoneLabel = (z) => String(z).replace(/_/g, ' ')
+function stepText(s) {
+  const attr = t('track.attr.' + s.attribute) === 'track.attr.' + s.attribute ? zoneLabel(s.attribute) : t('track.attr.' + s.attribute)
+  const key = 'track.steps.' + s.kind
+  const known = t(key) !== key
+  const txt = t(known ? key : 'track.steps.other', { obj: objLabel(snapEvent.value?.label || ''), zones: s.zones.map(zoneLabel).join(', '), attr, kind: zoneLabel(s.kind) })
+  return txt.charAt(0).toLocaleUpperCase(loc()) + txt.slice(1)
+}
+const STEP_COLORS = { visible: '#22c55e', entered_zone: '#3b82f6', active: '#eab308', stationary: '#94a3b8', attribute: '#38bdf8', gone: '#ef4444' }
+// Clic sur une étape : le clip se cale sur ce moment (il commence 3 s avant l'évènement)
+async function seekStep(s) {
+  if (view.value !== 'clip') { view.value = 'clip'; await nextTick() }
+  const v = video.value, x = e.value
+  if (!v || !x) return
+  const at = Math.max(0, (s.t - (x.s - 3000)) / 1000)
+  const go = () => { v.currentTime = at; v.play().catch(() => {}) }
+  v.readyState >= 1 ? go() : v.addEventListener('loadedmetadata', go, { once: true })
+}
+
 function destroy() { if (hls) { hls.destroy(); hls = null } }
 
 watch(() => [ev.detailId, view.value], async () => { if (e.value) ev.markSeen([e.value.id]); await nextTick(); loadClip(); loadSnap() })
-onMounted(() => { ev.markSeen([e.value.id]); loadClip(); addEventListener('keydown', onKey) })
+onMounted(() => { ev.markSeen([e.value.id]); loadClip(); loadSnap(); addEventListener('keydown', onKey) })
 onBeforeUnmount(() => { destroy(); removeEventListener('keydown', onKey) })
 
 function nav(d) {
@@ -196,11 +231,13 @@ function toTimeline() {
             </div>
             <span v-if="view === 'clip' || !snapId" class="text-xs text-ink-3">{{ view === 'clip' ? $t('detail.clipHint') : $t('detail.snapshotHint') }}</span>
             <div v-else class="flex items-center gap-1.5">
-              <button v-for="o in snapEvents.length > 1 ? snapEvents : []" :key="o.id" class="rounded border px-1.5 py-0.5 text-[11px]"
-                :class="o.id === snapId ? 'border-accent text-ink' : 'border-line text-ink-3 hover:text-ink'" @click="snapId = o.id">{{ objLabel(o.label) }}</button>
               <button class="flex items-center gap-1 rounded border px-2 py-0.5 text-[11px]" :class="ui.showBoxes ? 'border-accent bg-accent/15 text-ink' : 'border-line text-ink-3 hover:text-ink'"
                 :title="$t('detail.boxesTitle')" :aria-pressed="ui.showBoxes" @click="toggleBoxes">
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="2" width="10" height="8" rx="1" stroke-dasharray="2 1.5" /></svg>{{ $t('detail.boxes') }}
+              </button>
+              <button v-if="path.length > 1" class="flex items-center gap-1 rounded border px-2 py-0.5 text-[11px]" :class="showPath ? 'border-accent bg-accent/15 text-ink' : 'border-line text-ink-3 hover:text-ink'"
+                :title="$t('detail.pathTitle')" :aria-pressed="showPath" @click="showPath = !showPath">
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 10.5c2-1 2-5 4.5-5s2.5-3 4.5-4" /></svg>{{ $t('detail.path') }}
               </button>
             </div>
           </div>
@@ -218,10 +255,37 @@ function toTimeline() {
                   <span v-for="(b, i) in boxes" :key="'l' + i" class="pointer-events-none absolute max-w-[60%] truncate rounded-sm px-1 text-[11px] font-semibold leading-4 text-black"
                     :style="{ left: b.x * 100 + '%', ...(b.kind === 'object' && b.y > 0.06 ? { bottom: (1 - b.y) * 100 + '%' } : { top: (b.y + b.h) * 100 + '%' }), background: b.kind === 'object' ? TYPE_COLORS[e.type] : '#38bdf8' }">{{ caption(b) }}</span>
                 </template>
+                <svg v-if="showPath && path.length > 1" class="pointer-events-none absolute inset-0 size-full" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+                  <polyline :points="pathString(path)" fill="none" stroke="#facc15" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+                </svg>
+                <template v-if="showPath && path.length">
+                  <span class="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black bg-ok" :style="{ left: path[0].x * 100 + '%', top: path[0].y * 100 + '%' }" />
+                  <span class="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black bg-bad" :style="{ left: path[path.length - 1].x * 100 + '%', top: path[path.length - 1].y * 100 + '%' }" />
+                </template>
               </div>
             </div>
             <img v-else-if="e.thumb" :src="e.thumb" class="size-full object-contain" alt="">
             <div v-if="view === 'clip' && clipError" class="absolute inset-0 flex items-center justify-center text-[13px] text-ink-2">{{ $t('detail.clipUnavailable') }}</div>
+          </div>
+          <!-- Parcours : étapes de l'objet suivi (clic = revoir ce moment dans le clip) -->
+          <div v-if="snapId">
+            <div class="mb-1.5 flex items-baseline justify-between">
+              <span class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('detail.track') }}
+                <button v-for="o in snapEvents.length > 1 ? snapEvents : []" :key="o.id" class="rounded border px-1.5 py-px text-[10px] font-semibold normal-case tracking-normal"
+                  :class="o.id === snapId ? 'border-accent text-ink' : 'border-line text-ink-3 hover:text-ink'" @click="snapId = o.id">{{ objLabel(o.label) }}</button>
+              </span>
+              <span v-if="steps.length" class="text-[11px] text-ink-3">{{ $t('detail.trackHint') }}</span>
+            </div>
+            <p v-if="!steps.length" class="text-xs text-ink-3">{{ $t('detail.trackEmpty') }}</p>
+            <ol v-else class="flex max-h-28 flex-col overflow-y-auto rounded-lg border border-line text-xs">
+              <li v-for="(s, i) in steps" :key="i">
+                <button class="flex w-full items-center gap-2.5 border-b border-line px-3 py-1.5 text-left last:border-b-0 hover:bg-raised" @click="seekStep(s)">
+                  <span class="size-2 shrink-0 rounded-full" :style="{ background: STEP_COLORS[s.kind] || '#64748b' }" />
+                  <span class="w-16 shrink-0 font-mono text-ink-2">{{ hms(s.t) }}</span>
+                  <span class="truncate">{{ stepText(s) }}</span>
+                </button>
+              </li>
+            </ol>
           </div>
         </div>
 

@@ -251,7 +251,12 @@
     "deleteTitle": "Exclui o evento e a gravação de vídeo deste período (definitivo)",
     "deleteConfirm": "Confirmar: o vídeo também será apagado",
     "deleted": "Evento excluído",
-    "actionFailed": "Falha na ação: {msg}"
+    "actionFailed": "Falha na ação: {msg}",
+    "track": "Percurso",
+    "trackEmpty": "Nenhuma etapa registrada",
+    "trackHint": "Clique: rever este momento",
+    "path": "Trajeto",
+    "pathTitle": "Mostrar o trajeto do objeto na imagem"
   },
   "timeline": {
     "hours": "{n} h",
@@ -830,5 +835,20 @@
     "mb": "{n} MB",
     "gb": "{n} GB",
     "tb": "{n} TB"
+  },
+  "track": {
+    "steps": {
+      "visible": "{obj} detectado",
+      "entered_zone": "Entra em {zones}",
+      "active": "Começa a mover-se",
+      "stationary": "Para",
+      "attribute": "{attr} detectado",
+      "gone": "Desaparece",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "Rosto",
+      "license_plate": "Placa"
+    }
   }
 }

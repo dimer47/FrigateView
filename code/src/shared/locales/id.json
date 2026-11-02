@@ -251,7 +251,12 @@
     "deleteTitle": "Menghapus peristiwa dan rekaman video periode ini (permanen)",
     "deleteConfirm": "Konfirmasi: video juga akan dihapus",
     "deleted": "Peristiwa dihapus",
-    "actionFailed": "Tindakan gagal: {msg}"
+    "actionFailed": "Tindakan gagal: {msg}",
+    "track": "Jejak",
+    "trackEmpty": "Tidak ada tahap tercatat",
+    "trackHint": "Klik: putar ulang momen ini",
+    "path": "Lintasan",
+    "pathTitle": "Tampilkan lintasan objek pada gambar"
   },
   "timeline": {
     "hours": "{n} j",
@@ -830,5 +835,20 @@
     "mb": "{n} MB",
     "gb": "{n} GB",
     "tb": "{n} TB"
+  },
+  "track": {
+    "steps": {
+      "visible": "{obj} terdeteksi",
+      "entered_zone": "Memasuki {zones}",
+      "active": "Mulai bergerak",
+      "stationary": "Berhenti",
+      "attribute": "{attr} terdeteksi",
+      "gone": "Menghilang",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "Wajah",
+      "license_plate": "Pelat"
+    }
   }
 }

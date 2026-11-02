@@ -251,7 +251,12 @@
     "deleteTitle": "घटना और इस अवधि की वीडियो रिकॉर्डिंग हटाता है (स्थायी)",
     "deleteConfirm": "पुष्टि करें: वीडियो भी मिट जाएगा",
     "deleted": "घटना हटाई गई",
-    "actionFailed": "कार्रवाई विफल: {msg}"
+    "actionFailed": "कार्रवाई विफल: {msg}",
+    "track": "मार्ग",
+    "trackEmpty": "कोई चरण दर्ज नहीं",
+    "trackHint": "क्लिक: यह पल फिर देखें",
+    "path": "पथ",
+    "pathTitle": "छवि पर वस्तु का पथ दिखाएँ"
   },
   "timeline": {
     "hours": "{n} घं",
@@ -830,5 +835,20 @@
     "mb": "{n} MB",
     "gb": "{n} GB",
     "tb": "{n} TB"
+  },
+  "track": {
+    "steps": {
+      "visible": "{obj} पहचाना गया",
+      "entered_zone": "{zones} में प्रवेश",
+      "active": "चलना शुरू",
+      "stationary": "रुक गया",
+      "attribute": "{attr} पहचाना गया",
+      "gone": "चला गया",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "चेहरा",
+      "license_plate": "नंबर प्लेट"
+    }
   }
 }

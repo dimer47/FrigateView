@@ -251,7 +251,12 @@
     "deleteTitle": "Deletes the event and the video recording of this period (permanent)",
     "deleteConfirm": "Confirm: the video will be erased too",
     "deleted": "Event deleted",
-    "actionFailed": "Action failed: {msg}"
+    "actionFailed": "Action failed: {msg}",
+    "track": "Track",
+    "trackEmpty": "No step recorded",
+    "trackHint": "Click: replay this moment",
+    "path": "Path",
+    "pathTitle": "Show the object’s path on the image"
   },
   "timeline": {
     "hours": "{n} h",
@@ -830,5 +835,20 @@
     "mb": "{n} MB",
     "gb": "{n} GB",
     "tb": "{n} TB"
+  },
+  "track": {
+    "steps": {
+      "visible": "{obj} detected",
+      "entered_zone": "Enters {zones}",
+      "active": "Starts moving",
+      "stationary": "Stops",
+      "attribute": "{attr} detected",
+      "gone": "Leaves",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "Face",
+      "license_plate": "Plate"
+    }
   }
 }

@@ -251,7 +251,12 @@
     "deleteTitle": "删除该事件及此时段的录像（不可恢复）",
     "deleteConfirm": "确认：录像也会被删除",
     "deleted": "事件已删除",
-    "actionFailed": "操作失败：{msg}"
+    "actionFailed": "操作失败：{msg}",
+    "track": "轨迹",
+    "trackEmpty": "无记录步骤",
+    "trackHint": "点击：回看此刻",
+    "path": "路径",
+    "pathTitle": "在图像上显示对象的路径"
   },
   "timeline": {
     "hours": "{n} 小时",
@@ -830,5 +835,20 @@
     "mb": "{n} MB",
     "gb": "{n} GB",
     "tb": "{n} TB"
+  },
+  "track": {
+    "steps": {
+      "visible": "检测到{obj}",
+      "entered_zone": "进入 {zones}",
+      "active": "开始移动",
+      "stationary": "停止",
+      "attribute": "检测到{attr}",
+      "gone": "离开",
+      "other": "{kind}"
+    },
+    "attr": {
+      "face": "人脸",
+      "license_plate": "车牌"
+    }
   }
 }
