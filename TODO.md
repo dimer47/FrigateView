@@ -3,7 +3,7 @@
 ## Fonctionnalités
 
 - [x] Parcours de l'objet suivi : chronologie et trajet dans l'image
-- [ ] Notifications d'alerte générales : par caméra, zone ou type d'objet
+- [x] Notifications d'alerte générales : par caméra, zone ou type d'objet
 
 ## Tests en conditions réelles
 
@@ -14,4 +14,4 @@
 
 ## Améliorations possibles
 
-- [ ] Murs vidéo sous Windows : reconnaître l'écran aussi par son nom et sa position (l'identifiant d'écran peut changer après un redémarrage, le mur ne se rouvrirait pas)
+- [x] Murs vidéo sous Windows : reconnaître l'écran aussi par son nom et sa position (l'identifiant d'écran peut changer après un redémarrage, le mur ne se rouvrirait pas)

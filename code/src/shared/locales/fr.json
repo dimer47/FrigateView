@@ -850,5 +850,15 @@
       "face": "Visage",
       "license_plate": "Plaque"
     }
+  },
+  "notif": {
+    "severity": "Notifier",
+    "sevAll": "Tous les évènements",
+    "sevAlert": "Alertes seulement",
+    "cameras": "Caméras",
+    "camerasHint": "Décochez une caméra pour ne plus en recevoir de notification",
+    "zones": "Zones",
+    "zonesHint": "Aucune cochée : partout. Sinon, seulement les évènements qui touchent l’une de ces zones",
+    "noZones": "Aucune zone définie dans Frigate"
   }
 }

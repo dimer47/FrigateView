@@ -8,6 +8,7 @@ import os from 'node:os'
 import { createHash, randomBytes } from 'node:crypto'
 import { resolveLang, translate } from '../shared/langs'
 import { initUpdater } from './updater'
+import { remapScreens } from './screenMatch'
 import { isAllowedHttpUrl, isExternalUrlSafe, allowedIn as allowedInSet, isAppUrl, buildMultipart } from './guards'
 
 // Liens externes : http(s) seulement
@@ -209,6 +210,9 @@ const DEFAULTS = {
   lang: null, // null = langue du système
   notify: true,
   notifyTypes: { person: true, car: false, animal: false, other: false },
+  notifySeverity: 'all', // all | alert
+  notifyCamsOff: [], // caméras sans notification
+  notifyZones: [], // zones requises (vide = partout)
   notifySound: true,
   watchFaces: [], // personnes surveillées (noms /api/faces)
   watchPlates: [], // plaques surveillées (noms known_plates ou plaques brutes)
@@ -358,6 +362,14 @@ ipcMain.handle('screens:list', () => {
 // Ouvre / ferme les murs vidéo selon les réglages
 function syncWalls() {
   const displays = screen.getAllDisplays()
+  // Identifiant d'écran changé (Windows) : le mur suit son écran, reconnu par nom et position
+  const r = remapScreens(settings.screens, displays.map((d) => ({ id: d.id, label: d.label || '', bounds: d.bounds })))
+  if (JSON.stringify(r.conf) !== JSON.stringify(settings.screens)) {
+    for (const [from] of r.moved) { const w = walls.get(from); walls.delete(from); if (w && !w.isDestroyed()) w.destroy() }
+    settings.screens = r.conf
+    saveSettings()
+    applySettings()
+  }
   for (const [id, w] of walls) {
     const conf = settings.screens[id]
     if (!conf?.enabled || !displays.some((d) => String(d.id) === id)) { walls.delete(id); if (!w.isDestroyed()) w.destroy() }

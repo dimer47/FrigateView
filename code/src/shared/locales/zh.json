@@ -850,5 +850,15 @@
       "face": "人脸",
       "license_plate": "车牌"
     }
+  },
+  "notif": {
+    "severity": "通知",
+    "sevAll": "所有事件",
+    "sevAlert": "仅警报",
+    "cameras": "摄像头",
+    "camerasHint": "取消勾选摄像头即不再接收其通知",
+    "zones": "区域",
+    "zonesHint": "未勾选：所有位置。否则仅限涉及这些区域之一的事件",
+    "noZones": "Frigate 中未定义区域"
   }
 }

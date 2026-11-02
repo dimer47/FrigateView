@@ -850,5 +850,15 @@
       "face": "Rostro",
       "license_plate": "Matrícula"
     }
+  },
+  "notif": {
+    "severity": "Notificar",
+    "sevAll": "Todos los eventos",
+    "sevAlert": "Solo alertas",
+    "cameras": "Cámaras",
+    "camerasHint": "Desmarque una cámara para dejar de recibir sus notificaciones",
+    "zones": "Zonas",
+    "zonesHint": "Ninguna marcada: en todas partes. Si no, solo los eventos que tocan una de estas zonas",
+    "noZones": "Ninguna zona definida en Frigate"
   }
 }

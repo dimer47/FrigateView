@@ -850,5 +850,15 @@
       "face": "Face",
       "license_plate": "Plate"
     }
+  },
+  "notif": {
+    "severity": "Notify",
+    "sevAll": "All events",
+    "sevAlert": "Alerts only",
+    "cameras": "Cameras",
+    "camerasHint": "Uncheck a camera to stop its notifications",
+    "zones": "Zones",
+    "zonesHint": "None checked: everywhere. Otherwise, only events touching one of these zones",
+    "noZones": "No zone defined in Frigate"
   }
 }

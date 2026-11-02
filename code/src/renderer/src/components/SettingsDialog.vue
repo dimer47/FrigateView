@@ -54,6 +54,11 @@ watch(() => app.tab, (tb) => tb === 'notif' && !watchLists.value.loaded && loadW
 const watchToggle = (k, v) => app.set({ [k]: toggleIn([...(app.s[k] || [])], v) })
 
 const setType = (k, v) => app.set({ notifyTypes: { ...app.s.notifyTypes, [k]: v } })
+// Caméras cochées = notifiées (on enregistre celles exclues : une nouvelle caméra est notifiée d'office)
+const camOn = (id) => !(app.s.notifyCamsOff || []).includes(id)
+const setCam = (id) => app.set({ notifyCamsOff: toggleIn([...(app.s.notifyCamsOff || [])], id) })
+const setZone = (z) => app.set({ notifyZones: toggleIn([...(app.s.notifyZones || [])], z) })
+const allZones = () => [...new Set([...(ev.known.zones || []), ...(app.s.notifyZones || [])])].sort()
 async function applyScreens() {
   await window.native.applyScreens(JSON.parse(JSON.stringify(screenConf.value)))
   const n = Object.values(screenConf.value).filter((c) => c.enabled).length
@@ -108,6 +113,21 @@ const close = () => (app.open = false)
             <h3 class="mb-1.5 font-semibold">{{ $t('settings.notifTitle') }}</h3>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.notify') }}<small class="block text-xs text-ink-3">{{ $t('settings.notifyHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="app.s.notify" @change="app.set({ notify: $event.target.checked })"></label>
             <label v-for="k in TYPE_KEYS" :key="k" class="flex items-center justify-between gap-3 border-b border-line py-2.5 pl-4" :class="{ 'opacity-40': !app.s.notify }"><span>{{ typeLabel(k) }}</span><input type="checkbox" class="size-4 accent-accent" :disabled="!app.s.notify" :checked="app.s.notifyTypes[k]" @change="setType(k, $event.target.checked)"></label>
+            <label class="flex items-center justify-between gap-3 border-b border-line py-2.5" :class="{ 'opacity-40': !app.s.notify }"><span>{{ $t('notif.severity') }}</span>
+              <select class="input !w-44" :disabled="!app.s.notify" :value="app.s.notifySeverity || 'all'" @change="app.set({ notifySeverity: $event.target.value })"><option value="all">{{ $t('notif.sevAll') }}</option><option value="alert">{{ $t('notif.sevAlert') }}</option></select></label>
+            <div class="border-b border-line py-2.5" :class="{ 'opacity-40': !app.s.notify }">
+              <span>{{ $t('notif.cameras') }}<small class="block text-xs text-ink-3">{{ $t('notif.camerasHint') }}</small></span>
+              <div class="mt-1.5 flex flex-wrap gap-x-5 gap-y-1">
+                <label v-for="c in server.cameras" :key="c.id" class="flex items-center gap-2 py-0.5"><input type="checkbox" class="size-4 accent-accent" :disabled="!app.s.notify" :checked="camOn(c.id)" @change="setCam(c.id)">{{ c.name }}</label>
+              </div>
+            </div>
+            <div class="border-b border-line py-2.5" :class="{ 'opacity-40': !app.s.notify }">
+              <span>{{ $t('notif.zones') }}<small class="block text-xs text-ink-3">{{ $t('notif.zonesHint') }}</small></span>
+              <div class="mt-1.5 flex flex-wrap gap-x-5 gap-y-1">
+                <label v-for="z in allZones()" :key="z" class="flex items-center gap-2 py-0.5"><input type="checkbox" class="size-4 accent-accent" :disabled="!app.s.notify" :checked="(app.s.notifyZones || []).includes(z)" @change="setZone(z)">{{ z.replace(/_/g, ' ') }}</label>
+                <span v-if="!allZones().length" class="text-xs text-ink-3">{{ $t('notif.noZones') }}</span>
+              </div>
+            </div>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.sound') }}</span><input type="checkbox" class="size-4 accent-accent" :checked="app.s.notifySound" @change="app.set({ notifySound: $event.target.checked })"></label>
             <label class="flex items-center justify-between gap-3 border-b border-line py-2.5"><span>{{ $t('settings.dnd') }}<small class="block text-xs text-ink-3">{{ $t('settings.dndHint') }}</small></span><input type="checkbox" class="size-4 accent-accent" :checked="app.s.dnd" @change="app.set({ dnd: $event.target.checked })"></label>
             <button class="btn mt-4" @click="testNotif">{{ $t('settings.testNotif') }}</button>

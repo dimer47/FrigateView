@@ -28,6 +28,7 @@ import { bestGrid } from '@/stores/layouts'
 import { t, loc, setLocale } from '@/i18n'
 import { resolveLang } from '../../shared/langs'
 import { load, save } from '@/stores/storage'
+import { wantNotify } from '@/services/notifyRules'
 import { useStatsStore } from '@/stores/stats'
 import { parseTrackUpdate, matchWatch, watchConf, createGate, UNKNOWN } from '@/services/watch'
 import { playEvent } from '@/stores/playEvent'
@@ -99,7 +100,7 @@ async function onNewEvent(e) {
   const s = appSettings.s
   const title = `${typeLabel(e.type)} — ${server.camById(e.cam)?.name || e.cam}`
   const body = [new Date(e.s).toLocaleTimeString(loc()), e.zones[0]?.replace(/_/g, ' '), ...e.subLabels].filter(Boolean).join(' · ')
-  const wanted = s?.notify && s.notifyTypes[e.type] && !s.dnd
+  const wanted = wantNotify(e, s)
   if (await window.native.isFocused()) { if (e.severity === 'alert' || wanted) ui.notify(title, { label: 'Voir', run: () => (ev.detailId = e.id) }) }
   else if (wanted) window.native.notify({ title, body, id: e.id })
 }

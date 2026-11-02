@@ -850,5 +850,15 @@
       "face": "Wajah",
       "license_plate": "Pelat"
     }
+  },
+  "notif": {
+    "severity": "Beri tahu",
+    "sevAll": "Semua peristiwa",
+    "sevAlert": "Hanya peringatan",
+    "cameras": "Kamera",
+    "camerasHint": "Hapus centang kamera untuk berhenti menerima notifikasinya",
+    "zones": "Zona",
+    "zonesHint": "Tidak ada yang dicentang: di mana saja. Jika tidak, hanya peristiwa yang menyentuh salah satu zona ini",
+    "noZones": "Tidak ada zona di Frigate"
   }
 }
