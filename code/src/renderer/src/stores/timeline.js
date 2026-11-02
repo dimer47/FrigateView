@@ -30,6 +30,8 @@ export function mergeRanges(list) {
   return out
 }
 
+const WAIT_MAX = 4000
+
 export const useTimelineStore = defineStore('timeline', {
   state: () => ({
     view: { start: Date.now() - 3 * HOUR + 15 * MIN, end: Date.now() + 15 * MIN },
@@ -44,7 +46,8 @@ export const useTimelineStore = defineStore('timeline', {
     height: load('fv-tl', {}).height ?? 250,
     visible: load('fv-tl', {}).visible ?? true,
     chunks: {}, // `${cam}:${heure}` → { rec, motion, reviews, at }
-    loading: 0
+    loading: 0,
+    waiting: {} // caméra → début du chargement : l'horloge attend la vidéo (4 s max)
   }),
   getters: {
     cursor: (s) => (s.live ? Date.now() : s.time),
@@ -67,6 +70,7 @@ export const useTimelineStore = defineStore('timeline', {
     },
     goLive() {
       this.live = true
+      this.speedIdx = 1
       this.playing = true
       this.playbackCams = null
       const span = this.view.end - this.view.start, now = Date.now()
@@ -81,10 +85,16 @@ export const useTimelineStore = defineStore('timeline', {
     setSpeed(d) { this.speedIdx = Math.max(0, Math.min(this.speeds.length - 1, this.speedIdx + d)) },
     toggleSync() { this.sync = !this.sync; if (this.sync) this.playbackCams = null; this.persist() },
 
+    setWaiting(cam, on) {
+      if (on) (this.waiting ||= {})[cam] ??= Date.now()
+      else if (this.waiting) delete this.waiting[cam]
+    },
+
     // Horloge maîtresse : chaque case vidéo se cale sur `time`
     tick(dt, cams = []) {
       const now = Date.now()
       if (!this.live && this.playing) {
+        if (Object.values(this.waiting || {}).some((t) => now - t < WAIT_MAX)) return
         this.time += dt * this.speed
         if (this.time >= now - 1000) return this.goLive()
         this.skipGap(cams)

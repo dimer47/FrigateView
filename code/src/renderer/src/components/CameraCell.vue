@@ -252,6 +252,10 @@ watch(() => props.camId, () => { imgSrc.value = ''; stopPlayback(); startSnapsho
    la vidéo ne correspond donc à l'heure réelle qu'à travers la liste des segments. */
 const pbVideo = ref(null)
 const pbState = ref('idle') // idle | loading | playing | norec | error
+const pbBusy = ref(false) // vidéo en recherche ou en attente de données
+const pbWait = computed(() => playback.value && (pbState.value === 'loading' || (pbState.value === 'playing' && pbBusy.value)))
+watch(pbWait, (on) => tl.setWaiting(props.camId, on))
+onBeforeUnmount(() => tl.setWaiting(props.camId, false))
 let hls = null
 let chunk = null // { start, end, segs: [{ s, e }] } en ms
 let chunkLoading = false
@@ -318,7 +322,7 @@ function syncPlayback(force = false) {
 }
 
 function destroyHls() { if (hls) { hls.destroy(); hls = null } }
-function stopPlayback() { chunkGen++; chunkLoading = false; destroyHls(); chunk = null; pbState.value = 'idle' }
+function stopPlayback() { chunkGen++; chunkLoading = false; destroyHls(); chunk = null; pbBusy.value = false; pbState.value = 'idle' }
 
 watch(playback, (p) => (p ? syncPlayback() : stopPlayback()))
 watch(() => [tl.time, tl.playing, tl.speed], () => syncPlayback())
@@ -468,7 +472,7 @@ onBeforeUnmount(() => clearInterval(miniTimer))
 <template>
   <div ref="root" class="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#1b2636,#0b121c)]" @wheel="onWheel" @contextmenu="openQMenu">
    <div class="absolute inset-0" :class="{ 'cursor-grab': zoomed && !panning, 'cursor-grabbing': panning }" :style="zoomStyle" @pointerdown="onPanDown" @pointermove="onPanMove" @pointerup="onPanUp" @pointercancel="onPanUp" @dblclick="zoomed && ($event.stopPropagation(), resetZoom())">
-    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'brightness-50': pbState === 'norec' }" :muted="muted" playsinline />
+    <video v-show="playback" ref="pbVideo" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: pbState === 'norec' }" :muted="muted" playsinline @seeking="pbBusy = true" @waiting="pbBusy = true" @seeked="pbBusy = false" @playing="pbBusy = false" @canplay="pbBusy = false" />
     <img v-if="imgSrc && !showVideo && !playback" ref="imgEl" :src="imgSrc" class="absolute inset-0 size-full" :style="fitStyle" :class="{ 'grayscale brightness-50': frozen || offline }" draggable="false" alt="">
     <video ref="vA" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo || cur !== 0 }" autoplay :muted="muted || cur !== 0" playsinline @playing="cur === 0 && onPlaying()" />
     <video ref="vB" class="absolute inset-0 size-full" :style="fitStyle" :class="{ invisible: !showVideo || cur !== 1 }" autoplay :muted="muted || cur !== 1" playsinline @playing="cur === 1 && onPlaying()" />
@@ -510,8 +514,8 @@ onBeforeUnmount(() => clearInterval(miniTimer))
         {{ statLine }}
     </div>
 
-    <div v-if="playback && pbState !== 'playing'" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
-      <span v-if="pbState === 'loading'" class="spin" />
+    <div v-if="playback && (pbState !== 'playing' || pbBusy)" class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-1 p-2.5 text-center text-[13px] text-ink-2">
+      <span v-if="pbState === 'loading' || (pbState === 'playing' && pbBusy)" class="spin" />
       <template v-else>
         <strong class="text-ink">{{ pbState === 'error' ? $t('cell.playbackError') : $t('cell.noRecording') }}</strong>
         <span>{{ pbState === 'error' ? $t('cell.noVideoFromServer') : $t('cell.at', { time }) }}</span>
