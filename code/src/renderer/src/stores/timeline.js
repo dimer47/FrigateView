@@ -82,17 +82,46 @@ export const useTimelineStore = defineStore('timeline', {
     toggleSync() { this.sync = !this.sync; if (this.sync) this.playbackCams = null; this.persist() },
 
     // Horloge maîtresse : chaque case vidéo se cale sur `time`
-    tick(dt) {
+    tick(dt, cams = []) {
       const now = Date.now()
       if (!this.live && this.playing) {
         this.time += dt * this.speed
         if (this.time >= now - 1000) return this.goLive()
+        this.skipGap(cams)
       }
       if (this.live && now > this.view.end - (this.view.end - this.view.start) * 0.04) {
         const span = this.view.end - this.view.start
         this.view.end = now + span * 0.08
         this.view.start = this.view.end - span
       }
+    },
+
+    // Magnétisme en relecture : hors de tout élément affiché (selon les filtres), la lecture saute
+    // au début du prochain, toutes caméras relues confondues. Rien de coché ou rien devant : lecture normale.
+    skipGap(cams) {
+      const list = this.playbackCams || cams
+      if (!list.length || !Object.values(this.filters).some(Boolean)) return
+      const t = this.time, now = Date.now()
+      let next = Infinity
+      for (const cam of list) {
+        for (let h = Math.floor(t / HOUR); h <= Math.floor(now / HOUR); h++) {
+          const c = this.chunks[`${cam}:${h}`]
+          if (!c) continue
+          for (const r of this.visibleIn(c)) {
+            if (r.s <= t && t < r.e) return // dans un élément : rien à faire
+            if (r.s > t && r.s < next) next = r.s
+          }
+          if (next < (h + 1) * HOUR) break // trouvé dans cette heure : inutile d'aller plus loin
+        }
+      }
+      if (next === Infinity) return
+      this.time = next
+      const span = this.view.end - this.view.start
+      if (next > this.view.end - span * 0.05) { this.view.start = next - span / 2; this.view.end = next + span / 2 }
+    },
+    visibleIn(c) {
+      const f = this.filters
+      return [...c.reviews.filter((r) => f[r.type]), ...(f.motion ? c.motion : []), ...(f.rec ? c.rec : [])]
     },
 
     /* ---------- Vue ---------- */

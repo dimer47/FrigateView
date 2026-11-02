@@ -176,7 +176,7 @@ function loadData() { if (server.server && server.status === 'ok' && cams.value.
 let dataDebounce
 watch(() => [tl.view.start, tl.view.end, cams.value.join()], () => { clearTimeout(dataDebounce); dataDebounce = setTimeout(loadData, 250) })
 onMounted(() => {
-  loop = setInterval(() => { const t = Date.now(); tl.tick(t - last); last = t; now.value = t }, 200)
+  loop = setInterval(() => { const t = Date.now(); tl.tick(t - last, cams.value); last = t; now.value = t }, 200)
   dataLoop = setInterval(loadData, 30e3)
   loadData()
   ro = new ResizeObserver(() => { rulerWidth.value = ruler.value?.clientWidth || 800 })

@@ -21,6 +21,25 @@ function setMode(m) {
   mode.value = m
   state.value = 'idle'
 }
+// Adresse collée ou tapée en entier (« https://192.168.0.172:8971/ », « frigate.local:5000 ») :
+// répartie dans hôte, port et mode. Lancé au collage, en quittant le champ et avant la connexion,
+// jamais pendant la frappe (« https://1 » serait coupé en cours de saisie).
+function splitAddress() {
+  const raw = host.value.trim()
+  if (!/[:/]/.test(raw)) return
+  const scheme = raw.match(/^(https?):\/\//i)?.[1]?.toLowerCase()
+  let u
+  try { u = new URL(scheme ? raw : 'http://' + raw) } catch { return }
+  if (!u.hostname) return
+  const m = scheme === 'http' ? 'local' : scheme === 'https' ? 'secure' : mode.value
+  if (m !== mode.value) setMode(m)
+  host.value = u.hostname.replace(/^\[|\]$/g, '')
+  // Sans port explicite mais avec http(s):// : port habituel du mode (pas 80/443, Frigate n'y répond pas)
+  if (u.port) port.value = u.port
+  else if (scheme) port.value = PORTS[m]
+  state.value = 'idle'
+}
+const onPaste = () => setTimeout(splitAddress) // après la mise à jour du champ
 const user = ref(prev?.user || '')
 const password = ref('')
 const remember = ref(true)
@@ -37,6 +56,7 @@ const canGo = computed(() => host.value.trim() && /^\d+$/.test(port.value.trim()
 onMounted(() => (reconnecting.value && user.value ? passInput : firstInput).value?.focus())
 
 async function go() {
+  splitAddress()
   if (!canGo.value || state.value === 'busy') return
   state.value = 'busy'
   try {
@@ -99,7 +119,7 @@ const fp = (f) => (f || '').replace(/^sha256\//, '')
         </div>
       </div>
       <div v-show="!reconnecting" class="grid grid-cols-[1fr_90px] gap-2.5">
-        <div class="mb-2.5"><label class="label" for="host">{{ $t('connect.host') }}</label><input id="host" ref="firstInput" v-model="host" class="input" :placeholder="$t('connect.hostPlaceholder')" @input="state = 'idle'"></div>
+        <div class="mb-2.5"><label class="label" for="host">{{ $t('connect.host') }}</label><input id="host" ref="firstInput" v-model="host" class="input" :placeholder="$t('connect.hostPlaceholder')" @input="state = 'idle'" @paste="onPaste" @blur="splitAddress"></div>
         <div class="mb-2.5"><label class="label" for="port">{{ $t('connect.port') }}</label><input id="port" v-model="port" class="input" @input="state = 'idle'"></div>
       </div>
 
