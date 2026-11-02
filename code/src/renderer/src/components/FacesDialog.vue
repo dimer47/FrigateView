@@ -6,7 +6,8 @@ import { useServerStore } from '@/stores/server'
 import { useUiStore } from '@/stores/ui'
 import { getJson, getPath, eventThumbUrl, eventSnapshotUrl } from '@/services/frigate'
 import { TRAIN, getFaces, faceImageUrl, faceRecognitionEnabled, validName, folderName, rangeSelect, imageTime,
-  createFace, classifyFace, deleteFaceImages, renameFace, registerFace } from '@/services/faces'
+  createFace, classifyFace, deleteFaceImages, renameFace, registerFace, parseTrainFile } from '@/services/faces'
+import { setSubLabel } from '@/services/eventActions'
 import { fromEvent } from '@/stores/eventFilters'
 import { playEvent } from '@/stores/playEvent'
 import WatchBell from './WatchBell.vue'
@@ -102,7 +103,13 @@ async function assign() {
   const list = [...selected.value]
   await run(async () => {
     if (!people.value.some((p) => p.name === name)) await createFace(srv(), name)
-    for (const f of list) await classifyFace(srv(), f, name)
+    for (const f of list) {
+      await classifyFace(srv(), f, name)
+      // Frigate entraîne le modèle mais ne nomme pas l'événement d'origine (api/classification.py) :
+      // on pose le sous-libellé, pour que le filtre Visage et « Dernières apparitions » le retrouvent
+      const id = parseTrainFile(f).eventId
+      if (id) await setSubLabel(srv(), id, name).catch(() => {})
+    }
     return list.length
   }, (n) => t('faces.assigned', { n, name: label(name) }, n))
   assignTo.value = ''; newName.value = ''

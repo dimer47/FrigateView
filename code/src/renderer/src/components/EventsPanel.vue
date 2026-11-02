@@ -2,6 +2,7 @@
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useEventsStore, typeLabel, TYPE_COLORS } from '@/stores/events'
 import { FILTER_KEYS, filterOptions, toggleFilter, rangePreset, rangeFromDates } from '@/stores/eventFilters'
+import { knownLabel } from '@/services/plates'
 import { t, dayTitle, fmtDuration } from '@/i18n'
 import { useLayoutStore } from '@/stores/layouts'
 import { useServerStore } from '@/stores/server'
@@ -27,7 +28,9 @@ const menu = ref(null) // menu ouvert : object | face | plate | zone | cam | ran
 const dates = ref({ from: '', to: '' })
 const options = computed(() => filterOptions([...ev.items, ...ev.hist.items], { ...ev.known, cams: server.cameras?.map((c) => c.id) }))
 const objLabel = (o) => { const k = 'labels.' + o, v = t(k); return v === k ? o.replace(/_/g, ' ') : v }
-const valueLabel = (k, v) => (k === 'object' ? objLabel(v) : k === 'cam' ? camName(v) : k === 'zone' ? zone(v) : v)
+// Nom de plaque connue : suivi de ses plaques (« Michal · CV-419-HJ »)
+const plateLabel = (v) => { const k = ev.known.knownList?.find((x) => x.name === v); return k ? `${v} · ${k.plates.map(knownLabel).join(', ')}` : v }
+const valueLabel = (k, v) => (k === 'object' ? objLabel(v) : k === 'cam' ? camName(v) : k === 'zone' ? zone(v) : k === 'plate' ? plateLabel(v) : v)
 const chips = computed(() => FILTER_KEYS.flatMap((k) => ev.filters[k].map((v) => ({ k, v }))))
 const PRESETS = ['today', '7d', '30d']
 const rangeText = computed(() => {

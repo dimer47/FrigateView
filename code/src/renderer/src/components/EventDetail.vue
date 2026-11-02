@@ -6,7 +6,8 @@ import { t, loc, fmtDuration } from '@/i18n'
 import { useServerStore } from '@/stores/server'
 import { useLayoutStore } from '@/stores/layouts'
 import { useTimelineStore } from '@/stores/timeline'
-import { vodUrl, getEvent, eventSnapshotUrl } from '@/services/frigate'
+import { vodUrl, getEvent, getJson, eventSnapshotUrl } from '@/services/frigate'
+import { plusEnabled, validSubLabel, setSubLabel, sendToPlus, deleteReviews } from '@/services/eventActions'
 import { eventBoxes, boxCaption, pickEvent } from '@/services/boxes'
 import { useUiStore } from '@/stores/ui'
 import { useMediaStore } from '@/stores/media'
@@ -102,6 +103,54 @@ function onKey(k) {
 function download() { const x = e.value; media.exportClips([x.cam], x.s - 3000, Math.min(Date.now(), (x.e ?? Date.now()) + 3000)) }
 // Recherche sémantique : objet affiché sur la meilleure image, sinon le premier de la revue
 function similar() { ui.searchSimilar = snapId.value || e.value.detections[0]; ev.detailId = null; ui.searchOpen = true }
+/* ---- Actions : capture (tous), renommer, Frigate+, supprimer (admin) ---- */
+const admin = computed(() => server.isAdmin)
+const plus = ref(false)
+const busy = ref(false)
+const renaming = ref(false)
+const subInput = ref('')
+const confirmDel = ref(false)
+// Objet suivi visé : celui affiché sur la meilleure image, sinon le premier de la revue
+const target = () => snapId.value || e.value?.detections?.[0] || null
+const safe = (s) => String(s).replace(/[^\p{L}\p{N}_-]+/gu, '_')
+async function act(fn, ok) {
+  if (busy.value) return
+  busy.value = true
+  try { await fn(); if (ok) ui.notify(ok) } catch (err) { ui.notify(t('detail.actionFailed', { msg: err?.message || String(err) })) } finally { busy.value = false }
+}
+async function saveSnapshot() {
+  const id = target(), x = e.value
+  if (!id) return
+  const d = new Date(x.s), name = `${safe(camName(x.cam))}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.jpg`
+  const path = await window.native.chooseSave(name, 'image')
+  if (!path) return
+  const r = await window.native.download(`snap-${id}`, eventSnapshotUrl(server.server, id), path)
+  ui.notify(r.ok ? t('media.captured') : t('media.captureFailed'), r.ok ? { label: t('media.show'), run: () => window.native.reveal(path) } : undefined)
+}
+function startRename() { subInput.value = e.value.subLabels[0] || ''; renaming.value = true }
+function saveRename() {
+  const id = target(), x = e.value, v = subInput.value.trim()
+  if (!id || !validSubLabel(v)) return
+  act(async () => {
+    await setSubLabel(server.server, id, v, x.cam)
+    x.subLabels = v ? [v] : []
+    renaming.value = false
+  }, v ? t('detail.renamed', { name: v }) : t('detail.unnamed'))
+}
+const submitPlus = () => { const id = target(); if (id) act(() => sendToPlus(server.server, id), t('detail.plusSent')) }
+function remove() {
+  if (!confirmDel.value) { confirmDel.value = true; return }
+  confirmDel.value = false
+  const x = e.value
+  act(async () => {
+    await deleteReviews(server.server, [x.id])
+    ev.items = ev.items.filter((i) => i.id !== x.id)
+    ev.hist.items = ev.hist.items.filter((i) => i.id !== x.id)
+    ev.detailId = null
+  }, t('detail.deleted'))
+}
+onMounted(async () => { if (admin.value) try { plus.value = plusEnabled(await getJson(server.server, '/api/config')) } catch { /* Frigate+ masqué */ } })
+
 function toTimeline() {
   const x = e.value
   ev.detailId = null
@@ -181,6 +230,18 @@ function toTimeline() {
           <dl class="divide-y divide-line rounded-lg border border-line text-[13px]">
             <div v-for="[k, v] in info" :key="k" class="flex justify-between gap-3 px-3 py-2"><dt class="text-ink-3">{{ k }}</dt><dd class="truncate text-right">{{ v }}</dd></div>
           </dl>
+          <!-- Actions -->
+          <div class="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-ink-3">{{ $t('detail.actions') }}</div>
+          <div v-if="renaming" class="mb-2 flex flex-col gap-1.5">
+            <input v-model="subInput" class="input py-1" maxlength="100" :placeholder="$t('detail.renamePlaceholder')" autofocus @keydown.enter="saveRename" @keydown.esc.stop="renaming = false">
+            <div class="flex gap-1.5"><button class="btn btn-primary flex-1 py-1" :disabled="busy" @click="saveRename">{{ $t('detail.renameSave') }}</button><button class="btn py-1" @click="renaming = false">{{ $t('common.cancel') }}</button></div>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <button class="btn py-1.5" :disabled="!target()" :title="$t('detail.saveSnapshotTitle')" @click="saveSnapshot">{{ $t('detail.saveSnapshot') }}</button>
+            <button v-if="admin && !renaming" class="btn py-1.5" :disabled="busy || !target()" :title="$t('detail.renameTitle')" @click="startRename">{{ $t('detail.rename') }}</button>
+            <button v-if="admin && plus" class="btn py-1.5" :disabled="busy || !target()" @click="submitPlus">{{ $t('detail.sendPlus') }}</button>
+            <button v-if="admin" class="btn btn-danger py-1.5" :class="{ 'col-span-2': confirmDel }" :disabled="busy" :title="$t('detail.deleteTitle')" @click="remove" @blur="confirmDel = false">{{ confirmDel ? $t('detail.deleteConfirm') : $t('detail.delete') }}</button>
+          </div>
           <button v-if="e.detections?.length" class="btn mt-auto flex items-center justify-center gap-2 py-2" :title="$t('search.similarTitle')" @click="similar">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3" width="8" height="8" rx="1.5" /><rect x="7" y="5" width="8" height="8" rx="1.5" /></svg>{{ $t('search.similarFind') }}
           </button>

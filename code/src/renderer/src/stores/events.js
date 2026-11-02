@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { getRecentReviews, markReviewed, thumbUrl, wsUrl, getPath, getList, eventThumbUrl } from '@/services/frigate'
-import { emptyFilters, hasFilters, matchFilters, historyQuery, mergePages, fromEvent, PAGE } from './eventFilters'
+import { emptyFilters, hasFilters, matchFilters, historyQuery, mergePages, fromEvent, isPlate, PAGE } from './eventFilters'
+import { knownPlates } from '@/services/plates'
 import { reviewType, DAY } from './timeline'
 import { load, save } from './storage'
 import { t } from '@/i18n'
@@ -44,7 +45,7 @@ export const useEventsStore = defineStore('events', {
     fresh: [], // ids arrivés récemment (surbrillance)
     filters: emptyFilters(), // objet, visage, plaque, zone, caméra
     range: { preset: '', after: null, before: null }, // plage de dates (secondes)
-    known: { subLabels: [], plates: [], labels: [], zones: [] }, // valeurs connues du serveur
+    known: { subLabels: [], plates: [], labels: [], zones: [], plateNames: [], faceNames: [], knownList: [] }, // valeurs connues du serveur
     hist: { items: [], loading: false, done: false, error: false } // résultats de la recherche dans l'historique
   }),
   getters: {
@@ -52,7 +53,7 @@ export const useEventsStore = defineStore('events', {
     byId: (s) => (id) => s.items.find((e) => e.id === id) || s.hist.items.find((e) => e.id === id),
     // Filtre ou plage actif : la liste vient du serveur (au-delà des 2 jours en mémoire)
     historyMode: (s) => hasFilters(s.filters) || s.range.after != null || s.range.before != null,
-    knownPlates: (s) => new Set(s.known.plates)
+    knownPlates: (s) => new Set([...s.known.plates, ...(s.known.plateNames || [])])
   },
   actions: {
     persist() { save('fv-ev', { scopeLayout: this.scopeLayout, visible: this.visible, width: this.width }) },
@@ -62,7 +63,7 @@ export const useEventsStore = defineStore('events', {
       const cams = new Set(layoutCams)
       const plates = this.knownPlates
       return (this.historyMode ? this.hist.items : this.items).filter((e) =>
-        (!this.historyMode || matchFilters(e, this.filters, plates)) &&
+        (!this.historyMode || matchFilters(e, this.filters, plates, this.known.knownList)) &&
         (this.sev === 'all' || e.severity === this.sev) &&
         (!this.scopeLayout || cams.has(e.cam)) &&
         (!q || [camName(e.cam), typeLabel(e.type), ...e.objects, ...e.subLabels, ...e.zones].some((v) => v && String(v).toLowerCase().replace(/[\s_-]/g, '').includes(q))))
@@ -73,9 +74,20 @@ export const useEventsStore = defineStore('events', {
     // Valeurs proposées dans les menus (listes absentes sur certaines versions : ignorées)
     async loadKnown(server) {
       const [subLabels, plates, labels] = await Promise.all(['/api/sub_labels', '/api/recognized_license_plates', '/api/labels'].map((p) => getList(server, p)))
-      let zones = []
-      try { zones = Object.values((await getPath(server, '/api/config')).cameras || {}).flatMap((c) => Object.keys(c.zones || {})) } catch { /* facultatif */ }
-      this.known = { subLabels, plates, labels, zones }
+      let zones = [], plateNames = [], faceNames = [], knownList = []
+      try {
+        const config = await getPath(server, '/api/config')
+        zones = Object.values(config.cameras || {}).flatMap((c) => Object.keys(c.zones || {}))
+        knownList = knownPlates(config)
+        plateNames = knownList.map((k) => k.name) // noms de plaques : à ranger avec les plaques, pas les visages
+      } catch { /* facultatif */ }
+      // Compte admin : personnes exactes de la bibliothèque de visages ; tout autre nom (ancien nom de plaque…) va aux plaques
+      try {
+        const people = Object.keys(await getPath(server, '/api/faces')).filter((n) => n !== 'train')
+        faceNames = people.map((n) => n.replace(/_/g, ' '))
+        if (people.length) plateNames = [...new Set([...plateNames, ...subLabels.filter((n) => !people.includes(n) && !people.includes(String(n).replace(/ /g, '_')) && !isPlate(n))])]
+      } catch { /* non admin : on s'en tient aux noms de la configuration */ }
+      this.known = { subLabels, plates, labels, zones, plateNames, faceNames, knownList }
     },
 
     // Recherche dans l'historique : page suivante (reset = nouvelle recherche)
@@ -88,14 +100,17 @@ export const useEventsStore = defineStore('events', {
       const before = this._cursor ?? this.range.before
       // « Caméras du gabarit » : restriction faite par le serveur (sinon une page entière pourrait être masquée)
       const f = !this.filters.cam.length && this.scopeLayout ? { ...this.filters, cam: layoutCams.filter(Boolean) } : this.filters
-      const q = historyQuery(f, { after: this.range.after, before, limit: PAGE })
+      const q = historyQuery(f, { after: this.range.after, before, limit: PAGE, knownList: this.known.knownList })
       try {
         const pages = await Promise.all(q.paths.map((p) => getPath(server, p)))
         if (token !== this._histToken) return // recherche remplacée entre-temps
         const lists = pages.map((list) => (Array.isArray(list) ? list : []).map((r) => (q.kind === 'events' ? fromEvent(r, eventThumbUrl(server, r.id)) : normalize(server, r))))
         // Curseur : fin de page la plus récente parmi les requêtes pleines (doublons retirés par mergePages, aucun trou)
         const full = lists.filter((l) => l.length >= PAGE)
-        this.hist.items = mergePages(this.hist.items, lists.flat())
+        let found = lists.flat()
+        if (q.kind === 'events' && found.length) found = await this.toReviews(server, found)
+        if (token !== this._histToken) return
+        this.hist.items = mergePages(this.hist.items, found)
         this.hist.done = !full.length
         if (full.length) this._cursor = Math.max(...full.map((l) => Math.min(...l.map((e) => e.s)))) / 1000
       } catch {
@@ -103,6 +118,29 @@ export const useEventsStore = defineStore('events', {
       } finally {
         if (token === this._histToken) this.hist.loading = false
       }
+    },
+
+    // Recherche par visage ou plaque : /api/events renvoie des objets suivis ; un objet resté longtemps à l'image
+    // (personne immobile) couvre plusieurs revues, que la liste en direct affiche séparément. On remplace chaque objet
+    // par les revues qui le contiennent (data.detections), en leur ajoutant ses noms (un nom posé après coup
+    // n'apparaît pas dans data.sub_labels de la revue). Objet sans revue retrouvée : gardé tel quel.
+    async toReviews(server, found) {
+      const ids = new Map(found.map((e) => [e.id, e]))
+      const after = Math.floor(Math.min(...found.map((e) => e.s)) / 1000) - 1
+      const before = Math.ceil(Math.max(...found.map((e) => e.e ?? Date.now())) / 1000) + 1
+      const cams = [...new Set(found.map((e) => e.cam))].join(',')
+      let reviews = []
+      try { reviews = await getPath(server, `/api/review?cameras=${encodeURIComponent(cams)}&after=${after}&before=${before}&limit=500`) } catch { return found }
+      const covered = new Set(), out = []
+      for (const r of Array.isArray(reviews) ? reviews : []) {
+        const hits = (r.data?.detections || []).filter((id) => ids.has(id))
+        if (!hits.length) continue
+        hits.forEach((id) => covered.add(id))
+        const rv = normalize(server, r)
+        rv.subLabels = [...new Set([...rv.subLabels, ...hits.flatMap((id) => ids.get(id).subLabels)])]
+        out.push(rv)
+      }
+      return [...out, ...found.filter((e) => !covered.has(e.id))]
     },
 
     upsert(server, raw) {

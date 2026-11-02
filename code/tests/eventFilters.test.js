@@ -74,3 +74,41 @@ describe('pages et plages', () => {
     expect(fromEvent({ id: 'e2', camera: 'c', label: 'person', sub_label: 'bob, john', start_time: 1 }).subLabels).toEqual(['bob', 'john'])
   })
 })
+
+describe('visages et plaques dans les menus', () => {
+  it('noms de plaques rangés avec les plaques, variantes réunies', () => {
+    const items = [{ subLabels: ['Amandine', 'CV-419HJ'], objects: [], zones: [], cam: 'a' }, { subLabels: ['Voiture Michal', 'CV419HJ'], objects: [], zones: [], cam: 'a' }]
+    const o = filterOptions(items, { plates: ['HG-765GZ', 'HG-765-GZ'], plateNames: ['Voiture Michal'], subLabels: ['Amandine', 'Voiture Michal'] })
+    expect(o.face).toEqual(['Amandine'])
+    expect(o.plate).toEqual(['Voiture Michal', 'CV-419-HJ', 'HG-765-GZ'])
+  })
+  it('filtre plaque sans tenir compte des tirets', () => {
+    const e = { subLabels: ['CV419HJ'], objects: [], zones: [], cam: 'a' }
+    expect(matchFilters(e, { plate: ['CV-419-HJ'] }, new Set())).toBe(true)
+    expect(matchFilters(e, { plate: ['HG-765-GZ'] }, new Set())).toBe(false)
+  })
+})
+
+describe('nom de plaque → ses plaques', () => {
+  const knownList = [{ name: 'Michal', plates: ['CV[- ]?419[- ]?HJ'] }]
+  const ev = (sub) => ({ subLabels: [sub], objects: [], zones: [], cam: 'a' })
+  it('un nom trouve les passages lus avant le nommage', () => {
+    const set = new Set(['Michal'])
+    expect(matchFilters(ev('CV419HJ'), { plate: ['Michal'] }, set, knownList)).toBe(true)
+    expect(matchFilters(ev('CV-419HJ'), { plate: ['Michal'] }, set, knownList)).toBe(true)
+    expect(matchFilters(ev('Michal'), { plate: ['Michal'] }, set, knownList)).toBe(true)
+    expect(matchFilters(ev('HG765GZ'), { plate: ['Michal'] }, set, knownList)).toBe(false)
+  })
+  it('recherche historique : le motif des plaques du nom', () => {
+    const q = historyQuery({ ...emptyFilters(), plate: ['Michal'] }, { knownList })
+    expect(q.paths[1]).toContain('recognized_license_plate=' + encodeURIComponent('CV[- ]?419[- ]?HJ'))
+  })
+})
+
+describe('plaque couverte par un nom', () => {
+  it('pas de doublon nom + plaque', () => {
+    const knownList = [{ name: 'Michal', plates: ['CV[- ]?419[- ]?HJ'] }]
+    const o = filterOptions([], { plates: ['CV419HJ', 'CV-419HJ', 'HG-765GZ'], plateNames: ['Michal'], knownList })
+    expect(o.plate).toEqual(['Michal', 'HG-765-GZ'])
+  })
+})
