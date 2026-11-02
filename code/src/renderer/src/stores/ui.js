@@ -32,6 +32,7 @@ export const useUiStore = defineStore('ui', {
     helpOpen: false,
     facesOpen: false,
     platesOpen: false,
+    serverOpen: false, // santé du serveur : stockage, journaux, redémarrage
     searchOpen: false,
     searchSimilar: null, // identifiant d'objet suivi : « Trouver des similaires »
     toast: null
